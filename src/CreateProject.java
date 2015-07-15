@@ -64,8 +64,11 @@ public class CreateProject {
 			for(String path : _pathes) {
 				path = path.substring(_portalDir.length()+1);
 				String integrationPath = path + "-integration";
-				if(path.contains(test) || integrationPath.contains(test)) {
-					moduleName = path;
+				if(path.contains(test)) {
+					moduleName = path+"/unit";
+				}
+				else if(integrationPath.contains(test)) {
+					moduleName = path+"/integration";
 				}
 			}
 			createRoots(testRootsElement, "test."+test+".dir", moduleName);

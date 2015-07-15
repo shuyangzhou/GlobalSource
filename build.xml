@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="GlobalSource" default="build" basedir=".">
+<project name="GlobalSourceProject" default="build" basedir=".">
+    <description>Builds, tests, and runs the project GlobalSourceProject.</description>
+    <import file="nbproject/build-impl.xml"/>
+
+	<property file="build-ext.properties" />
 	<property file="build.properties" />
+
+	<property file="exclude-modules-ext.properties" />
+	<property file="exclude-modules.properties" />
 
 	<property name="project.dir" value="${basedir}/portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
@@ -34,6 +41,7 @@
 		<attribute name="module" />
 		<attribute name="list" />
 		<attribute name="type" />
+		<attribute name="src.dir.name" />
 
 		<sequential>
 			<set-module-source-directory module="@{module}" />
@@ -67,8 +75,8 @@
 							<if>
 								<available file="@{module}/unit" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
-@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}/unit
+@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
 
 </concat>
 								<if>
@@ -88,8 +96,8 @@
 							<if>
 								<available file="@{module}/integration" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}.integration=@{module}/integration
-@{type}.${src.dir.name}-integration.dir=$${file.reference.${src.dir.name}.@{type}.integration}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}.integration=@{module}/integration
+@{type}.@{src.dir.name}-integration.dir=$${file.reference.@{src.dir.name}.@{type}.integration}
 
 </concat>
 
@@ -108,8 +116,8 @@
 							</if>
 						</then>
 						<else>
-							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}
-@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
+							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}
+@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
 
 </concat>
 						</else>
@@ -175,8 +183,6 @@
 
 				<basename property="src.dir.name" file="${src.dir}" />
 
-				<property file="exclude-modules.properties" />
-
 				<if>
 					<not>
 						<contains string="${exclude-modules}" substring="${src.dir.name}" />
@@ -186,26 +192,51 @@
 							module="@{module}"
 							list="module.list"
 							type="src"
+							src.dir.name="${src.dir.name}"
 						/>
 					</then>
 				</if>
 			</sequential>
 		</for>
 
-		<for param="test">
+		<for param="test.module">
 			<path>
 				<dirset dir="${portal.dir}">
 					<include name="**/test"/>
 				</dirset>
 			</path>
 			<sequential>
-				<append-source-list
-					module="@{test}"
-					list="test.list"
-					type="test"
-				/>
+				<dirname property="test.dir" file="@{test.module}" />
+
+				<basename property="test.dir.name" file="${test.dir}" />
+
+				<if>
+					<not>
+						<contains string="${exclude-modules}" substring="${test.dir.name}" />
+					</not>
+					<then>
+						<append-source-list
+							module="@{test.module}"
+							list="test.list"
+							type="test"
+							src.dir.name="${test.dir.name}"
+						/>
+					</then>
+				</if>
+
+				<var name="test.dir" unset="true" />
+				<var name="test.dir.name" unset="true" />
 			</sequential>
 		</for>
+
+		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=${portal.dir}/portal-web/docroot
+src.portal-web.dir=$${file.reference.portal-web.src}
+
+</concat>
+
+		<var name="concat" value="${module.list},portal-web" />
+
+		<var name="module.list" value="${concat}" />
 
 		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-test.test=${portal.dir}/portal-test/src
 test.portal-test.dir=$${file.reference.portal-test.test}
