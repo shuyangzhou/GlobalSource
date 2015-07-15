@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.util.Arrays;
 
@@ -12,6 +11,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 public class CreateProject {
 
 	public static void createConfiguration(Element projectElement) {
@@ -47,12 +47,15 @@ public class CreateProject {
 		for (String module : _modules) {
 			for(String path : _pathes) {
 				path = path.substring(_portalDir.length()+1);
+
 				if(path.contains(module)) {
 					moduleName = path;
 				}
 			}
+
 			if (!module.endsWith("-test")||module.endsWith("test-internal")) {
-				createRoots(sourceRootsElement, "src."+module+".dir", moduleName);
+				createRoots(
+					sourceRootsElement, "src."+module+".dir", moduleName);
 			}
 		}
 
@@ -63,7 +66,9 @@ public class CreateProject {
 		for (String test : _tests) {
 			for(String path : _pathes) {
 				path = path.substring(_portalDir.length()+1);
+
 				String integrationPath = path + "-integration";
+
 				if(path.contains(test)) {
 					moduleName = path+"/unit";
 				}
@@ -169,7 +174,8 @@ public class CreateProject {
 		catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(
 				"Insufficient number of inputs, please use the following " +
-				"order of inputs: Project Name, module list");
+					"order of inputs: Project Name, module list, test list, " +
+						"path list, portal directory");
 
 			System.exit(1);
 		}
