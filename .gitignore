@@ -1,5 +1,7 @@
+build-ext.properties
+
 nbproject/build-impl.xml
 nbproject/genfiles.properties
 nbproject/private
+
 /portal/nbproject/private/
-build-ext.properties
