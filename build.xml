@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="GlobalSourceProject" default="build" basedir=".">
-    <description>Builds, tests, and runs the project GlobalSourceProject.</description>
-    <import file="nbproject/build-impl.xml"/>
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir=".">
 
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
