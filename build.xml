@@ -202,26 +202,21 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="test.dir" file="@{test.module}" />
-
-				<basename property="test.dir.name" file="${test.dir}" />
+				<set-module-source-directory module="@{test.module}" />
 
 				<if>
 					<not>
-						<contains string="${exclude-modules}" substring="${test.dir.name}" />
+						<contains string="${exclude-modules}" substring="${src.dir.name}" />
 					</not>
 					<then>
 						<append-source-list
 							module="@{test.module}"
 							list="test.list"
 							type="test"
-							src.dir.name="${test.dir.name}"
+							src.dir.name="${src.dir.name}"
 						/>
 					</then>
 				</if>
-
-				<var name="test.dir" unset="true" />
-				<var name="test.dir.name" unset="true" />
 			</sequential>
 		</for>
 
