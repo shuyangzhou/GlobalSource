@@ -42,6 +42,9 @@
 		<attribute name="src.dir.name" />
 
 		<sequential>
+			<local name="src.dir" />
+			<local name="src.dir.name" />
+
 			<set-module-source-directory module="@{module}" />
 
 			<if>
@@ -177,9 +180,10 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="src.dir" file="@{module}" />
+				<local name="src.dir" />
+				<local name="src.dir.name" />
 
-				<basename property="src.dir.name" file="${src.dir}" />
+				<set-module-source-directory module="@{module}" />
 
 				<if>
 					<not>
@@ -204,9 +208,10 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="test.dir" file="@{test.module}" />
+				<local name="src.dir" />
+				<local name="src.dir.name" />
 
-				<basename property="test.dir.name" file="${test.dir}" />
+				<set-module-source-directory module="@{test.module}" />
 
 				<if>
 					<not>
