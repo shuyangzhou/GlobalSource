@@ -39,14 +39,8 @@
 		<attribute name="module" />
 		<attribute name="list" />
 		<attribute name="type" />
-		<attribute name="src.dir.name" />
 
 		<sequential>
-			<local name="src.dir" />
-			<local name="src.dir.name" />
-
-			<set-module-source-directory module="@{module}" />
-
 			<if>
 				<available file="${src.dir}/build.xml" />
 				<then>
@@ -76,8 +70,8 @@
 							<if>
 								<available file="@{module}/unit" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}/unit
-@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
+@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
 								<if>
@@ -97,8 +91,8 @@
 							<if>
 								<available file="@{module}/integration" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}.integration=@{module}/integration
-@{type}.@{src.dir.name}-integration.dir=$${file.reference.@{src.dir.name}.@{type}.integration}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}.integration=@{module}/integration
+@{type}.${src.dir.name}-integration.dir=$${file.reference.${src.dir.name}.@{type}.integration}
 
 </concat>
 
@@ -117,8 +111,8 @@
 							</if>
 						</then>
 						<else>
-							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}
-@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
+							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}
+@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
 						</else>
@@ -194,7 +188,6 @@
 							module="@{module}"
 							list="module.list"
 							type="src"
-							src.dir.name="${src.dir.name}"
 						/>
 					</then>
 				</if>
@@ -215,20 +208,16 @@
 
 				<if>
 					<not>
-						<contains string="${exclude-modules}" substring="${test.dir.name}" />
+						<contains string="${exclude-modules}" substring="${src.dir.name}" />
 					</not>
 					<then>
 						<append-source-list
 							module="@{test.module}"
 							list="test.list"
 							type="test"
-							src.dir.name="${test.dir.name}"
 						/>
 					</then>
 				</if>
-
-				<var name="test.dir" unset="true" />
-				<var name="test.dir.name" unset="true" />
 			</sequential>
 		</for>
 
