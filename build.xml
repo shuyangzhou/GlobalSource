@@ -123,9 +123,6 @@
 
 				</then>
 			</if>
-
-			<var name="src.dir" unset="true" />
-			<var name="src.dir.name" unset="true" />
 		</sequential>
 	</macrodef>
 
@@ -133,6 +130,9 @@
 		<attribute name="module" />
 
 		<sequential>
+			<var name="src.dir" unset="true" />
+			<var name="src.dir.name" unset="true" />
+
 			<dirname property="src.dir" file="@{module}" />
 
 			<basename property="src.dir.name" file="${src.dir}" />
@@ -177,9 +177,7 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="src.dir" file="@{module}" />
-
-				<basename property="src.dir.name" file="${src.dir}" />
+				<set-module-source-directory module="@{module}" />
 
 				<if>
 					<not>
