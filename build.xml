@@ -35,6 +35,25 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="append-list">
+		<attribute name="list" />
+		<attribute name="src.dir.name" />
+
+		<sequential>
+			<if>
+				<equals arg1="${@{list}}" arg2="" />
+				<then>
+					<var name="concat" value="@{src.dir.name}" />
+				</then>
+				<else>
+					<var name="concat" value="${@{list}},@{src.dir.name}" />
+				</else>
+			</if>
+
+			<var name="@{list}" value="${concat}" />
+		</sequential>
+	</macrodef>
+
 	<macrodef name="append-source-list">
 		<attribute name="module" />
 		<attribute name="list" />
@@ -48,23 +67,6 @@
 					<var name="path.list" value="${concat}" />
 
 					<if>
-						<equals arg1="@{list}" arg2="module.list" />
-						<then>
-							<if>
-								<equals arg1="${@{list}}" arg2="" />
-								<then>
-									<var name="concat" value="${src.dir.name}" />
-								</then>
-								<else>
-									<var name="concat" value="${@{list}},${src.dir.name}" />
-								</else>
-							</if>
-
-							<var name="@{list}" value="${concat}" />
-						</then>
-					</if>
-
-					<if>
 						<equals arg1="@{type}" arg2="test" />
 						<then>
 							<if>
@@ -74,17 +76,10 @@
 @{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
-								<if>
-									<equals arg1="${@{list}}" arg2="" />
-									<then>
-										<var name="concat" value="${src.dir.name}" />
-									</then>
-									<else>
-										<var name="concat" value="${@{list}},${src.dir.name}" />
-									</else>
-								</if>
-
-								<var name="@{list}" value="${concat}" />
+								<append-list
+									list="@{list}"
+									src.dir.name="${src.dir.name}"
+								/>
 
 								</then>
 							</if>
@@ -96,17 +91,11 @@
 
 </concat>
 
-								<if>
-									<equals arg1="${@{list}}" arg2="" />
-									<then>
-										<var name="concat" value="${src.dir.name}-integration" />
-									</then>
-									<else>
-										<var name="concat" value="${@{list}},${src.dir.name}-integration" />
-									</else>
-								</if>
+								<append-list
+									list="@{list}"
+									src.dir.name="${src.dir.name}-integration"
+								/>
 
-								<var name="@{list}" value="${concat}" />
 								</then>
 							</if>
 						</then>
@@ -115,6 +104,11 @@
 @{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
+
+							<append-list
+								list="@{list}"
+								src.dir.name="${src.dir.name}"
+							/>
 						</else>
 					</if>
 
