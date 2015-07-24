@@ -35,15 +35,31 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="append-list">
+		<attribute name="list" />
+		<attribute name="src.dir.name" />
+
+		<sequential>
+			<if>
+				<equals arg1="${@{list}}" arg2="" />
+				<then>
+					<var name="concat" value="@{src.dir.name}" />
+				</then>
+				<else>
+					<var name="concat" value="${@{list}},@{src.dir.name}" />
+				</else>
+			</if>
+
+			<var name="@{list}" value="${concat}" />
+		</sequential>
+	</macrodef>
+
 	<macrodef name="append-source-list">
 		<attribute name="module" />
 		<attribute name="list" />
 		<attribute name="type" />
-		<attribute name="src.dir.name" />
 
 		<sequential>
-			<set-module-source-directory module="@{module}" />
-
 			<if>
 				<available file="${src.dir}/build.xml" />
 				<then>
@@ -51,73 +67,48 @@
 					<var name="path.list" value="${concat}" />
 
 					<if>
-						<equals arg1="@{list}" arg2="module.list" />
-						<then>
-							<if>
-								<equals arg1="${@{list}}" arg2="" />
-								<then>
-									<var name="concat" value="${src.dir.name}" />
-								</then>
-								<else>
-									<var name="concat" value="${@{list}},${src.dir.name}" />
-								</else>
-							</if>
-
-							<var name="@{list}" value="${concat}" />
-						</then>
-					</if>
-
-					<if>
 						<equals arg1="@{type}" arg2="test" />
 						<then>
 							<if>
 								<available file="@{module}/unit" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}/unit
-@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
+@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
-								<if>
-									<equals arg1="${@{list}}" arg2="" />
-									<then>
-										<var name="concat" value="${src.dir.name}" />
-									</then>
-									<else>
-										<var name="concat" value="${@{list}},${src.dir.name}" />
-									</else>
-								</if>
-
-								<var name="@{list}" value="${concat}" />
+								<append-list
+									list="@{list}"
+									src.dir.name="${src.dir.name}"
+								/>
 
 								</then>
 							</if>
 							<if>
 								<available file="@{module}/integration" type="dir" />
 								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}.integration=@{module}/integration
-@{type}.@{src.dir.name}-integration.dir=$${file.reference.@{src.dir.name}.@{type}.integration}
+									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}.integration=@{module}/integration
+@{type}.${src.dir.name}-integration.dir=$${file.reference.${src.dir.name}.@{type}.integration}
 
 </concat>
 
-								<if>
-									<equals arg1="${@{list}}" arg2="" />
-									<then>
-										<var name="concat" value="${src.dir.name}-integration" />
-									</then>
-									<else>
-										<var name="concat" value="${@{list}},${src.dir.name}-integration" />
-									</else>
-								</if>
+								<append-list
+									list="@{list}"
+									src.dir.name="${src.dir.name}-integration"
+								/>
 
-								<var name="@{list}" value="${concat}" />
 								</then>
 							</if>
 						</then>
 						<else>
-							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.@{src.dir.name}.@{type}=@{module}
-@{type}.@{src.dir.name}.dir=$${file.reference.@{src.dir.name}.@{type}}
+							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}
+@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
+
+							<append-list
+								list="@{list}"
+								src.dir.name="${src.dir.name}"
+							/>
 						</else>
 					</if>
 
@@ -177,9 +168,10 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="src.dir" file="@{module}" />
+				<local name="src.dir" />
+				<local name="src.dir.name" />
 
-				<basename property="src.dir.name" file="${src.dir}" />
+				<set-module-source-directory module="@{module}" />
 
 				<if>
 					<not>
@@ -190,7 +182,6 @@
 							module="@{module}"
 							list="module.list"
 							type="src"
-							src.dir.name="${src.dir.name}"
 						/>
 					</then>
 				</if>
@@ -204,26 +195,23 @@
 				</dirset>
 			</path>
 			<sequential>
-				<dirname property="test.dir" file="@{test.module}" />
+				<local name="src.dir" />
+				<local name="src.dir.name" />
 
-				<basename property="test.dir.name" file="${test.dir}" />
+				<set-module-source-directory module="@{test.module}" />
 
 				<if>
 					<not>
-						<contains string="${exclude-modules}" substring="${test.dir.name}" />
+						<contains string="${exclude-modules}" substring="${src.dir.name}" />
 					</not>
 					<then>
 						<append-source-list
 							module="@{test.module}"
 							list="test.list"
 							type="test"
-							src.dir.name="${test.dir.name}"
 						/>
 					</then>
 				</if>
-
-				<var name="test.dir" unset="true" />
-				<var name="test.dir.name" unset="true" />
 			</sequential>
 		</for>
 
