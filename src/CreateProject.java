@@ -48,15 +48,13 @@ public class CreateProject {
 			for(String path : _pathes) {
 				path = path.substring(_portalDir.length()+1);
 
-				if(path.contains(module)) {
+				if(path.endsWith(module)) {
 					moduleName = path;
 				}
 			}
 
-			if (!module.endsWith("-test")||module.endsWith("test-internal")) {
-				createRoots(
-					sourceRootsElement, "src."+module+".dir", moduleName);
-			}
+			createRoots(
+				sourceRootsElement, "src."+module+".dir", moduleName);
 		}
 
 		Element testRootsElement = document.createElement("test-roots");
