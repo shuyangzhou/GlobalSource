@@ -53,8 +53,10 @@ public class CreateProject {
 				}
 			}
 
-			createRoots(
-				sourceRootsElement, "src."+module+".dir", moduleName);
+			if(verifySourceFolder(moduleName)) {
+				createRoots(
+					sourceRootsElement, "src." + module + ".dir", moduleName);
+			}
 		}
 
 		Element testRootsElement = document.createElement("test-roots");
@@ -177,6 +179,23 @@ public class CreateProject {
 
 			System.exit(1);
 		}
+	}
+
+	public static boolean verifySourceFolder(String moduleName) {
+		File folder = new File(_portalDir+"/"+moduleName+"/src");
+
+		if(folder.exists()) {
+			File[] listOfFiles = folder.listFiles();
+
+			if(
+				listOfFiles[0].getName().startsWith(".") &&
+				listOfFiles.length == 1) {
+
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private static String[] _modules;
