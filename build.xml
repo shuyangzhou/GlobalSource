@@ -69,7 +69,7 @@
 </concat>
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir.name}"
+									src.dir.name="${src.dir}"
 								/>
 
 								</then>
@@ -84,7 +84,7 @@
 
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir.name}-integration"
+									src.dir.name="${src.dir}-integration"
 								/>
 
 								</then>
@@ -98,7 +98,7 @@
 
 							<append-list
 								list="@{list}"
-								src.dir.name="${src.dir.name}"
+								src.dir.name="${src.dir}"
 							/>
 						</else>
 					</if>
@@ -209,7 +209,7 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 </concat>
 
-		<var name="module.list" value="${module.list},portal-web" />
+		<var name="module.list" value="${module.list},${portal.dir}/portal-web" />
 
 		<append-lib-jars/>
 
