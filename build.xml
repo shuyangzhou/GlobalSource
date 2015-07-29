@@ -64,12 +64,12 @@
 								<available file="@{module}/unit" type="dir" />
 								<then>
 									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
-@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
+@{type}.${src.dir.name}-unit.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir}"
+									src.dir.name="${src.dir}-unit"
 								/>
 
 								</then>
@@ -218,9 +218,9 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 		<java classname="CreateProject" classpath="${basedir}/classes">
 			<arg value="${project.name}" />
+			<arg value="${portal.dir}" />
 			<arg value="${module.list}" />
 			<arg value="${test.list}" />
-			<arg value="${portal.dir}" />
 		</java>
 	</target>
 
