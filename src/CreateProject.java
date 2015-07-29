@@ -43,6 +43,7 @@ public class CreateProject {
 		dataElement.appendChild(sourceRootsElement);
 
 		String moduleName="";
+
 		String relativePath = "";
 
 		for (String module : _modules) {
@@ -52,8 +53,11 @@ public class CreateProject {
 			else {
 				relativePath = module;
 			}
+
 			String[] moduleSplit = module.split("/");
+
 			moduleName = moduleSplit[moduleSplit.length-1];
+
 			if(verifySourceFolder(moduleName)) {
 				createRoots(
 					sourceRootsElement, "src." + moduleName + ".dir", relativePath);
@@ -71,8 +75,11 @@ public class CreateProject {
 			else {
 				relativePath = test;
 			}
+
 			String[] testSplit = test.split("/");
+
 			String testName = testSplit[testSplit.length-1];
+
 			createRoots(testRootsElement, "test."+testName+".dir", relativePath);
 		}
 	}
