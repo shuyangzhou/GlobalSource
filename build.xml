@@ -64,12 +64,12 @@
 								<available file="@{module}/unit" type="dir" />
 								<then>
 									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
-@{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
+@{type}.${src.dir.name}-unit.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir}"
+									src.dir.name="${src.dir}-unit"
 								/>
 
 								</then>
