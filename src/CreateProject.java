@@ -169,11 +169,7 @@ public class CreateProject {
 
 			_tests = args[2].split(",");
 
-			_pathes = args[3].split(",");
-
-			_pathes = Arrays.copyOfRange(_pathes,1,_pathes.length);
-
-			_portalDir = args[4];
+			_portalDir = args[3];
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(
@@ -204,7 +200,6 @@ public class CreateProject {
 	}
 
 	private static String[] _modules;
-	private static String[] _pathes;
 	private static String _portalDir;
 	private static String _projectName;
 	private static String[] _tests;
