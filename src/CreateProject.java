@@ -44,13 +44,13 @@ public class CreateProject {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		String moduleName="";
+		String moduleName = "";
 
 		String relativePath = "";
 
 		for (String module : _modules) {
 			if(module.startsWith(_portalDir)) {
-				relativePath = module.substring(_portalDir.length()+1);
+				relativePath = module.substring(_portalDir.length() + 1);
 			}
 			else {
 				relativePath = module;
@@ -62,7 +62,8 @@ public class CreateProject {
 
 			if(verifySourceFolder(moduleName)) {
 				createRoots(
-					sourceRootsElement, "src." + moduleName + ".dir", relativePath);
+					sourceRootsElement, "src." + moduleName + ".dir",
+					relativePath);
 			}
 		}
 
@@ -82,7 +83,8 @@ public class CreateProject {
 
 			String testName = testSplit[testSplit.length-1];
 
-			createRoots(testRootsElement, "test."+testName+".dir", relativePath);
+			createRoots(
+				testRootsElement, "test." + testName + ".dir", relativePath);
 		}
 	}
 
@@ -190,7 +192,7 @@ public class CreateProject {
 
 		List moduleSourceList = new ArrayList();
 
-		while(modules[i].startsWith(_portalDir+"/modules")) {
+		while(modules[i].startsWith(_portalDir + "/modules")) {
 			moduleSourceList.add(modules[i]);
 
 			i++;
@@ -198,7 +200,7 @@ public class CreateProject {
 
 		List portalSourceList = new ArrayList();
 
-		while(i<modules.length) {
+		while(i < modules.length) {
 			portalSourceList.add(modules[i]);
 
 			i++;
