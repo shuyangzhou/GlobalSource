@@ -69,7 +69,7 @@
 </concat>
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir.name}"
+									src.dir.name="${src.dir}"
 								/>
 
 								</then>
@@ -84,7 +84,7 @@
 
 								<append-list
 									list="@{list}"
-									src.dir.name="${src.dir.name}-integration"
+									src.dir.name="${src.dir}-integration"
 								/>
 
 								</then>
@@ -98,7 +98,7 @@
 
 							<append-list
 								list="@{list}"
-								src.dir.name="${src.dir.name}"
+								src.dir.name="${src.dir}"
 							/>
 						</else>
 					</if>
@@ -209,19 +209,7 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 </concat>
 
-		<var name="module.list" value="${module.list},portal-web" />
-
-		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-test.test=${portal.dir}/portal-test/src
-test.portal-test.dir=$${file.reference.portal-test.test}
-
-</concat>
-
-		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-test-internal.test=${portal.dir}/portal-test-internal/src
-test.portal-test-internal.dir=$${file.reference.portal-test-internal.test}
-
-</concat>
-
-		<var name="test.list" value="${test.list},portal-test,portal-test-internal" />
+		<var name="module.list" value="${module.list},${portal.dir}/portal-web" />
 
 		<append-lib-jars/>
 
@@ -229,7 +217,6 @@ test.portal-test-internal.dir=$${file.reference.portal-test-internal.test}
 			<arg value="${project.name}" />
 			<arg value="${module.list}" />
 			<arg value="${test.list}" />
-			<arg value="${path.list}" />
 			<arg value="${portal.dir}" />
 		</java>
 	</target>

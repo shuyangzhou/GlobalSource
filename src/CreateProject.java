@@ -1,5 +1,7 @@
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -42,19 +44,27 @@ public class CreateProject {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		String moduleName="";
+		String moduleName = "";
+
+		String relativePath = "";
 
 		for (String module : _modules) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
-
-				if(path.endsWith(module)) {
-					moduleName = path;
-				}
+			if(module.startsWith(_portalDir)) {
+				relativePath = module.substring(_portalDir.length() + 1);
+			}
+			else {
+				relativePath = module;
 			}
 
-			createRoots(
-				sourceRootsElement, "src."+module+".dir", moduleName);
+			String[] moduleSplit = module.split("/");
+
+			moduleName = moduleSplit[moduleSplit.length-1];
+
+			if(verifySourceFolder(moduleName)) {
+				createRoots(
+					sourceRootsElement, "src." + moduleName + ".dir",
+					relativePath);
+			}
 		}
 
 		Element testRootsElement = document.createElement("test-roots");
@@ -62,19 +72,19 @@ public class CreateProject {
 		dataElement.appendChild(testRootsElement);
 
 		for (String test : _tests) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
-
-				String integrationPath = path + "-integration";
-
-				if(path.contains(test)) {
-					moduleName = path+"/unit";
-				}
-				else if(integrationPath.contains(test)) {
-					moduleName = path+"/integration";
-				}
+			if(test.startsWith(_portalDir)) {
+				relativePath = test.substring(_portalDir.length()+1);
 			}
-			createRoots(testRootsElement, "test."+test+".dir", moduleName);
+			else {
+				relativePath = test;
+			}
+
+			String[] testSplit = test.split("/");
+
+			String testName = testSplit[testSplit.length-1];
+
+			createRoots(
+				testRootsElement, "test." + testName + ".dir", relativePath);
 		}
 	}
 
@@ -159,15 +169,11 @@ public class CreateProject {
 		try {
 			_projectName = args[0];
 
-			_modules = args[1].split(",");
+			_portalDir = args[3];
 
-			_tests = args[2].split(",");
+			_modules = reorderModules(args[1]);
 
-			_pathes = args[3].split(",");
-
-			_pathes = Arrays.copyOfRange(_pathes,1,_pathes.length);
-
-			_portalDir = args[4];
+			_tests = reorderModules(args[2]);
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(
@@ -179,8 +185,56 @@ public class CreateProject {
 		}
 	}
 
+	public static String[] reorderModules(String originalOrder) {
+		String[] modules = originalOrder.split(",");
+
+		int i = 0;
+
+		List moduleSourceList = new ArrayList();
+
+		while(modules[i].startsWith(_portalDir + "/modules")) {
+			moduleSourceList.add(modules[i]);
+
+			i++;
+		}
+
+		List portalSourceList = new ArrayList();
+
+		while(i < modules.length) {
+			portalSourceList.add(modules[i]);
+
+			i++;
+		}
+
+		Collections.sort(portalSourceList);
+
+		Collections.sort(moduleSourceList);
+
+		portalSourceList.addAll(moduleSourceList);
+
+		return (String[]) portalSourceList.toArray(
+			new String[portalSourceList.size()]);
+	}
+
+	public static boolean verifySourceFolder(String moduleName) {
+		File folder = new File(_portalDir+"/"+moduleName+"/src");
+
+		if(folder.exists()) {
+			File[] listOfFiles = folder.listFiles();
+
+			if(listOfFiles.length == 1) {
+				String fileName = listOfFiles[0].getName();
+
+				if(fileName.startsWith(".")) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	private static String[] _modules;
-	private static String[] _pathes;
 	private static String _portalDir;
 	private static String _projectName;
 	private static String[] _tests;
