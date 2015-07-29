@@ -44,17 +44,25 @@ public class CreateProject {
 
 		String moduleName="";
 
-		for (String module : _modules) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
+		String relativePath = "";
 
-				if(path.endsWith(module)) {
-					moduleName = path;
-				}
+		for (String module : _modules) {
+			if(module.startsWith(_portalDir)) {
+				relativePath = module.substring(_portalDir.length()+1);
+			}
+			else {
+				relativePath = module;
 			}
 
-			createRoots(
-				sourceRootsElement, "src."+module+".dir", moduleName);
+			String[] moduleSplit = module.split("/");
+
+			moduleName = moduleSplit[moduleSplit.length - 1];
+
+			if(verifySourceFolder(moduleName)) {
+				createRoots(
+					sourceRootsElement, "src." + moduleName + ".dir",
+					relativePath);
+			}
 		}
 
 		Element testRootsElement = document.createElement("test-roots");
@@ -62,19 +70,19 @@ public class CreateProject {
 		dataElement.appendChild(testRootsElement);
 
 		for (String test : _tests) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
-
-				String integrationPath = path + "-integration";
-
-				if(path.contains(test)) {
-					moduleName = path+"/unit";
-				}
-				else if(integrationPath.contains(test)) {
-					moduleName = path+"/integration";
-				}
+			if(test.startsWith(_portalDir)) {
+				relativePath = test.substring(_portalDir.length() + 1);
 			}
-			createRoots(testRootsElement, "test."+test+".dir", moduleName);
+			else {
+				relativePath = test;
+			}
+
+			String[] testSplit = test.split("/");
+
+			String testName = testSplit[testSplit.length - 1];
+
+			createRoots(
+				testRootsElement, "test." + testName + ".dir", relativePath);
 		}
 	}
 
@@ -163,11 +171,7 @@ public class CreateProject {
 
 			_tests = args[2].split(",");
 
-			_pathes = args[3].split(",");
-
-			_pathes = Arrays.copyOfRange(_pathes,1,_pathes.length);
-
-			_portalDir = args[4];
+			_portalDir = args[3];
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(
@@ -179,8 +183,25 @@ public class CreateProject {
 		}
 	}
 
+	public static boolean verifySourceFolder(String moduleName) {
+		File folder = new File(_portalDir + "/" + moduleName + "/src");
+
+		if(folder.exists()) {
+			File[] listOfFiles = folder.listFiles();
+
+			if(listOfFiles.length == 1) {
+				String fileName = listOfFiles[0].getName();
+
+				if(fileName.startsWith(".")) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	private static String[] _modules;
-	private static String[] _pathes;
 	private static String _portalDir;
 	private static String _projectName;
 	private static String[] _tests;
