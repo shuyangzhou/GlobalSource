@@ -150,6 +150,9 @@
 
 		<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
 
+		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
+</concat>
+
 		<for param="module">
 			<path>
 				<dirset dir="${portal.dir}">
