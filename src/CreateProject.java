@@ -1,5 +1,7 @@
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -165,11 +167,11 @@ public class CreateProject {
 		try {
 			_projectName = args[0];
 
-			_modules = args[1].split(",");
-
-			_tests = args[2].split(",");
-
 			_portalDir = args[3];
+
+			_modules = reorderModules(args[1]);
+
+			_tests = reorderModules(args[2]);
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(
@@ -179,6 +181,37 @@ public class CreateProject {
 
 			System.exit(1);
 		}
+	}
+
+	public static String[] reorderModules(String originalOrder) {
+		String[] modules = originalOrder.split(",");
+
+		int i = 0;
+
+		List moduleSourceList = new ArrayList();
+
+		while(modules[i].startsWith(_portalDir+"/modules")) {
+			moduleSourceList.add(modules[i]);
+
+			i++;
+		}
+
+		List portalSourceList = new ArrayList();
+
+		while(i<modules.length) {
+			portalSourceList.add(modules[i]);
+
+			i++;
+		}
+
+		Collections.sort(portalSourceList);
+
+		Collections.sort(moduleSourceList);
+
+		portalSourceList.addAll(moduleSourceList);
+
+		return (String[]) portalSourceList.toArray(
+			new String[portalSourceList.size()]);
 	}
 
 	public static boolean verifySourceFolder(String moduleName) {
