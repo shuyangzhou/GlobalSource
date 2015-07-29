@@ -229,7 +229,6 @@ test.portal-test-internal.dir=$${file.reference.portal-test-internal.test}
 			<arg value="${project.name}" />
 			<arg value="${module.list}" />
 			<arg value="${test.list}" />
-			<arg value="${path.list}" />
 			<arg value="${portal.dir}" />
 		</java>
 	</target>
