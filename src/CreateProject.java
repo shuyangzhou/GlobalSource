@@ -16,7 +16,7 @@ import org.w3c.dom.Element;
 
 public class CreateProject {
 
-	public static void createConfiguration(Element projectElement) {
+	private static void createConfiguration(Element projectElement) {
 		Element configurationElement = document.createElement("configuration");
 
 		projectElement.appendChild(configurationElement);
@@ -26,7 +26,7 @@ public class CreateProject {
 		createLibraries(configurationElement);
 	}
 
-	public static void createData(Element configurationElement) {
+	private static void createData(Element configurationElement) {
 		Element dataElement = document.createElement("data");
 
 		dataElement.setAttribute(
@@ -88,7 +88,7 @@ public class CreateProject {
 		}
 	}
 
-	public static void createLibraries(Element configurationElement) {
+	private static void createLibraries(Element configurationElement) {
 		Element librariesElement = document.createElement("libraries");
 
 		librariesElement.setAttribute(
@@ -104,7 +104,7 @@ public class CreateProject {
 		librariesElement.appendChild(definitionsElement);
 	}
 
-	public static void createProjectElement() {
+	private static void createProjectElement() {
 		Element projectElement = document.createElement("project");
 
 		projectElement.setAttribute(
@@ -122,7 +122,7 @@ public class CreateProject {
 		createConfiguration(projectElement);
 	}
 
-	public static void createRoots(
+	private static void createRoots(
 		Element sourceRootsElement, String module, String moduleName) {
 
 		Element rootElement = document.createElement("root");
@@ -165,7 +165,7 @@ public class CreateProject {
 		transformer.transform(source, streamResult);
 	}
 
-	public static void parseArgument(String[] args) {
+	private static void parseArgument(String[] args) {
 		try {
 			_projectName = args[0];
 
@@ -185,7 +185,7 @@ public class CreateProject {
 		}
 	}
 
-	public static String[] reorderModules(String originalOrder, String portalDir) {
+	private static String[] reorderModules(String originalOrder, String portalDir) {
 		String[] modules = originalOrder.split(",");
 
 		int i = 0;
@@ -215,7 +215,7 @@ public class CreateProject {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	public static boolean verifySourceFolder(String moduleName) {
+	private static boolean verifySourceFolder(String moduleName) {
 		File folder = new File(_portalDir + "/" + moduleName + "/src");
 
 		if(folder.exists()) {
