@@ -44,18 +44,24 @@ public class CreateProject {
 
 		String moduleName="";
 
-		for (String module : _modules) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
+		String relativePath = "";
 
-				if(path.endsWith(module)) {
-					moduleName = path;
-				}
+		for (String module : _modules) {
+			if(module.startsWith(_portalDir)) {
+				relativePath = module.substring(_portalDir.length()+1);
 			}
+			else {
+				relativePath = module;
+			}
+
+			String[] moduleSplit = module.split("/");
+
+			moduleName = moduleSplit[moduleSplit.length - 1];
 
 			if(verifySourceFolder(moduleName)) {
 				createRoots(
-					sourceRootsElement, "src." + module + ".dir", moduleName);
+					sourceRootsElement, "src." + moduleName + ".dir",
+					relativePath);
 			}
 		}
 
@@ -64,19 +70,19 @@ public class CreateProject {
 		dataElement.appendChild(testRootsElement);
 
 		for (String test : _tests) {
-			for(String path : _pathes) {
-				path = path.substring(_portalDir.length()+1);
-
-				String integrationPath = path + "-integration";
-
-				if(path.contains(test)) {
-					moduleName = path+"/unit";
-				}
-				else if(integrationPath.contains(test)) {
-					moduleName = path+"/integration";
-				}
+			if(test.startsWith(_portalDir)) {
+				relativePath = test.substring(_portalDir.length() + 1);
 			}
-			createRoots(testRootsElement, "test."+test+".dir", moduleName);
+			else {
+				relativePath = test;
+			}
+
+			String[] testSplit = test.split("/");
+
+			String testName = testSplit[testSplit.length - 1];
+
+			createRoots(
+				testRootsElement, "test." + testName + ".dir", relativePath);
 		}
 	}
 
@@ -182,7 +188,7 @@ public class CreateProject {
 	}
 
 	public static boolean verifySourceFolder(String moduleName) {
-		File folder = new File(_portalDir+"/"+moduleName+"/src");
+		File folder = new File(_portalDir + "/" + moduleName + "/src");
 
 		if(folder.exists()) {
 			File[] listOfFiles = folder.listFiles();
