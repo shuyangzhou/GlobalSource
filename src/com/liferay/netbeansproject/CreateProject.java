@@ -1,3 +1,5 @@
+package com.liferay.netbeansproject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,6 +144,8 @@ public class CreateProject {
 	}
 
 	public static void main(String[] args) throws Exception {
+		AppendLibJars.AppendJars(args[4]);
+
 		_ProjectInfo projectInfo = new _ProjectInfo(args);
 
 		DocumentBuilderFactory documentBuilderFactory =
