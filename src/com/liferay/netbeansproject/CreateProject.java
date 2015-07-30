@@ -144,7 +144,7 @@ public class CreateProject {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if(args.length != 4) {
+		if(args.length != 5) {
 			throw new IllegalArgumentException(
 				"Incorrect Number of arguments");
 		}
