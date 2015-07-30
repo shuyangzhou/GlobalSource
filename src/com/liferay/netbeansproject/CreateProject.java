@@ -18,6 +18,39 @@ import org.w3c.dom.Element;
 
 public class CreateProject {
 
+	public static void main(String[] args) throws Exception {
+		AppendLibJars.AppendJars(args[4]);
+
+		_ProjectInfo projectInfo = new _ProjectInfo(args);
+
+		DocumentBuilderFactory documentBuilderFactory =
+			DocumentBuilderFactory.newInstance();
+
+		DocumentBuilder documentBuilder =
+			documentBuilderFactory.newDocumentBuilder();
+
+		_document = documentBuilder.newDocument();
+
+		_createProjectElement(projectInfo);
+
+		TransformerFactory transformerFactory =
+			TransformerFactory.newInstance();
+
+		Transformer transformer = transformerFactory.newTransformer();
+
+		DOMSource source = new DOMSource(_document);
+
+		StreamResult streamResult;
+
+		streamResult =
+			new StreamResult(new File("portal/nbproject/project.xml"));
+
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(
+			"{http://xml.apache.org/xslt}indent-amount", "4");
+		transformer.transform(source, streamResult);
+	}
+
 	private static void _createConfiguration(
 		Element projectElement, _ProjectInfo projectInfo) {
 
@@ -141,39 +174,6 @@ public class CreateProject {
 		rootElement.setAttribute("name", moduleName);
 
 		sourceRootsElement.appendChild(rootElement);
-	}
-
-	public static void main(String[] args) throws Exception {
-		AppendLibJars.AppendJars(args[4]);
-
-		_ProjectInfo projectInfo = new _ProjectInfo(args);
-
-		DocumentBuilderFactory documentBuilderFactory =
-			DocumentBuilderFactory.newInstance();
-
-		DocumentBuilder documentBuilder =
-			documentBuilderFactory.newDocumentBuilder();
-
-		_document = documentBuilder.newDocument();
-
-		_createProjectElement(projectInfo);
-
-		TransformerFactory transformerFactory =
-			TransformerFactory.newInstance();
-
-		Transformer transformer = transformerFactory.newTransformer();
-
-		DOMSource source = new DOMSource(_document);
-
-		StreamResult streamResult;
-
-		streamResult =
-			new StreamResult(new File("portal/nbproject/project.xml"));
-
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty(
-			"{http://xml.apache.org/xslt}indent-amount", "4");
-		transformer.transform(source, streamResult);
 	}
 
 	private static String[] _reorderModules(
