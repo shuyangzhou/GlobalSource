@@ -14,18 +14,6 @@
 
 	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 
-	<macrodef name="append-lib-jars">
-		<sequential>
-			<path id="lib-jars">
-				<fileset dir="${portal.dir}/lib" includes="**/*.jar" />
-			</path>
-
-			<java classname="AppendLibJars" classpath="${basedir}/classes">
-				<arg value="${toString:lib-jars}" />
-			</java>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="append-list">
 		<attribute name="list" />
 		<attribute name="src.dir.name" />
@@ -211,13 +199,16 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 		<var name="module.list" value="${module.list},${portal.dir}/portal-web" />
 
-		<append-lib-jars/>
+		<path id="lib-jars">
+			<fileset dir="${portal.dir}/lib" includes="**/*.jar" />
+		</path>
 
-		<java classname="CreateProject" classpath="${basedir}/classes">
+		<java classname="com.liferay.netbeansproject.CreateProject" classpath="${basedir}/classes/">
 			<arg value="${project.name}" />
 			<arg value="${portal.dir}" />
 			<arg value="${module.list}" />
 			<arg value="${test.list}" />
+			<arg value="${toString:lib-jars}" />
 		</java>
 	</target>
 

@@ -1,3 +1,5 @@
+package com.liferay.netbeansproject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +15,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import com.liferay.netbeansproject.AppendLibJars;
 
 public class CreateProject {
 
@@ -142,6 +146,8 @@ public class CreateProject {
 	}
 
 	public static void main(String[] args) throws Exception {
+		AppendLibJars.AppendJars(args[4]);
+
 		ProjectInfo projectInfo = parseArgument(args);
 
 		DocumentBuilderFactory documentBuilderFactory =
