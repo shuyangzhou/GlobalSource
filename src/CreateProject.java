@@ -16,17 +16,21 @@ import org.w3c.dom.Element;
 
 public class CreateProject {
 
-	private static void _createConfiguration(Element projectElement) {
+	private static void _createConfiguration(
+		Element projectElement, ProjectInfo projectInfo) {
+
 		Element configurationElement = _document.createElement("configuration");
 
 		projectElement.appendChild(configurationElement);
 
-		_createData(configurationElement);
+		_createData(configurationElement, projectInfo);
 
 		_createLibraries(configurationElement);
 	}
 
-	private static void _createData(Element configurationElement) {
+	private static void _createData(
+		Element configurationElement, ProjectInfo projectInfo) {
+
 		Element dataElement = _document.createElement("data");
 
 		dataElement.setAttribute(
@@ -36,7 +40,8 @@ public class CreateProject {
 
 		Element nameElement = _document.createElement("name");
 
-		nameElement.appendChild(_document.createTextNode(_projectName));
+		nameElement.appendChild(
+			_document.createTextNode(projectInfo.getProjectName()));
 
 		dataElement.appendChild(nameElement);
 
@@ -48,9 +53,10 @@ public class CreateProject {
 
 		String relativePath = "";
 
-		for (String module : _modules) {
-			if(module.startsWith(_portalDir)) {
-				relativePath = module.substring(_portalDir.length()+1);
+		for (String module : projectInfo.getModules()) {
+			if(module.startsWith(projectInfo.getPortalDir())) {
+				relativePath =
+					module.substring(projectInfo.getPortalDir().length()+1);
 			}
 			else {
 				relativePath = module;
@@ -60,7 +66,7 @@ public class CreateProject {
 
 			moduleName = moduleSplit[moduleSplit.length - 1];
 
-			if(_verifySourceFolder(moduleName)) {
+			if(_verifySourceFolder(projectInfo, moduleName)) {
 				_createRoots(
 					sourceRootsElement, "src." + moduleName + ".dir",
 					relativePath);
@@ -71,9 +77,10 @@ public class CreateProject {
 
 		dataElement.appendChild(testRootsElement);
 
-		for (String test : _tests) {
-			if(test.startsWith(_portalDir)) {
-				relativePath = test.substring(_portalDir.length() + 1);
+		for (String test : projectInfo.getTests()) {
+			if(test.startsWith(projectInfo.getPortalDir())) {
+				relativePath =
+					test.substring(projectInfo.getPortalDir().length() + 1);
 			}
 			else {
 				relativePath = test;
@@ -104,7 +111,7 @@ public class CreateProject {
 		librariesElement.appendChild(definitionsElement);
 	}
 
-	private static void _createProjectElement() {
+	private static void _createProjectElement(ProjectInfo projectInfo) {
 		Element projectElement = _document.createElement("project");
 
 		projectElement.setAttribute(
@@ -119,7 +126,7 @@ public class CreateProject {
 
 		projectElement.appendChild(typeElement);
 
-		_createConfiguration(projectElement);
+		_createConfiguration(projectElement, projectInfo);
 	}
 
 	private static void _createRoots(
@@ -135,7 +142,7 @@ public class CreateProject {
 	}
 
 	public static void main(String[] args) throws Exception {
-		_parseArgument(args);
+		ProjectInfo projectInfo = new ProjectInfo(args);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -145,7 +152,7 @@ public class CreateProject {
 
 		_document = documentBuilder.newDocument();
 
-		_createProjectElement();
+		_createProjectElement(projectInfo);
 
 		TransformerFactory transformerFactory =
 			TransformerFactory.newInstance();
@@ -165,27 +172,9 @@ public class CreateProject {
 		transformer.transform(source, streamResult);
 	}
 
-	private static void _parseArgument(String[] args) {
-		try {
-			_projectName = args[0];
+	private static String[] _reorderModules(
+		String originalOrder, String portalDir) {
 
-			_portalDir = args[1];
-
-			_modules = _reorderModules(args[2], _portalDir);
-
-			_tests = _reorderModules(args[3], _portalDir);
-		}
-		catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println(
-				"Insufficient number of inputs, please use the following " +
-					"order of inputs: Project Name, module list, test list, " +
-						"path list, portal directory");
-
-			System.exit(1);
-		}
-	}
-
-	private static String[] _reorderModules(String originalOrder, String portalDir) {
 		String[] modules = originalOrder.split(",");
 
 		int i = 0;
@@ -215,8 +204,11 @@ public class CreateProject {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	private static boolean _verifySourceFolder(String moduleName) {
-		File folder = new File(_portalDir + "/" + moduleName + "/src");
+	private static boolean _verifySourceFolder(
+		ProjectInfo projectInfo, String moduleName) {
+
+		File folder =
+			new File(projectInfo.getPortalDir() + "/" + moduleName + "/src");
 
 		if(folder.exists()) {
 			File[] listOfFiles = folder.listFiles();
@@ -233,10 +225,38 @@ public class CreateProject {
 		return true;
 	}
 
-	private static String[] _modules;
-	private static String _portalDir;
-	private static String _projectName;
-	private static String[] _tests;
-	private static Document _document;
+	private static class ProjectInfo {
+		private ProjectInfo(String[] projectInfo) {
+			_projectName = projectInfo[0];
 
+			_portalDir = projectInfo[1];
+
+			_modules = _reorderModules(projectInfo[2], _portalDir);
+
+			_tests = _reorderModules(projectInfo[3], _portalDir);
+		}
+
+		public String[] getModules() {
+			return _modules;
+		}
+
+		public String getPortalDir() {
+			return _portalDir;
+		}
+
+		public String getProjectName() {
+			return _projectName;
+		}
+
+		public String[] getTests() {
+			return _tests;
+		}
+
+		private final String[] _modules;
+		private final String _portalDir;
+		private final String _projectName;
+		private final String[] _tests;
+	}
+
+	private static Document _document;
 }
