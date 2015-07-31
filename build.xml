@@ -152,7 +152,7 @@
 
 				<if>
 					<not>
-						<contains string="${exclude-modules}" substring="${src.dir.name}" />
+						<contains string="${exclude.modules}" substring="${src.dir.name}" />
 					</not>
 					<then>
 						<append-source-list
@@ -179,7 +179,7 @@
 
 				<if>
 					<not>
-						<contains string="${exclude-modules}" substring="${src.dir.name}" />
+						<contains string="${exclude.modules}" substring="${src.dir.name}" />
 					</not>
 					<then>
 						<append-source-list
