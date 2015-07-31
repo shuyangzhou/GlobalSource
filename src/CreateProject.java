@@ -16,31 +16,36 @@ import org.w3c.dom.Element;
 
 public class CreateProject {
 
-	public static void createConfiguration(Element projectElement) {
-		Element configurationElement = document.createElement("configuration");
+	private static void _createConfiguration(
+		Element projectElement, ProjectInfo projectInfo) {
+
+		Element configurationElement = _document.createElement("configuration");
 
 		projectElement.appendChild(configurationElement);
 
-		createData(configurationElement);
+		_createData(configurationElement, projectInfo);
 
-		createLibraries(configurationElement);
+		_createLibraries(configurationElement);
 	}
 
-	public static void createData(Element configurationElement) {
-		Element dataElement = document.createElement("data");
+	private static void _createData(
+		Element configurationElement, ProjectInfo projectInfo) {
+
+		Element dataElement = _document.createElement("data");
 
 		dataElement.setAttribute(
 			"xmlns", "http://www.netbeans.org/ns/j2se-project/3");
 
 		configurationElement.appendChild(dataElement);
 
-		Element nameElement = document.createElement("name");
+		Element nameElement = _document.createElement("name");
 
-		nameElement.appendChild(document.createTextNode(_projectName));
+		nameElement.appendChild(
+			_document.createTextNode(projectInfo.getProjectName()));
 
 		dataElement.appendChild(nameElement);
 
-		Element sourceRootsElement = document.createElement("source-roots");
+		Element sourceRootsElement = _document.createElement("source-roots");
 
 		dataElement.appendChild(sourceRootsElement);
 
@@ -48,9 +53,10 @@ public class CreateProject {
 
 		String relativePath = "";
 
-		for (String module : _modules) {
-			if(module.startsWith(_portalDir)) {
-				relativePath = module.substring(_portalDir.length()+1);
+		for (String module : projectInfo.getModules()) {
+			if(module.startsWith(projectInfo.getPortalDir())) {
+				relativePath =
+					module.substring(projectInfo.getPortalDir().length()+1);
 			}
 			else {
 				relativePath = module;
@@ -60,20 +66,21 @@ public class CreateProject {
 
 			moduleName = moduleSplit[moduleSplit.length - 1];
 
-			if(verifySourceFolder(moduleName)) {
-				createRoots(
+			if(_verifySourceFolder(projectInfo, moduleName)) {
+				_createRoots(
 					sourceRootsElement, "src." + moduleName + ".dir",
 					relativePath);
 			}
 		}
 
-		Element testRootsElement = document.createElement("test-roots");
+		Element testRootsElement = _document.createElement("test-roots");
 
 		dataElement.appendChild(testRootsElement);
 
-		for (String test : _tests) {
-			if(test.startsWith(_portalDir)) {
-				relativePath = test.substring(_portalDir.length() + 1);
+		for (String test : projectInfo.getTests()) {
+			if(test.startsWith(projectInfo.getPortalDir())) {
+				relativePath =
+					test.substring(projectInfo.getPortalDir().length() + 1);
 			}
 			else {
 				relativePath = test;
@@ -83,49 +90,49 @@ public class CreateProject {
 
 			String testName = testSplit[testSplit.length - 1];
 
-			createRoots(
+			_createRoots(
 				testRootsElement, "test." + testName + ".dir", relativePath);
 		}
 	}
 
-	public static void createLibraries(Element configurationElement) {
-		Element librariesElement = document.createElement("libraries");
+	private static void _createLibraries(Element configurationElement) {
+		Element librariesElement = _document.createElement("libraries");
 
 		librariesElement.setAttribute(
 			"xmlns", "http://www.netbeans.org/ns/ant-project-libraries/1");
 
 		configurationElement.appendChild(librariesElement);
 
-		Element definitionsElement = document.createElement("definitions");
+		Element definitionsElement = _document.createElement("definitions");
 
 		definitionsElement.appendChild(
-			document.createTextNode("./lib/nblibraries.properties"));
+			_document.createTextNode("./lib/nblibraries.properties"));
 
 		librariesElement.appendChild(definitionsElement);
 	}
 
-	public static void createProjectElement() {
-		Element projectElement = document.createElement("project");
+	private static void _createProjectElement(ProjectInfo projectInfo) {
+		Element projectElement = _document.createElement("project");
 
 		projectElement.setAttribute(
 			"xmlns", "http://www.netbeans.org/ns/project/1");
 
-		document.appendChild(projectElement);
+		_document.appendChild(projectElement);
 
-		Element typeElement = document.createElement("type");
+		Element typeElement = _document.createElement("type");
 
 		typeElement.appendChild(
-			document.createTextNode("org.netbeans.modules.java.j2seproject"));
+			_document.createTextNode("org.netbeans.modules.java.j2seproject"));
 
 		projectElement.appendChild(typeElement);
 
-		createConfiguration(projectElement);
+		_createConfiguration(projectElement, projectInfo);
 	}
 
-	public static void createRoots(
+	private static void _createRoots(
 		Element sourceRootsElement, String module, String moduleName) {
 
-		Element rootElement = document.createElement("root");
+		Element rootElement = _document.createElement("root");
 
 		rootElement.setAttribute("id", module);
 
@@ -135,57 +142,48 @@ public class CreateProject {
 	}
 
 	public static void main(String[] args) throws Exception {
-		parseArgument(args);
-
-		DocumentBuilderFactory documentBuilderFactory =
-			DocumentBuilderFactory.newInstance();
-
-		DocumentBuilder documentBuilder =
-			documentBuilderFactory.newDocumentBuilder();
-
-		document = documentBuilder.newDocument();
-
-		createProjectElement();
-
-		TransformerFactory transformerFactory =
-			TransformerFactory.newInstance();
-
-		Transformer transformer = transformerFactory.newTransformer();
-
-		DOMSource source = new DOMSource(document);
-
-		StreamResult streamResult;
-
-		streamResult =
-			new StreamResult(new File("portal/nbproject/project.xml"));
-
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty(
-			"{http://xml.apache.org/xslt}indent-amount", "4");
-		transformer.transform(source, streamResult);
-	}
-
-	public static void parseArgument(String[] args) {
-		try {
-			_projectName = args[0];
-
-			_portalDir = args[1];
-
-			_modules = reorderModules(args[2], _portalDir);
-
-			_tests = reorderModules(args[3], _portalDir);
+		if(args.length != 4) {
+			throw new IllegalArgumentException(
+				"Incorrect Number of arguments");
 		}
-		catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println(
-				"Insufficient number of inputs, please use the following " +
-					"order of inputs: Project Name, module list, test list, " +
-						"path list, portal directory");
+		else {
+			ProjectInfo projectInfo =
+				new ProjectInfo(
+					args[0], args[1], _reorderModules(args[2],args[1]),
+					_reorderModules(args[3],args[1]));
 
-			System.exit(1);
+			DocumentBuilderFactory documentBuilderFactory =
+				DocumentBuilderFactory.newInstance();
+
+			DocumentBuilder documentBuilder =
+				documentBuilderFactory.newDocumentBuilder();
+
+			_document = documentBuilder.newDocument();
+
+			_createProjectElement(projectInfo);
+
+			TransformerFactory transformerFactory =
+				TransformerFactory.newInstance();
+
+			Transformer transformer = transformerFactory.newTransformer();
+
+			DOMSource source = new DOMSource(_document);
+
+			StreamResult streamResult;
+
+			streamResult =
+				new StreamResult(new File("portal/nbproject/project.xml"));
+
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(
+				"{http://xml.apache.org/xslt}indent-amount", "4");
+			transformer.transform(source, streamResult);
 		}
 	}
 
-	public static String[] reorderModules(String originalOrder, String portalDir) {
+	private static String[] _reorderModules(
+		String originalOrder, String portalDir) {
+
 		String[] modules = originalOrder.split(",");
 
 		int i = 0;
@@ -215,8 +213,11 @@ public class CreateProject {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	public static boolean verifySourceFolder(String moduleName) {
-		File folder = new File(_portalDir + "/" + moduleName + "/src");
+	private static boolean _verifySourceFolder(
+		ProjectInfo projectInfo, String moduleName) {
+
+		File folder =
+			new File(projectInfo.getPortalDir() + "/" + moduleName + "/src");
 
 		if(folder.exists()) {
 			File[] listOfFiles = folder.listFiles();
@@ -233,10 +234,41 @@ public class CreateProject {
 		return true;
 	}
 
-	private static String[] _modules;
-	private static String _portalDir;
-	private static String _projectName;
-	private static String[] _tests;
-	private static Document document;
+	private static class ProjectInfo {
+		private ProjectInfo(
+			String projectName, String portalDir,String[] modules,
+			String[] tests) {
 
+			_projectName = projectName;
+
+			_portalDir = portalDir;
+
+			_modules = modules;
+
+			_tests = tests;
+		}
+
+		public String[] getModules() {
+			return _modules;
+		}
+
+		public String getPortalDir() {
+			return _portalDir;
+		}
+
+		public String getProjectName() {
+			return _projectName;
+		}
+
+		public String[] getTests() {
+			return _tests;
+		}
+
+		private final String[] _modules;
+		private final String _portalDir;
+		private final String _projectName;
+		private final String[] _tests;
+	}
+
+	private static Document _document;
 }
