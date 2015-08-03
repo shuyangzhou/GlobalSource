@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="Liferay-Source-Netbeans-Project" default="build" basedir=".">
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
 
+	<property name="ivy.home" value="${portal.dir}/.ivy" />
 	<property name="project.dir" value="${basedir}/portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
@@ -96,6 +97,27 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="resolve-ivy-dependency">
+		<attribute name="module" />
+		<sequential>
+			<dirname property="src.dir" file="@{module}" />
+
+			<if>
+				<available file="${src.dir}/ivy.xml" />
+				<then>
+					<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+
+					<ivy:resolve
+						conf="default,internal,provided"
+						file="${src.dir}/ivy.xml"
+						haltonfailure="false"
+						transitive="true"
+					/>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="set-module-source-directory">
 		<attribute name="module" />
 
@@ -160,6 +182,8 @@
 							list="module.list"
 							type="src"
 						/>
+
+						<resolve-ivy-dependency module="@{test.module}" />
 					</then>
 				</if>
 			</sequential>
@@ -187,6 +211,8 @@
 							list="test.list"
 							type="test"
 						/>
+
+						<resolve-ivy-dependency module="@{test.module}" />
 					</then>
 				</if>
 			</sequential>
@@ -201,6 +227,7 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 		<path id="lib-jars">
 			<fileset dir="${portal.dir}/lib" includes="**/*.jar" />
+			<fileset dir="${portal.dir}/.ivy" includes="**/*.jar" />
 		</path>
 
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="${basedir}/classes/">
