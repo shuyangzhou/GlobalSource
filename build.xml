@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="Liferay-Source-Netbeans-Project" default="build" basedir=".">
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
 
+	<property name="ivy.home" value="${portal.dir}/.ivy" />
 	<property name="project.dir" value="${basedir}/portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
@@ -96,6 +97,34 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="resolve-ivy-dependency">
+		<attribute name="module" />
+		<sequential>
+			<dirname property="src.dir" file="@{module}" />
+
+			<if>
+				<available file="${src.dir}/ivy.xml" />
+				<then>
+					<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+
+					<ivy:resolve
+						conf="default,internal,provided"
+						file="${src.dir}/ivy.xml"
+						haltonfailure="false"
+						transitive="true"
+					/>
+
+					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}" xsl="false" graph="false" xml="true" />
+
+					<java classname="com.liferay.netbeansproject.IvyReportParser" classpath="${basedir}/classes/">
+						<arg value="${basedir}/${ivy.reports.dir}/${src.dir.name}" />
+						<arg value="${ivy.dependency.list}" />
+					</java>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="set-module-source-directory">
 		<attribute name="module" />
 
@@ -131,6 +160,8 @@
 			includeantruntime="false"
 		/>
 
+		<touch file="${ivy.dependency.list}" />
+
 		<unzip src="${project.dir}/CleanProject.zip" dest="${project.dir}/" />
 
 		<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
@@ -160,6 +191,8 @@
 							list="module.list"
 							type="src"
 						/>
+
+						<resolve-ivy-dependency module="@{module}" />
 					</then>
 				</if>
 			</sequential>
@@ -187,6 +220,8 @@
 							list="test.list"
 							type="test"
 						/>
+
+						<resolve-ivy-dependency module="@{test.module}" />
 					</then>
 				</if>
 			</sequential>
@@ -203,6 +238,8 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 			<fileset dir="${portal.dir}/lib" includes="**/*.jar" />
 		</path>
 
+		<loadfile property="ivy-dependencies-list" srcFile="${ivy.dependency.list}" />
+
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="${basedir}/classes/">
 			<arg value="${project.name}" />
 			<arg value="${portal.dir}" />
@@ -214,6 +251,9 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 	<target name="clean">
 		<delete dir="classes" />
+		<delete dir="${ivy.reports.dir}" />
 		<delete dir="${project.dir}/nbproject" />
+
+		<delete file="${ivy.dependency.list}" />
 	</target>
 </project>
