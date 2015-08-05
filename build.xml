@@ -113,6 +113,13 @@
 						haltonfailure="false"
 						transitive="true"
 					/>
+
+					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}" xsl="false" graph="false" xml="true" />
+
+					<java classname="com.liferay.netbeansproject.IvyReportParser" classpath="${basedir}/classes/">
+						<arg value="${basedir}/${ivy.reports.dir}/${src.dir.name}" />
+						<arg value="${ivy.dependency.list}" />
+					</java>
 				</then>
 			</if>
 		</sequential>
@@ -152,6 +159,8 @@
 			destdir="${basedir}/classes"
 			includeantruntime="false"
 		/>
+
+		<touch file="${ivy.dependency.list}" />
 
 		<unzip src="${project.dir}/CleanProject.zip" dest="${project.dir}/" />
 
@@ -229,6 +238,8 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 			<fileset dir="${portal.dir}/lib" includes="**/*.jar" />
 		</path>
 
+		<loadfile property="ivy-dependencies-list" srcFile="${ivy.dependency.list}" />
+
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="${basedir}/classes/">
 			<arg value="${project.name}" />
 			<arg value="${portal.dir}" />
@@ -240,6 +251,9 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 	<target name="clean">
 		<delete dir="classes" />
+		<delete dir="${ivy.reports.dir}" />
 		<delete dir="${project.dir}/nbproject" />
+
+		<delete file="${ivy.dependency.list}" />
 	</target>
 </project>
