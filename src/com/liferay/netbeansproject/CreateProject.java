@@ -68,7 +68,7 @@ public class CreateProject {
 
 			moduleName = moduleSplit[moduleSplit.length - 1];
 
-			if(_verifySourceFolder(projectInfo, moduleName)) {
+			if(_verifySourceFolder(module)) {
 				_createRoots(
 					sourceRootsElement, "src." + moduleName + ".dir",
 					relativePath);
@@ -216,14 +216,16 @@ public class CreateProject {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	private static boolean _verifySourceFolder(
-		ProjectInfo projectInfo, String moduleName) {
-
+	private static boolean _verifySourceFolder(String module) {
 		File folder =
-			new File(projectInfo.getPortalDir() + "/" + moduleName + "/src");
+			new File(module + "/src");
 
 		if(folder.exists()) {
 			File[] listOfFiles = folder.listFiles();
+
+			if(listOfFiles.length == 0) {
+				return false;
+			}
 
 			if(listOfFiles.length == 1) {
 				String fileName = listOfFiles[0].getName();
