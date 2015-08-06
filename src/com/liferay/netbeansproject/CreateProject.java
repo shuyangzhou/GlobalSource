@@ -18,6 +18,47 @@ import org.w3c.dom.Element;
 
 public class CreateProject {
 
+	public static void main(String[] args) throws Exception {
+		if(args.length != 5) {
+			throw new IllegalArgumentException(
+				"Incorrect Number of arguments");
+		}
+
+		AppendLibJars.appendJars(args[4].split(File.pathSeparator));
+
+		ProjectInfo projectInfo =
+			new ProjectInfo(
+				args[0], args[1], _reorderModules(args[2],args[1]),
+				_reorderModules(args[3],args[1]));
+
+		DocumentBuilderFactory documentBuilderFactory =
+			DocumentBuilderFactory.newInstance();
+
+		DocumentBuilder documentBuilder =
+			documentBuilderFactory.newDocumentBuilder();
+
+		_document = documentBuilder.newDocument();
+
+		_createProjectElement(projectInfo);
+
+		TransformerFactory transformerFactory =
+			TransformerFactory.newInstance();
+
+		Transformer transformer = transformerFactory.newTransformer();
+
+		DOMSource source = new DOMSource(_document);
+
+		StreamResult streamResult;
+
+		streamResult =
+			new StreamResult(new File("portal/nbproject/project.xml"));
+
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(
+			"{http://xml.apache.org/xslt}indent-amount", "4");
+		transformer.transform(source, streamResult);
+	}
+
 	private static void _createConfiguration(
 		Element projectElement, ProjectInfo projectInfo) {
 
@@ -141,47 +182,6 @@ public class CreateProject {
 		rootElement.setAttribute("name", moduleName);
 
 		sourceRootsElement.appendChild(rootElement);
-	}
-
-	public static void main(String[] args) throws Exception {
-		if(args.length != 5) {
-			throw new IllegalArgumentException(
-				"Incorrect Number of arguments");
-		}
-
-		AppendLibJars.appendJars(args[4].split(File.pathSeparator));
-
-		ProjectInfo projectInfo =
-			new ProjectInfo(
-				args[0], args[1], _reorderModules(args[2],args[1]),
-				_reorderModules(args[3],args[1]));
-
-		DocumentBuilderFactory documentBuilderFactory =
-			DocumentBuilderFactory.newInstance();
-
-		DocumentBuilder documentBuilder =
-			documentBuilderFactory.newDocumentBuilder();
-
-		_document = documentBuilder.newDocument();
-
-		_createProjectElement(projectInfo);
-
-		TransformerFactory transformerFactory =
-			TransformerFactory.newInstance();
-
-		Transformer transformer = transformerFactory.newTransformer();
-
-		DOMSource source = new DOMSource(_document);
-
-		StreamResult streamResult;
-
-		streamResult =
-			new StreamResult(new File("portal/nbproject/project.xml"));
-
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty(
-			"{http://xml.apache.org/xslt}indent-amount", "4");
-		transformer.transform(source, streamResult);
 	}
 
 	private static String[] _reorderModules(
