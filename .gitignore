@@ -4,4 +4,7 @@ nbproject/build-impl.xml
 nbproject/genfiles.properties
 nbproject/private
 
-/portal/nbproject/private/
+classes/
+ivy-reports/
+portal/ivy
+portal/nbproject/private/
