@@ -109,7 +109,15 @@
 			<if>
 				<available file="${src.dir}/ivy.xml" />
 				<then>
-					<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+					<if>
+						<available file="${src.dir}/ivy-settings.xml" />
+						<then>
+							<ivy:settings file="${src.dir}/ivy-settings.xml" />
+						</then>
+						<else>
+							<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+						</else>
+					</if>
 
 					<ivy:resolve
 						conf="default,internal,provided"
