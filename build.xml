@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="Liferay-Source-Netbeans-Project" default="build" basedir=".">
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
 
+	<property name="ivy.home" value="${portal.dir}/.ivy" />
 	<property name="project.dir" value="${basedir}/portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
@@ -12,7 +13,12 @@
 	<property name="path.list" value="" />
 	<property name="test.list" value="" />
 
+	<path id="ivy.lib.path">
+		<fileset dir="lib" includes="ivy*.jar" />
+	</path>
+
 	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
 
 	<macrodef name="append-list">
 		<attribute name="list" />
@@ -96,6 +102,30 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="resolve-ivy-dependency">
+		<attribute name="module" />
+		<sequential>
+			<dirname property="src.dir" file="@{module}" />
+
+			<if>
+				<available file="${src.dir}/ivy.xml" />
+				<then>
+					<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+
+					<ivy:resolve
+						conf="default,internal,provided"
+						file="${src.dir}/ivy.xml"
+						haltonfailure="false"
+						log="quiet"
+						transitive="true"
+					/>
+
+					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}" xsl="false" graph="false" xml="true" />
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="set-module-source-directory">
 		<attribute name="module" />
 
@@ -160,6 +190,8 @@
 							list="module.list"
 							type="src"
 						/>
+
+						<resolve-ivy-dependency module="@{module}" />
 					</then>
 				</if>
 			</sequential>
@@ -187,6 +219,8 @@
 							list="test.list"
 							type="test"
 						/>
+
+						<resolve-ivy-dependency module="@{test.module}" />
 					</then>
 				</if>
 			</sequential>
