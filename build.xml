@@ -42,58 +42,53 @@
 		<attribute name="type" />
 
 		<sequential>
-			<if>
-				<available file="${src.dir}/build.xml" />
-				<then>
-					<var name="path.list" value="${path.list},${src.dir}" />
 
+			<var name="path.list" value="${path.list},${src.dir}" />
+
+			<if>
+				<equals arg1="@{type}" arg2="test" />
+				<then>
 					<if>
-						<equals arg1="@{type}" arg2="test" />
+						<available file="@{module}/unit" type="dir" />
 						<then>
-							<if>
-								<available file="@{module}/unit" type="dir" />
-								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
+							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}/unit
 @{type}.${src.dir.name}-unit.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
-								<append-list
-									list="@{list}"
-									src.dir.name="${src.dir}-unit"
-								/>
+						<append-list
+							list="@{list}"
+							src.dir.name="${src.dir}-unit"
+						/>
 
-								</then>
-							</if>
-							<if>
-								<available file="@{module}/integration" type="dir" />
-								<then>
-									<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}.integration=@{module}/integration
+						</then>
+					</if>
+					<if>
+						<available file="@{module}/integration" type="dir" />
+						<then>
+							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}.integration=@{module}/integration
 @{type}.${src.dir.name}-integration.dir=$${file.reference.${src.dir.name}.@{type}.integration}
 
 </concat>
 
-								<append-list
-									list="@{list}"
-									src.dir.name="${src.dir}-integration"
-								/>
+						<append-list
+							list="@{list}"
+							src.dir.name="${src.dir}-integration"
+						/>
 
-								</then>
-							</if>
 						</then>
-						<else>
-							<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}
+					</if>
+				</then>
+				<else>
+					<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.${src.dir.name}.@{type}=@{module}
 @{type}.${src.dir.name}.dir=$${file.reference.${src.dir.name}.@{type}}
 
 </concat>
 
-							<append-list
-								list="@{list}"
-								src.dir.name="${src.dir}"
-							/>
-						</else>
-					</if>
-
-				</then>
+					<append-list
+						list="@{list}"
+						src.dir.name="${src.dir}"
+					/>
+				</else>
 			</if>
 
 			<var name="src.dir" unset="true" />
@@ -192,9 +187,12 @@
 				<set-module-source-directory module="@{module}" />
 
 				<if>
-					<not>
-						<contains string="${exclude.modules}" substring="${src.dir.name}" />
-					</not>
+					<and>
+						<not>
+							<contains string="${exclude.modules}" substring="${src.dir.name}" />
+						</not>
+						<available file="${src.dir}/build.xml" />
+					</and>
 					<then>
 						<append-source-list
 							module="@{module}"
@@ -221,9 +219,12 @@
 				<set-module-source-directory module="@{test.module}" />
 
 				<if>
-					<not>
-						<contains string="${exclude.modules}" substring="${src.dir.name}" />
-					</not>
+					<and>
+						<not>
+							<contains string="${exclude.modules}" substring="${src.dir.name}" />
+						</not>
+						<available file="${src.dir}/build.xml" />
+					</and>
 					<then>
 						<append-source-list
 							module="@{test.module}"
