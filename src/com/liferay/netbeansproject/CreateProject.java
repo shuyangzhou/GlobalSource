@@ -24,12 +24,14 @@ public class CreateProject {
 				"Incorrect Number of arguments");
 		}
 
-		AppendLibJars.appendJars(args[4].split(File.pathSeparator));
-
 		ProjectInfo projectInfo =
 			new ProjectInfo(
 				args[0], args[1], _reorderModules(args[2],args[1]),
 				_reorderModules(args[3],args[1]));
+
+		String libList = _buildLibList(projectInfo, args[4]);
+
+		AppendLibJars.appendJars(libList.split(File.pathSeparator));
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -57,6 +59,20 @@ public class CreateProject {
 		transformer.setOutputProperty(
 			"{http://xml.apache.org/xslt}indent-amount", "4");
 		transformer.transform(source, streamResult);
+	}
+
+	private static String _buildLibList(
+		ProjectInfo projectInfo, String portalJars) throws Exception {
+
+		StringBuilder sb = new StringBuilder(portalJars + ":");
+
+		for(String modulePath : projectInfo.getModules()) {
+			sb.append(IvyReportParser.parseIvyReport(modulePath));
+		}
+
+		sb.setLength(sb.length() - 1);
+
+		return sb.toString();
 	}
 
 	private static void _createConfiguration(
