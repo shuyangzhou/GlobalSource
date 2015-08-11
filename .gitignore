@@ -1,10 +1,10 @@
-build-ext.properties
+java-application-project/build-ext.properties
 
-nbproject/build-impl.xml
-nbproject/genfiles.properties
-nbproject/private
+java-application-project/nbproject/build-impl.xml
+java-application-project/nbproject/genfiles.properties
+java-application-project/nbproject/private
 
-classes/
-ivy-reports/
-portal/ivy
-portal/nbproject/private/
+java-application-project/classes/
+java-application-project/ivy-reports/
+java-application-project/portal/ivy
+java-application-project/portal/nbproject/private/
