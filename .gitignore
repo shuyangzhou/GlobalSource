@@ -8,3 +8,6 @@ java-application-project/classes/
 java-application-project/ivy-reports/
 java-application-project/portal/ivy
 java-application-project/portal/nbproject/private/
+
+java-maven-project/classes/
+java-maven-project/portal/
