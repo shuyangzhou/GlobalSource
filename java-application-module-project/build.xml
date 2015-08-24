@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+	<property file="build-ext.properties" />
+	<property file="build.properties" />
+
+	<property name="project.dir" value="portal" />
+	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
+
+	<property name="module.list" value="" />
+	<property name="path.list" value="" />
+
+	<path id="ivy.lib.path">
+		<fileset dir="lib" includes="ivy*.jar" />
+	</path>
+
+	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
+
+	<macrodef name="append-list">
+		<attribute name="list" />
+		<attribute name="src.dir.name" />
+
+		<sequential>
+			<if>
+				<equals arg1="${@{list}}" arg2="" />
+				<then>
+					<var name="@{list}" value="@{src.dir.name}" />
+				</then>
+				<else>
+					<var name="@{list}" value="${@{list}},@{src.dir.name}" />
+				</else>
+			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="append-module">
+		<attribute name="src.dir" />
+		<attribute name="src.dir.name" />
+
+		<sequential>
+			<var name="path.list" value="${path.list}:@{src.dir}" />
+
+			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=modules/@{src.dir.name}
+reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
+</concat>
+			<append-list
+				list="module.list"
+				src.dir.name="${src.dir}"
+			/>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="append-module-properties">
+		<attribute name="src.dir" />
+		<attribute name="src.dir.name" />
+
+		<sequential>
+			<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">excludes=${exclude.types}
+application.title=@{src.dir}
+dist.jar=$${dist.dir}/@{src.dir.name}.jar
+file.reference.@{src.dir.name}-src=@{src.dir}/src
+src.dir=$${file.reference.@{src.dir.name}-src}
+</concat>
+			<if>
+				<available file="@{src.dir}/test/unit" type="dir" />
+				<then>
+					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+test.unit.dir=$${file.reference.test-unit}
+</concat>
+				</then>
+				<else>
+					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+test.unit.dir=
+</concat>
+				</else>
+			</if>
+			<if>
+				<available file="@{src.dir}/test/integration" type="dir" />
+				<then>
+					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-integration=@{src.dir}/test/integration
+test.integration.dir=$${file.reference.test-integration}
+</concat>
+				</then>
+				<else>
+					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+test.integration.dir=
+</concat>
+				</else>
+			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="resolve-ivy-dependency">
+		<attribute name="module" />
+
+		<sequential>
+			<dirname property="src.dir" file="@{module}" />
+
+			<if>
+				<available file="${src.dir}/ivy.xml" />
+				<then>
+					<if>
+						<available file="${src.dir}/ivy-settings.xml" />
+						<then>
+							<ivy:settings file="${src.dir}/ivy-settings.xml" id="ivy.resolve.settings" />
+
+							<ivy:resolve
+								conf="default,internal,provided,test"
+								file="${src.dir}/ivy.xml"
+								haltonfailure="false"
+								log="quiet"
+								settingsref="ivy.resolve.settings"
+								transitive="true"
+							/>
+						</then>
+						<else>
+							<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+
+							<ivy:resolve
+								conf="default,internal,provided,test"
+								file="${src.dir}/ivy.xml"
+								haltonfailure="false"
+								log="quiet"
+								transitive="true"
+							/>
+						</else>
+					</if>
+
+					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}-[conf].xml" xsl="false" graph="false" xml="true" conf="default,internal,provided,test"/>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="set-module-source-directory">
+		<attribute name="module" />
+
+		<sequential>
+			<dirname property="src.dir" file="@{module}" />
+
+			<basename property="src.dir.name" file="${src.dir}" />
+
+			<if>
+				<equals arg1="${src.dir.name}" arg2="WEB-INF" />
+				<then>
+					<dirname property="temp" file="${src.dir}" />
+
+					<var name="src.dir" unset="true" />
+
+					<dirname property="src.dir" file="${temp}" />
+
+					<var name="temp" unset="true" />
+					<var name="src.dir.name" unset="true" />
+
+					<basename property="src.dir.name" file="${src.dir}" />
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
+	<target name="build" depends="clean">
+		<mkdir dir="classes" />
+
+		<javac
+			srcdir="src"
+			destdir="classes"
+			includeantruntime="false"
+		/>
+
+		<unzip src="${project.dir}/CleanProject.zip" dest="${project.dir}/" />
+
+		<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
+
+		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
+</concat>
+
+		<copy todir="${ivy.home}">
+			<fileset dir="${portal.dir}/.ivy" />
+		</copy>
+
+		<for param="module">
+			<path>
+				<dirset dir="${portal.dir}">
+					<include name="**/src"/>
+				</dirset>
+			</path>
+
+			<sequential>
+				<local name="src.dir" />
+				<local name="src.dir.name" />
+
+				<set-module-source-directory module="@{module}" />
+
+				<if>
+					<and>
+						<not>
+							<contains string="${exclude.modules}" substring="${src.dir.name}" />
+						</not>
+						<available file="${src.dir}/build.xml" />
+					</and>
+					<then>
+						<append-module
+							src.dir="${src.dir}"
+							src.dir.name="${src.dir.name}"
+						/>
+
+						<unzip src="${project.dir}/CleanModule.zip" dest="${project.dir}/modules/${src.dir.name}/" />
+
+						<append-module-properties
+							src.dir="${src.dir}"
+							src.dir.name="${src.dir.name}"
+						/>
+
+						<resolve-ivy-dependency module="@{module}" />
+					</then>
+				</if>
+			</sequential>
+		</for>
+
+		<for param="module">
+			<path>
+				<dirset dir="${portal.dir}">
+					<include name="**/src"/>
+				</dirset>
+			</path>
+
+			<sequential>
+				<local name="src.dir" />
+				<local name="src.dir.name" />
+
+				<set-module-source-directory module="@{module}" />
+
+				<if>
+					<and>
+						<not>
+							<contains string="${exclude.modules}" substring="${src.dir.name}" />
+						</not>
+						<available file="${src.dir}/build.xml" />
+					</and>
+					<then>
+						<property file="project-dependency.properties" prefix="dependencies." />
+						<property file="jar-dependency.properties" prefix="jar." />
+
+						<local name="project.dependencies" />
+						<local name="jar.dependencies" />
+
+						<if>
+							<isset property="dependencies.${src.dir.name}" />
+							<then>
+								<propertycopy name="project.dependencies" from="dependencies.${src.dir.name}" override="true" />
+							</then>
+							<else>
+								<property name="project.dependencies" value="${portal.module.dependencies}" />
+							</else>
+						</if>
+
+						<if>
+							<isset property="jar.${src.dir.name}" />
+							<then>
+								<propertycopy name="jar.dependencies" from="jar.${src.dir.name}" override="true" />
+							</then>
+							<else>
+								<property name="jar.dependencies" value="" />
+							</else>
+						</if>
+
+						<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes">
+							<arg value="${src.dir.name}" />
+							<arg value="${portal.dir}" />
+							<arg value="${src.dir}" />
+							<arg value="${project.dependencies}" />
+							<arg value="${jar.dependencies}" />
+							<arg value="${module.list}" />
+						</java>
+					</then>
+				</if>
+			</sequential>
+		</for>
+
+		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=${portal.dir}/portal-web/docroot
+src.portal-web.dir=$${file.reference.portal-web.src}
+</concat>
+
+		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
+			<arg value="${project.name}" />
+			<arg value="${portal.dir}" />
+			<arg value="${module.list}" />
+			<arg value="${umbrella.source.list}" />
+		</java>
+	</target>
+
+	<target name="clean">
+		<delete dir="classes" />
+		<delete dir="${ivy.home}" />
+		<delete dir="${project.dir}/nbproject" />
+		<delete dir="${project.dir}/modules" />
+		<delete dir="ivy-reports/" />
+	</target>
+</project>
