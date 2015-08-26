@@ -1,6 +1,8 @@
 package com.liferay.netbeansproject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,7 +39,13 @@ public class IvyReportParser {
 		DocumentBuilder documentBuilder =
 			documentBuilderFactory.newDocumentBuilder();
 
-		File reportFile = new File("ivy-reports/" + fileName);
+		Properties properties = new Properties();
+
+		properties.load(new FileInputStream("build.properties"));
+
+		File reportFile =
+			new File(
+				properties.getProperty("ivy.reports.dir") + "/" + fileName);
 
 		if (!reportFile.exists()) {
 			return "";
