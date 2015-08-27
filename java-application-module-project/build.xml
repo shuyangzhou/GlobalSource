@@ -251,7 +251,7 @@ test.integration.dir=
 								<propertycopy name="project.dependencies" from="dependencies.${src.dir.name}" override="true" />
 							</then>
 							<else>
-								<property name="project.dependencies" value="${portal.module.dependencies}" />
+								<property name="project.dependencies" value="${dependencies.portal.module.dependencies}" />
 							</else>
 						</if>
 
