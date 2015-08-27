@@ -248,7 +248,7 @@ public class CreateModule {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		_createRoots(sourceRootsElement, "src.dir");
+		_createRoots(sourceRootsElement, projectInfo.getFullPath(), "src.dir");
 
 		if (
 				projectInfo.getProjectName().equals("portal-impl") ||
@@ -259,9 +259,13 @@ public class CreateModule {
 
 		Element testRootsElement = _document.createElement("test-roots");
 
-		_createRoots(testRootsElement, "test.unit.dir");
+		if(new File(projectInfo.getFullPath() + "/test/unit").exists()) {
+			_createRoots(testRootsElement, "test.unit.dir");
+		}
 
-		_createRoots(testRootsElement, "test.integration.dir");
+		if(new File(projectInfo.getFullPath() + "/test/integration").exists()) {
+			_createRoots(testRootsElement, "test.integration.dir");
+		}
 
 		dataElement.appendChild(testRootsElement);
 	}
@@ -362,6 +366,18 @@ public class CreateModule {
 		Element rootElement = _document.createElement("root");
 
 		rootElement.setAttribute("id", rootId);
+
+		sourceRootsElement.appendChild(rootElement);
+	}
+
+	private static void _createRoots(
+		Element sourceRootsElement, String label, String rootId) {
+
+		Element rootElement = _document.createElement("root");
+
+		rootElement.setAttribute("id", rootId);
+
+		rootElement.setAttribute("name", label);
 
 		sourceRootsElement.appendChild(rootElement);
 	}
