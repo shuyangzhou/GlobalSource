@@ -239,16 +239,16 @@ test.integration.dir=
 						<available file="${src.dir}/build.xml" />
 					</and>
 					<then>
-						<property file="project-dependency.properties" prefix="dependencies." />
+						<property file="project-dependency.properties" />
 						<property file="jar-dependency.properties" prefix="jar." />
 
 						<local name="project.dependencies" />
 						<local name="jar.dependencies" />
 
 						<if>
-							<isset property="dependencies.${src.dir.name}" />
+							<isset property="${src.dir.name}" />
 							<then>
-								<propertycopy name="project.dependencies" from="dependencies.${src.dir.name}" override="true" />
+								<propertycopy name="project.dependencies" from="${src.dir.name}" override="true" />
 							</then>
 							<else>
 								<property name="project.dependencies" value="${portal.module.dependencies}" />
