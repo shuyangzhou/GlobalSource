@@ -3,6 +3,7 @@ package com.liferay.netbeansproject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+
 import org.apache.commons.lang3.StringUtils;
 public class ModuleBuildParser {
 
@@ -11,21 +12,20 @@ public class ModuleBuildParser {
 
 		StringBuilder sb = new StringBuilder();
 
-		if(gradleFile.exists()) {
+		if (gradleFile.exists()) {
 			try(BufferedReader br =
 				new BufferedReader(new FileReader(gradleFile))) {
 
 				String line = br.readLine();
 
-				while(line != null) {
+				while (line != null) {
 					line = line.trim();
 
-					if(line.startsWith("compile project")) {
+					if (line.startsWith("compile project")) {
 						String[] importSharedProject =
 							StringUtils.substringsBetween(line, "\"", "\"");
 
-						String[] split =
-							importSharedProject[0].split(":");
+						String[] split = importSharedProject[0].split(":");
 
 						String importSharedProjectName = split[split.length-1];
 
@@ -38,10 +38,11 @@ public class ModuleBuildParser {
 			}
 		}
 
-		if(sb.length() > 0) {
+		if (sb.length() > 0) {
 			sb.setLength(sb.length() - 1);
 		}
 
 		return sb.toString();
 	}
+
 }

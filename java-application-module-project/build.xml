@@ -98,7 +98,7 @@ test.integration.dir=
 			<dirname property="src.dir" file="@{module}" />
 
 			<if>
-				<available file="${src.dir}/ivy.xml" />
+				<available file="portal/modules/${src.dir.name}/ivy.xml" />
 				<then>
 					<if>
 						<available file="${src.dir}/ivy-settings.xml" />
@@ -107,7 +107,7 @@ test.integration.dir=
 
 							<ivy:resolve
 								conf="default,internal,provided,test"
-								file="${src.dir}/ivy.xml"
+								file="portal/modules/${src.dir.name}/ivy.xml"
 								haltonfailure="false"
 								log="quiet"
 								settingsref="ivy.resolve.settings"
@@ -119,7 +119,7 @@ test.integration.dir=
 
 							<ivy:resolve
 								conf="default,internal,provided,test"
-								file="${src.dir}/ivy.xml"
+								file="portal/modules/${src.dir.name}/ivy.xml"
 								haltonfailure="false"
 								log="quiet"
 								transitive="true"
@@ -176,10 +176,6 @@ test.integration.dir=
 		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
 </concat>
 
-		<!-- <copy todir="${ivy.home}">
-			<fileset dir="${portal.dir}/.ivy" />
-		</copy> -->
-
 		<for param="module">
 			<path>
 				<dirset dir="${portal.dir}">
@@ -212,6 +208,11 @@ test.integration.dir=
 							src.dir="${src.dir}"
 							src.dir.name="${src.dir.name}"
 						/>
+
+						<java classname="com.liferay.netbeansproject.GradleParser" classpath="classes" classpathref="project.lib.path">
+							<arg value="${src.dir}" />
+							<arg value="${src.dir.name}" />
+						</java>
 
 						<resolve-ivy-dependency module="@{module}" />
 					</then>
@@ -293,9 +294,8 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 	<target name="clean">
 		<delete dir="classes" />
-		<delete dir="${ivy.home}" />
 		<delete dir="${project.dir}/nbproject" />
 		<delete dir="${project.dir}/modules" />
-		<delete dir="ivy-reports/" />
+		<delete dir="${project.dir}/ivy-reports/" />
 	</target>
 </project>

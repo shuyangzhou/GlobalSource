@@ -3,6 +3,7 @@ package com.liferay.netbeansproject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -48,9 +49,8 @@ public class IvyReportParser {
 			properties.load(inputStream);
 		}
 
-		File reportFile =
-			new File(
-				properties.getProperty("ivy.reports.dir") + "/" + fileName);
+		File reportFile = new File(
+			properties.getProperty("ivy.reports.dir") + "/" + fileName);
 
 		if (!reportFile.exists()) {
 			return "";
