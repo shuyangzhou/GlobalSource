@@ -224,6 +224,16 @@ public class GradleParser {
 						ivyLine[1], ivyLine[0], ivyLine[2], transitive,
 							"test->default"));
 		}
+
+		// Special case for dynamic-data-mapping-form-values-query
+		if (line.startsWith("antlr group")) {
+			String[] ivyLine = StringUtils.substringsBetween(line, "\"", "\"");
+
+			ivyDependencyList.add(
+					new IvyDependency(
+						ivyLine[1], ivyLine[0], ivyLine[2], transitive,
+							"default"));
+		}
 	}
 
 	private static Document _document;
