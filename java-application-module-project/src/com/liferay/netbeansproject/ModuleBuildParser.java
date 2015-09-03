@@ -1,48 +1,46 @@
 package com.liferay.netbeansproject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
+import org.apache.commons.lang3.StringUtils;
 public class ModuleBuildParser {
 
 	public static String parseBuildFile(String modulePath) throws Exception {
-		DocumentBuilderFactory documentBuilderFactory =
-			DocumentBuilderFactory.newInstance();
-
-		DocumentBuilder documentBuilder =
-			documentBuilderFactory.newDocumentBuilder();
-
-		File buildFile = new File(modulePath + "/build.xml");
-
-		if (!buildFile.exists()) {
-			return "";
-		}
-
-		XPathFactory xPathFactory = XPathFactory.newInstance();
-
-		XPath xPath = xPathFactory.newXPath();
-
-		XPathExpression xPathExpression = xPath.compile(
-			"/project/property[@name=\"import.shared\"]/@value");
-
-		String importShared = xPathExpression.evaluate(
-			documentBuilder.parse(buildFile));
-
-		String[] importSharedSplit = importShared.split(",");
+		File gradleFile = new File(modulePath + "/build.gradle");
 
 		StringBuilder sb = new StringBuilder();
 
-		for (String module : importSharedSplit) {
-			String[] moduleSplit = module.split("/");
-			sb.append(moduleSplit[moduleSplit.length-1]);
-			sb.append(":");
+		if (gradleFile.exists()) {
+			try(BufferedReader br =
+				new BufferedReader(new FileReader(gradleFile))) {
+
+				String line = br.readLine();
+
+				while (line != null) {
+					line = line.trim();
+
+					if (line.startsWith("compile project")) {
+						String[] importSharedProject =
+							StringUtils.substringsBetween(line, "\"", "\"");
+
+						String[] split = importSharedProject[0].split(":");
+
+						String importSharedProjectName = split[split.length-1];
+
+						sb.append(importSharedProjectName);
+						sb.append(":");
+					}
+
+					line = br.readLine();
+				}
+			}
 		}
 
-		sb.setLength(sb.length() - 1);
+		if (sb.length() > 0) {
+			sb.setLength(sb.length() - 1);
+		}
 
 		return sb.toString();
 	}
