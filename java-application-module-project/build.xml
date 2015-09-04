@@ -10,12 +10,12 @@
 	<property name="module.list" value="" />
 	<property name="path.list" value="" />
 
-	<path id="ivy.lib.path">
-		<fileset dir="lib" includes="ivy*.jar" />
+	<path id="project.lib.path">
+		<fileset dir="lib" includes="*.jar" />
 	</path>
 
 	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
-	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
+	<taskdef classpathref="project.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
 
 	<macrodef name="append-list">
 		<attribute name="list" />
@@ -98,7 +98,7 @@ test.integration.dir=
 			<dirname property="src.dir" file="@{module}" />
 
 			<if>
-				<available file="${src.dir}/ivy.xml" />
+				<available file="portal/modules/${src.dir.name}/ivy.xml" />
 				<then>
 					<if>
 						<available file="${src.dir}/ivy-settings.xml" />
@@ -107,7 +107,7 @@ test.integration.dir=
 
 							<ivy:resolve
 								conf="default,internal,provided,test"
-								file="${src.dir}/ivy.xml"
+								file="portal/modules/${src.dir.name}/ivy.xml"
 								haltonfailure="false"
 								log="quiet"
 								settingsref="ivy.resolve.settings"
@@ -115,11 +115,11 @@ test.integration.dir=
 							/>
 						</then>
 						<else>
-							<ivy:settings file="${portal.dir}/ivy-settings.xml" />
+							<ivy:settings file="../ivy-settings.xml" />
 
 							<ivy:resolve
 								conf="default,internal,provided,test"
-								file="${src.dir}/ivy.xml"
+								file="portal/modules/${src.dir.name}/ivy.xml"
 								haltonfailure="false"
 								log="quiet"
 								transitive="true"
@@ -165,6 +165,7 @@ test.integration.dir=
 		<javac
 			srcdir="src"
 			destdir="classes"
+			classpathref="project.lib.path"
 			includeantruntime="false"
 		/>
 
@@ -174,10 +175,6 @@ test.integration.dir=
 
 		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
 </concat>
-
-		<copy todir="${ivy.home}">
-			<fileset dir="${portal.dir}/.ivy" />
-		</copy>
 
 		<for param="module">
 			<path>
@@ -211,6 +208,11 @@ test.integration.dir=
 							src.dir="${src.dir}"
 							src.dir.name="${src.dir.name}"
 						/>
+
+						<java classname="com.liferay.netbeansproject.GradleParser" classpath="classes" classpathref="project.lib.path">
+							<arg value="${src.dir}" />
+							<arg value="${src.dir.name}" />
+						</java>
 
 						<resolve-ivy-dependency module="@{module}" />
 					</then>
@@ -265,7 +267,7 @@ test.integration.dir=
 							</else>
 						</if>
 
-						<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes">
+						<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes" classpathref="project.lib.path">
 							<arg value="${src.dir.name}" />
 							<arg value="${portal.dir}" />
 							<arg value="${src.dir}" />
@@ -282,7 +284,7 @@ test.integration.dir=
 src.portal-web.dir=$${file.reference.portal-web.src}
 </concat>
 
-		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
+		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes" classpathref="project.lib.path">
 			<arg value="${project.name}" />
 			<arg value="${portal.dir}" />
 			<arg value="${module.list}" />
@@ -292,9 +294,8 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 
 	<target name="clean">
 		<delete dir="classes" />
-		<delete dir="${ivy.home}" />
 		<delete dir="${project.dir}/nbproject" />
 		<delete dir="${project.dir}/modules" />
-		<delete dir="ivy-reports/" />
+		<delete dir="${project.dir}/ivy-reports/" />
 	</target>
 </project>

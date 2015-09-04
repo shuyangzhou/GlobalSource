@@ -259,11 +259,13 @@ public class CreateModule {
 
 		Element testRootsElement = _document.createElement("test-roots");
 
-		if(new File(projectInfo.getFullPath() + "/test/unit").exists()) {
+		if (new File(projectInfo.getFullPath() + "/test/unit").exists()) {
 			_createRoots(testRootsElement, "test.unit.dir");
 		}
 
-		if(new File(projectInfo.getFullPath() + "/test/integration").exists()) {
+		if (new File(
+				projectInfo.getFullPath() + "/test/integration").exists()) {
+
 			_createRoots(testRootsElement, "test.integration.dir");
 		}
 
