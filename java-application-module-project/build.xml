@@ -176,10 +176,12 @@ test.integration.dir=
 		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
 </concat>
 
-		<mkdir dir="portal/ivy/cache" />
+		<mkdir dir="portal/ivy/cache/local" />
 
-		<copy todir="portal/ivy/cache">
-			<fileset dir="${portal.dir}/.gradle/caches/modules-2/files-2.1" />
+		<copy todir="portal/ivy/cache/local" flatten="true" >
+			<fileset dir="${portal.dir}/.gradle/caches/modules-2/files-2.1">
+				<include name="**/*.jar" />
+			</fileset>
 		</copy>
 
 		<for param="module">

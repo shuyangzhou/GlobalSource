@@ -7,6 +7,10 @@
 		<ibiblio m2compatible="true" name="local-m2" root="file://${user.home}/.m2/repository" />
 
 		<chain dual="true" name="default">
+			<filesystem name="local">
+				<artifact pattern="${basedir}/${project.dir}/ivy/cache/local/[artifact]-[revision].[ext]" />
+			</filesystem>
+
 			<resolver ref="local-m2" />
 
 			<resolver ref="liferay-public" />
