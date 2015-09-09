@@ -5,6 +5,7 @@
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>Liferay-Source-Netbeans-Project-Builder</name>
             <source-roots>
+                <root id="src.shared-source.dir" name="Shared Source"/>
                 <root id="src.dir"/>
             </source-roots>
             <test-roots>
