@@ -7,6 +7,7 @@
 	<property name="project.dir" value="portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
+	<property name="gradle.list" value="" />
 	<property name="module.list" value="" />
 	<property name="path.list" value="" />
 	<property name="test.list" value="" />
@@ -91,7 +92,7 @@
 	</macrodef>
 
 	<macrodef name="common-build">
-		<element name="build.diff" />
+		<element name="build.diff" optional="true"/>
 
 		<sequential>
 			<mkdir dir="classes" />
@@ -139,6 +140,11 @@
 						<then>
 							<build.diff />
 
+							<append-list
+								list="gradle.list"
+								src.dir.name="${src.dir}"
+							/>
+
 							<java classname="com.liferay.netbeansproject.GradleResolver" classpath="classes" classpathref="project.lib.path">
 								<arg value="${src.dir}" />
 								<arg value="portal/modules/${src.dir.name}" />
@@ -148,7 +154,7 @@
 				</sequential>
 			</for>
 			<java classname="com.liferay.netbeansproject.GradleSettingCreator" classpath="classes" classpathref="project.lib.path">
-				<arg value="${module.list}" />
+				<arg value="${gradle.list}" />
 			</java>
 			<gradle-execute task="copyDependencies">
 				<arg value="-PbuildDir=lib" />

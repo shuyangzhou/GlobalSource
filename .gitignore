@@ -21,9 +21,19 @@ java-application-project/portal/nbproject/private/
 java-maven-project/classes/
 java-maven-project/portal/
 
+java-application-module-project/settings.gradle
+java-application-module-project/.gradle
 java-application-module-project/classes/
 java-application-module-project/portal/ivy-reports/
 java-application-module-project/portal/ivy/
 java-application-module-project/portal/modules/
 java-application-module-project/portal/nbproject/
 java-application-module-project/build/
+
+java-parent-module-project/settings.gradle
+java-parent-module-project/.gradle
+java-parent-module-project/classes/
+java-parent-module-project/portal/ModuleProjects/
+java-parent-module-project/portal/modules/
+java-parent-module-project/portal/nbproject/
+java-parent-module-project/build/
