@@ -2,39 +2,7 @@
 
 <project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
-	<property file="build-ext.properties" />
-	<property file="build.properties" />
-
-	<property name="project.dir" value="portal" />
-	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
-
-	<property name="module.list" value="" />
-	<property name="path.list" value="" />
-	<property name="test.list" value="" />
-
-	<path id="ivy.lib.path">
-		<fileset dir="lib" includes="ivy*.jar" />
-	</path>
-
-	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
-	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
-
-	<macrodef name="append-list">
-		<attribute name="list" />
-		<attribute name="src.dir.name" />
-
-		<sequential>
-			<if>
-				<equals arg1="${@{list}}" arg2="" />
-				<then>
-					<var name="@{list}" value="@{src.dir.name}" />
-				</then>
-				<else>
-					<var name="@{list}" value="${@{list}},@{src.dir.name}" />
-				</else>
-			</if>
-		</sequential>
-	</macrodef>
+	<import file="../common/shared-macrodefs.xml" />
 
 	<macrodef name="append-source-list">
 		<attribute name="module" />
@@ -42,7 +10,6 @@
 		<attribute name="type" />
 
 		<sequential>
-
 			<var name="path.list" value="${path.list},${src.dir}" />
 
 			<if>
@@ -96,124 +63,18 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="resolve-ivy-dependency">
-		<attribute name="module" />
-		<sequential>
-			<dirname property="src.dir" file="@{module}" />
-
-			<if>
-				<available file="${src.dir}/ivy.xml" />
-				<then>
-					<if>
-						<available file="${src.dir}/ivy-settings.xml" />
-						<then>
-							<ivy:settings file="${src.dir}/ivy-settings.xml" id="ivy.resolve.settings" />
-
-							<ivy:resolve
-								conf="default,internal,provided"
-								file="${src.dir}/ivy.xml"
-								haltonfailure="false"
-								log="quiet"
-								settingsref="ivy.resolve.settings"
-								transitive="true"
-							/>
-						</then>
-						<else>
-							<ivy:settings file="${portal.dir}/ivy-settings.xml"/>
-
-							<ivy:resolve
-								conf="default,internal,provided"
-								file="${src.dir}/ivy.xml"
-								haltonfailure="false"
-								log="quiet"
-								transitive="true"
-							/>
-						</else>
-					</if>
-
-					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}" xsl="false" graph="false" xml="true" />
-				</then>
-			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="set-module-source-directory">
-		<attribute name="module" />
-
-		<sequential>
-			<dirname property="src.dir" file="@{module}" />
-
-			<basename property="src.dir.name" file="${src.dir}" />
-
-			<if>
-				<equals arg1="${src.dir.name}" arg2="WEB-INF" />
-				<then>
-					<dirname property="temp" file="${src.dir}" />
-
-					<var name="src.dir" unset="true" />
-
-					<dirname property="src.dir" file="${temp}" />
-
-					<var name="temp" unset="true" />
-					<var name="src.dir.name" unset="true" />
-
-					<basename property="src.dir.name" file="${src.dir}" />
-				</then>
-			</if>
-		</sequential>
-	</macrodef>
-
 	<target name="build" depends="clean">
-		<mkdir dir="classes" />
+		<common-build>
+			<build.diff>
+				<append-source-list
+					module="@{module}"
+					list="module.list"
+					type="src"
+				/>
 
-		<javac
-			srcdir="src"
-			destdir="classes"
-			includeantruntime="false"
-		/>
-
-		<unzip src="${project.dir}/CleanProject.zip" dest="${project.dir}/" />
-
-		<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
-
-		<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
-</concat>
-
-		<copy todir="${ivy.home}">
-			<fileset dir="${portal.dir}/.ivy" />
-		</copy>
-
-		<for param="module">
-			<path>
-				<dirset dir="${portal.dir}">
-					<include name="**/src"/>
-				</dirset>
-			</path>
-			<sequential>
-				<local name="src.dir" />
-				<local name="src.dir.name" />
-
-				<set-module-source-directory module="@{module}" />
-
-				<if>
-					<and>
-						<not>
-							<contains string="${exclude.modules}" substring="${src.dir.name}" />
-						</not>
-						<available file="${src.dir}/build.xml" />
-					</and>
-					<then>
-						<append-source-list
-							module="@{module}"
-							list="module.list"
-							type="src"
-						/>
-
-						<resolve-ivy-dependency module="@{module}" />
-					</then>
-				</if>
-			</sequential>
-		</for>
+				<mkdir dir="portal/modules/${src.dir.name}" />
+			</build.diff>
+		</common-build>
 
 		<for param="test.module">
 			<path>
@@ -247,11 +108,6 @@
 			</sequential>
 		</for>
 
-		<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=${portal.dir}/portal-web/docroot
-src.portal-web.dir=$${file.reference.portal-web.src}
-
-</concat>
-
 		<var name="module.list" value="${module.list},${portal.dir}/portal-web" />
 
 		<path id="lib-jars">
@@ -268,8 +124,6 @@ src.portal-web.dir=$${file.reference.portal-web.src}
 	</target>
 
 	<target name="clean">
-		<delete dir="classes" />
-		<delete dir="${ivy.home}" />
-		<delete dir="${project.dir}/nbproject" />
+		<clean />
 	</target>
 </project>
