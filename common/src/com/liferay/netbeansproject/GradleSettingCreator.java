@@ -12,10 +12,9 @@ public class GradleSettingCreator {
 	public static void main(String[] args) throws Exception {
 		String[] modules = args[0].split(",");
 
-		File settingsFile = new File("settings.gradle");
-
 		try(PrintWriter pw = new PrintWriter(
-			new BufferedWriter(new FileWriter(settingsFile, true)))) {
+			new BufferedWriter(new FileWriter(
+				new File("settings.gradle"), true)))) {
 
 			for (String modulePath : modules) {
 				Path path = Paths.get(modulePath);

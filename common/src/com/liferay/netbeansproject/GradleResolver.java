@@ -3,11 +3,8 @@ package com.liferay.netbeansproject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 
 import java.nio.file.Path;
@@ -60,7 +57,9 @@ public class GradleResolver {
 				while (line != null) {
 					if (line.startsWith("dependencies {")) {
 						while (!line.startsWith("}")) {
-							if (!line.contains("project") && !line.contains("group: \"com.liferay.portal\"")) {
+							if (!line.contains("project") &&
+								!line.contains("group: \"com.liferay.portal\""))
+							{
 								line = line.replaceFirst("optional, ", "");
 								line = line.replaceFirst(
 									"antlr group", "compile group");
@@ -106,25 +105,20 @@ public class GradleResolver {
 
 	private static void _createGradleFile(
 			String defaultFilePath, String dependencyString, String filePath)
-		throws IOException {
-
-		File dependencyFile = new File(filePath + "/build.gradle");
+		throws Exception {
 
 		File defaultFile = new File(defaultFilePath);
 
 		try(PrintWriter pw = new PrintWriter(
-			new BufferedWriter(new FileWriter(dependencyFile)))) {
+			new BufferedWriter(new FileWriter(new File(
+				filePath + "/build.gradle"))))) {
 
 			try(BufferedReader br =
 					new BufferedReader(new FileReader(defaultFile))) {
 
-				Properties optionalRepositories = new Properties();
-
-				try (InputStream in =
-					new FileInputStream("module-repository.properties")) {
-
-					optionalRepositories.load(in);
-				}
+				Properties optionalRepositories =
+					_propertyLoader.loadPropertyFile(
+						"module-repository.properties");
 
 				String line = br.readLine();
 
@@ -153,5 +147,5 @@ public class GradleResolver {
 			}
 		}
 	}
-
+	private static final PropertyLoader _propertyLoader = new PropertyLoader();
 }
