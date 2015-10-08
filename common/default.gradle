@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+repositories {
+	mavenLocal()
+	maven {
+		url "http://cdn.repository.liferay.com/nexus/content/groups/public"
+		*optional-repository*
+	}
+	mavenCentral()	
+}
+
+*insert-dependencies*
+
+task copyDependencies(type: Copy) {
+    from configurations.compile
+    into "$buildDir"
+}
+task copyTestDependencies(type: Copy) {
+	from configurations.testCompile
+    into "$buildDir/test"
+}
+
+copyDependencies.dependsOn copyTestDependencies
