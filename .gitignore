@@ -37,3 +37,8 @@ java-parent-module-project/portal/ModuleProjects/
 java-parent-module-project/portal/modules/
 java-parent-module-project/portal/nbproject/
 java-parent-module-project/build/
+
+Plugins-Project/build/
+Plugins-Project/classes/
+Plugins-Project/nbproject/private/
+Plugins-Project/plugins/
