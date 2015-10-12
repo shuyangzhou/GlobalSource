@@ -7,9 +7,12 @@
 	<property name="project.dir" value="portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
+	<property name="gradle.list" value="" />
 	<property name="module.list" value="" />
 	<property name="path.list" value="" />
 	<property name="test.list" value="" />
+
+	<property environment="env" />
 
 	<path id="project.lib.path">
 		<fileset dir="../common/lib" includes="*.jar" />
@@ -35,45 +38,30 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="resolve-ivy-dependency">
-		<attribute name="module" />
+	<macrodef name="gradle-execute">
+		<attribute default="${basedir}" name="dir" />
+		<attribute default="true" name="failonerror" />
+		<attribute default="true" name="forcedcacheenabled" />
+		<attribute name="task" />
+		<element implicit="true" name="args" optional="true" />
 
 		<sequential>
-			<dirname property="src.dir" file="@{module}" />
-
 			<if>
-				<available file="portal/modules/${src.dir.name}/ivy.xml" />
+				<os family="unix" />
 				<then>
-					<if>
-						<available file="${src.dir}/ivy-settings.xml" />
-						<then>
-							<ivy:settings file="${src.dir}/ivy-settings.xml" id="ivy.resolve.settings" />
+					<property name="gradlew.suffix" value="" />
 
-							<ivy:resolve
-								conf="default,internal,provided,test"
-								file="portal/modules/${src.dir.name}/ivy.xml"
-								haltonfailure="false"
-								log="quiet"
-								settingsref="ivy.resolve.settings"
-								transitive="true"
-							/>
-						</then>
-						<else>
-							<ivy:settings file="../common/ivy-settings.xml" />
-
-							<ivy:resolve
-								conf="default,internal,provided,test"
-								file="portal/modules/${src.dir.name}/ivy.xml"
-								haltonfailure="false"
-								log="quiet"
-								transitive="true"
-							/>
-						</else>
-					</if>
-
-					<ivy:report todir="${ivy.reports.dir}/" outputpattern="${src.dir.name}-[conf].xml" xsl="false" graph="false" xml="true" conf="default,internal,provided,test"/>
+					<chmod file="${portal.dir}/gradlew${gradlew.suffix}" perm="a+x" />
 				</then>
+				<else>
+					<property name="gradlew.suffix" value=".bat" />
+				</else>
 			</if>
+
+			<exec dir="@{dir}" executable="${portal.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
+				<args />
+				<arg value="@{task}" />
+			</exec>
 		</sequential>
 	</macrodef>
 
@@ -104,7 +92,7 @@
 	</macrodef>
 
 	<macrodef name="common-build">
-		<element name="build.diff" />
+		<element name="build.diff" optional="true"/>
 
 		<sequential>
 			<mkdir dir="classes" />
@@ -112,7 +100,7 @@
 			<javac
 				destdir="classes"
 				classpathref="project.lib.path"
-				includeantruntime="false" >
+				includeantruntime="false">
 
 				<src path="../common/src" />
 				<src path="src" />
@@ -129,14 +117,6 @@
 	src.portal-web.dir=$${file.reference.portal-web.src}
 
 	</concat>
-
-			<mkdir dir="${ivy.home}/cache/local" />
-
-			<copy todir="${ivy.home}/cache/local" flatten="true" >
-				<fileset dir="${portal.dir}/.gradle/caches/modules-2/files-2.1">
-					<include name="**/*.jar" />
-				</fileset>
-			</copy>
 
 			<for param="module">
 				<path>
@@ -160,21 +140,31 @@
 						<then>
 							<build.diff />
 
-							<java classname="com.liferay.netbeansproject.GradleParser" classpath="classes" classpathref="project.lib.path">
-								<arg value="${src.dir}" />
-								<arg value="${src.dir.name}" />
-							</java>
+							<append-list
+								list="gradle.list"
+								src.dir.name="${src.dir}"
+							/>
 
-							<resolve-ivy-dependency module="@{module}" />
+							<java classname="com.liferay.netbeansproject.GradleResolver" classpath="classes" classpathref="project.lib.path">
+								<arg value="${src.dir}" />
+								<arg value="portal/modules/${src.dir.name}" />
+							</java>
 						</then>
 					</if>
 				</sequential>
 			</for>
+			<java classname="com.liferay.netbeansproject.GradleSettingCreator" classpath="classes" classpathref="project.lib.path">
+				<arg value="${gradle.list}" />
+			</java>
+			<gradle-execute task="copyDependencies">
+				<arg value="-PbuildDir=lib" />
+			</gradle-execute>
 		</sequential>
 	</macrodef>
 
 	<macrodef name="clean">
 		<sequential>
+			<delete file="settings.gradle" />
 			<delete dir="classes" />
 			<delete dir="${project.dir}/modules" />
 			<delete dir="${project.dir}/nbproject" />

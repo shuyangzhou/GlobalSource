@@ -52,7 +52,7 @@ test.integration.dir=$${file.reference.test-integration}
 </concat>
 				</then>
 				<else>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-integration=@{src.dir}/test/integration
 test.integration.dir=
 </concat>
 				</else>
