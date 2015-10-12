@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Plugins-project" default="build" basedir=".">
+	<path id="project.lib.path">
+		<fileset dir="../common/lib" includes="*.jar" />
+	</path>
+
+	<target name="build" depends="clean">
+		<mkdir dir="classes" />
+
+		<javac destdir="classes" classpathref="project.lib.path">
+			<src path="src" />
+			<src path="../common/src" />
+		</javac>
+
+		<mkdir dir="plugins" />
+
+		<java classname="com.liferay.netbeansproject.PluginsProject" classpath="classes" classpathref="project.lib.path" />
+	</target>
+
+	<target name="clean">
+		<delete dir="classes" />
+		<delete dir="plugins" />
+	</target>
+</project>
