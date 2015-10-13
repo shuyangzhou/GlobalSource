@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,8 +76,7 @@ public class CreateModule {
 	}
 
 	private static void _appendImportSharedList(
-			Set<String> importShared, ProjectInfo projectInfo, Set ivyJars,
-			String fullPath)
+			Set<String> importShared, ProjectInfo projectInfo, String fullPath)
 		throws Exception {
 
 		String importSharedList = ModuleBuildParser.parseBuildFile(fullPath);
@@ -92,13 +90,7 @@ public class CreateModule {
 					importShared.add(module);
 
 					_appendImportSharedList(
-						importShared, projectInfo, ivyJars,
-						moduleNameMap.get(module));
-
-					String ivyListString = IvyReportParser.parseIvyReport(
-						module);
-
-					ivyJars.addAll(Arrays.asList(ivyListString.split(":")));
+						importShared, projectInfo, moduleNameMap.get(module));
 				}
 			}
 		}
@@ -114,6 +106,28 @@ public class CreateModule {
 		}
 	}
 
+	private static void _appendLibFolders(
+		File libFolder, StringBuilder javacSB, StringBuilder testSB) {
+
+		for (File jar : libFolder.listFiles()) {
+			String jarName = jar.getName();
+
+			if (jarName.endsWith(".jar")) {
+				javacSB.append("\t");
+				javacSB.append(jar.getAbsolutePath());
+				javacSB.append(":\\\n");
+			}
+
+			if (jarName.equals("test")) {
+				for (File testJar : jar.listFiles()) {
+					testSB.append("\t");
+					testSB.append(testJar.getAbsolutePath());
+					testSB.append(":\\\n");
+				}
+			}
+		}
+	}
+
 	private static void _appendProperties(ProjectInfo projectInfo)
 		throws Exception {
 
@@ -126,6 +140,8 @@ public class CreateModule {
 						true)))) {
 
 			StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
+			StringBuilder testSB = new StringBuilder(
+				"javac.test.classpath=\\\n");
 
 			for (String module : projectInfo.getProjectLibs()) {
 				if (!module.equals("")) {
@@ -134,29 +150,29 @@ public class CreateModule {
 			}
 
 			Set<String> importShared = new HashSet<>();
-			Set<String> ivyJars = new HashSet<>();
+
+			File libFolder = new File(
+				"portal/modules/" + projectInfo.getProjectName() + "/lib");
+
+			if (libFolder.exists()) {
+				_appendLibFolders(libFolder, javacSB, testSB);
+			}
 
 			_appendImportSharedList(
-				importShared, projectInfo, ivyJars, projectInfo.getFullPath());
+				importShared, projectInfo, projectInfo.getFullPath());
 
 			projectInfo.setImportShared(importShared);
 
 			for (String module : importShared) {
 				if (!module.equals("")) {
 					_appendReferenceProperties(printWriter, module, javacSB);
-				}
-			}
 
-			String ivyListString = IvyReportParser.parseIvyReport(
-				projectInfo.getProjectName());
+					File importLibFolder = new File(
+						"portal/modules/" + module + "/lib");
 
-			ivyJars.addAll(Arrays.asList(ivyListString.split(":")));
-
-			for (String jar : ivyJars) {
-				if (!jar.equals("")) {
-					javacSB.append("\t");
-					javacSB.append(jar);
-					javacSB.append(":\\\n");
+					if (importLibFolder.exists()) {
+						_appendLibFolders(importLibFolder, javacSB, testSB);
+					}
 				}
 			}
 
@@ -187,6 +203,11 @@ public class CreateModule {
 			}
 
 			printWriter.println(javacSB.toString());
+
+			testSB.append("\t${build.classes.dir}:\\\n");
+			testSB.append("\t${javac.classpath}");
+
+			printWriter.println(testSB.toString());
 		}
 	}
 
