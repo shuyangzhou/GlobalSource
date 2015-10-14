@@ -21,7 +21,11 @@ public class ModuleBuildParser {
 				while (line != null) {
 					line = line.trim();
 
-					if (line.startsWith("compile project")) {
+					if (line.startsWith("compile project") ||
+						line.startsWith("provided project") ||
+						line.startsWith("testCompile project") ||
+						line.startsWith("testIntegrationCompile project")) {
+
 						String[] importSharedProject =
 							StringUtils.substringsBetween(line, "\"", "\"");
 
