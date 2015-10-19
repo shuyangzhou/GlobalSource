@@ -262,28 +262,6 @@ public class CreateProject {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	private static boolean _verifySourceFolder(String module) {
-		File folder = new File(module + "/src");
-
-		if (folder.exists()) {
-			File[] listOfFiles = folder.listFiles();
-
-			if (listOfFiles.length == 0) {
-				return false;
-			}
-
-			if (listOfFiles.length == 1) {
-				String fileName = listOfFiles[0].getName();
-
-				if (fileName.startsWith(".")) {
-					return false;
-				}
-			}
-		}
-
-		return true;
-	}
-
 	private static Document _document;
 
 	private static class ProjectInfo {

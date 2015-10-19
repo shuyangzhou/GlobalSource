@@ -6,6 +6,7 @@
 */portal/nbproject/
 
 common/ivy
+common/.gradle
 
 java-application-project/nbproject/build-impl.xml
 java-application-project/nbproject/genfiles.properties

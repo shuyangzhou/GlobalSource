@@ -13,15 +13,20 @@ public class ModuleBuildParser {
 		StringBuilder sb = new StringBuilder();
 
 		if (gradleFile.exists()) {
-			try(BufferedReader br =
+			try(BufferedReader bufferedReader =
 				new BufferedReader(new FileReader(gradleFile))) {
 
-				String line = br.readLine();
+				String line = null;
 
-				while (line != null) {
+				while ((line = bufferedReader.readLine()) != null) {
 					line = line.trim();
 
-					if (line.startsWith("compile project")) {
+					if (line.startsWith("compile project") ||
+						line.startsWith("provided project") ||
+						line.startsWith("frontendThemes project") ||
+						line.startsWith("testCompile project") ||
+						line.startsWith("testIntegrationCompile project")) {
+
 						String[] importSharedProject =
 							StringUtils.substringsBetween(line, "\"", "\"");
 
@@ -32,8 +37,6 @@ public class ModuleBuildParser {
 						sb.append(importSharedProjectName);
 						sb.append(":");
 					}
-
-					line = br.readLine();
 				}
 			}
 		}

@@ -8,8 +8,6 @@
 		<attribute name="src.dir.name" />
 
 		<sequential>
-			<var name="path.list" value="${path.list}:@{src.dir}" />
-
 			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=modules/@{src.dir.name}
 reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
 </concat>
