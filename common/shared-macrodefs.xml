@@ -4,7 +4,6 @@
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
 
-	<property name="project.dir" value="portal" />
 	<property name="sdk.dir" value="${portal.dir}/tools/sdk" />
 
 	<property name="module.list" value="" />
@@ -37,7 +36,7 @@
 	</macrodef>
 
 	<macrodef name="gradle-execute">
-		<attribute default="${basedir}" name="dir" />
+		<attribute default="${module.projects.dir}" name="dir" />
 		<attribute default="true" name="failonerror" />
 		<attribute default="true" name="forcedcacheenabled" />
 		<attribute name="task" />
@@ -104,7 +103,7 @@
 				<src path="src" />
 			</javac>
 
-			<unzip src="${project.dir}/CleanProject.zip" dest="${project.dir}/" />
+			<unzip src="CleanProject.zip" dest="${project.dir}/" />
 
 			<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
 
@@ -158,6 +157,7 @@
 			<delete dir="classes" />
 			<delete dir="${project.dir}/modules" />
 			<delete dir="${project.dir}/nbproject" />
+			<delete dir="${module.projects.dir}" />
 		</sequential>
 	</macrodef>
 </project>

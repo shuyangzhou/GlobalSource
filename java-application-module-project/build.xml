@@ -8,7 +8,7 @@
 		<attribute name="src.dir.name" />
 
 		<sequential>
-			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=modules/@{src.dir.name}
+			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=${module.projects.dir}/@{src.dir.name}
 reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
 </concat>
 			<append-list
@@ -23,7 +23,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		<attribute name="src.dir.name" />
 
 		<sequential>
-			<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">excludes=${exclude.types}
+			<concat destfile="${module.projects.dir}/@{src.dir.name}/nbproject/project.properties" append="true">excludes=${exclude.types}
 application.title=@{src.dir}
 dist.jar=$${dist.dir}/@{src.dir.name}.jar
 file.reference.@{src.dir.name}-src=@{src.dir}/src
@@ -32,12 +32,12 @@ src.dir=$${file.reference.@{src.dir.name}-src}
 			<if>
 				<available file="@{src.dir}/test/unit" type="dir" />
 				<then>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+					<concat destfile="${module.projects.dir}/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
 test.unit.dir=$${file.reference.test-unit}
 </concat>
 				</then>
 				<else>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+					<concat destfile="${module.projects.dir}/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
 test.unit.dir=
 </concat>
 				</else>
@@ -45,12 +45,12 @@ test.unit.dir=
 			<if>
 				<available file="@{src.dir}/test/integration" type="dir" />
 				<then>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-integration=@{src.dir}/test/integration
+					<concat destfile="${module.projects.dir}/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-integration=@{src.dir}/test/integration
 test.integration.dir=$${file.reference.test-integration}
 </concat>
 				</then>
 				<else>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
+					<concat destfile="${module.projects.dir}/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
 test.integration.dir=
 </concat>
 				</else>
@@ -66,7 +66,7 @@ test.integration.dir=
 					src.dir.name="${src.dir.name}"
 				/>
 
-				<unzip src="${project.dir}/CleanModule.zip" dest="${project.dir}/modules/${src.dir.name}/" />
+				<unzip src="CleanModule.zip" dest="${module.projects.dir}/${src.dir.name}/" />
 
 				<append-module-properties
 					src.dir="${src.dir}"
