@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 public class GradleResolver {
@@ -13,22 +14,28 @@ public class GradleResolver {
 	public static void main(String[] args) throws Exception {
 		StringBuilder sb = new StringBuilder();
 
+		PropertyLoader propertyLoader = new PropertyLoader();
+
+		Properties properties = propertyLoader.loadPropertyFile(
+			"build.properties");
+
+		String moduleDir = properties.getProperty("module.projects.dir");
+
 		for(String pathToGradle : args[0].split(",")) {
 			Path path = Paths.get(pathToGradle);
 
 			Path fileName = path.getFileName();
 
 			_createGradleFile(
-				_extractDependencyString(path),
-				"portal/modules/" + fileName);
+				_extractDependencyString(path), moduleDir + "/" + fileName);
 
-			sb.append("include \"portal/modules/");
+			sb.append("include \"");
 			sb.append(fileName);
 			sb.append("\"\n");
 		}
 
 		Files.write(
-			Paths.get("settings.gradle"), Arrays.asList(sb),
+			Paths.get(moduleDir + "/settings.gradle"), Arrays.asList(sb),
 			Charset.defaultCharset());
 	}
 
