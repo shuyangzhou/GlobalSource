@@ -11,6 +11,10 @@ repositories {
 	}
 }
 
+configurations {
+	testConfiguration
+}
+
 *insert-dependencies*
 
 task copyDependencies(type: Copy) {
@@ -18,7 +22,7 @@ task copyDependencies(type: Copy) {
     into "$buildDir"
 }
 task copyTestDependencies(type: Copy) {
-	from configurations.testCompile
+	from configurations.testConfiguration
     into "$buildDir/test"
 }
 

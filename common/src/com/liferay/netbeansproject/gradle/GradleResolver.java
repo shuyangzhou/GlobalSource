@@ -120,9 +120,11 @@ public class GradleResolver {
 		dependency = StringUtil.replace(
 			dependency, "jnaerator classifier: \"shaded\",", "compile");
 		dependency = StringUtil.replace(dependency, "provided", "compile");
+		dependency = StringUtil.replace(
+			dependency, "testIntegrationCompile", "testCompile");
 
 		return  StringUtil.replace(
-			dependency, "testIntegrationCompile", "testCompile");
+			dependency, "testCompile", "testConfiguration");
 	}
 
 	private static final Pattern _dependencyPattern =
