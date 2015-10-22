@@ -373,7 +373,9 @@ public class CreateModule {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		_createRoots(sourceRootsElement, projectInfo.getFullPath(), "src." + projectInfo.getProjectName() + ".dir");
+		_createRoots(
+			sourceRootsElement, projectInfo.getFullPath(),
+			"src." + projectInfo.getProjectName() + ".dir");
 
 		if (projectInfo.getProjectName().equals("portal-impl") ||
 			projectInfo.getProjectName().equals("portal-service")) {
@@ -384,13 +386,17 @@ public class CreateModule {
 		Element testRootsElement = _document.createElement("test-roots");
 
 		if (new File(projectInfo.getFullPath() + "/test/unit").exists()) {
-			_createRoots(testRootsElement, "test.unit.dir");
+			_createRoots(
+				testRootsElement,
+				"test." + projectInfo.getProjectName() + ".unit.dir");
 		}
 
 		if (new File(
 			projectInfo.getFullPath() + "/test/integration").exists()) {
 
-			_createRoots(testRootsElement, "test.integration.dir");
+			_createRoots(
+				testRootsElement,
+				"test." + projectInfo.getProjectName() + ".integration.dir");
 		}
 
 		dataElement.appendChild(testRootsElement);
