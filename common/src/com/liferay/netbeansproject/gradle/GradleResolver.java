@@ -1,5 +1,6 @@
 package com.liferay.netbeansproject.gradle;
 
+import com.liferay.netbeansproject.PropertyLoader;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
@@ -11,6 +12,8 @@ import java.nio.file.Paths;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Properties;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +33,13 @@ public class GradleResolver {
 
 		StringBuilder sb = new StringBuilder();
 
+		PropertyLoader propertyLoader = new PropertyLoader();
+
+		Properties properties = propertyLoader.loadPropertyFile(
+			"build.properties");
+
+		String moduleDir = properties.getProperty("module.projects.dir");
+
 		for(String module : StringUtil.split(moduleList, ',')) {
 			Path modulePath = Paths.get(module);
 
@@ -37,15 +47,15 @@ public class GradleResolver {
 
 			_createGradleFile(
 				defaultGradleContent, _extractDependency(modulePath),
-				"portal/modules/" + fileName);
+				moduleDir + "/" + fileName);
 
-			sb.append("include \"portal/modules/");
+			sb.append("include \"");
 			sb.append(fileName);
 			sb.append("\"\n");
 		}
 
 		Files.write(
-			Paths.get("settings.gradle"), Arrays.asList(sb),
+			Paths.get(moduleDir + "/settings.gradle"), Arrays.asList(sb),
 			Charset.defaultCharset());
 	}
 

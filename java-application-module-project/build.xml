@@ -8,53 +8,13 @@
 		<attribute name="src.dir.name" />
 
 		<sequential>
-			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=modules/@{src.dir.name}
+			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=${module.projects.dir}/@{src.dir.name}
 reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
 </concat>
 			<append-list
 				list="module.list"
 				src.dir.name="${src.dir}"
 			/>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="append-module-properties">
-		<attribute name="src.dir" />
-		<attribute name="src.dir.name" />
-
-		<sequential>
-			<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">excludes=${exclude.types}
-application.title=@{src.dir}
-dist.jar=$${dist.dir}/@{src.dir.name}.jar
-file.reference.@{src.dir.name}-src=@{src.dir}/src
-src.dir=$${file.reference.@{src.dir.name}-src}
-</concat>
-			<if>
-				<available file="@{src.dir}/test/unit" type="dir" />
-				<then>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
-test.unit.dir=$${file.reference.test-unit}
-</concat>
-				</then>
-				<else>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
-test.unit.dir=
-</concat>
-				</else>
-			</if>
-			<if>
-				<available file="@{src.dir}/test/integration" type="dir" />
-				<then>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-integration=@{src.dir}/test/integration
-test.integration.dir=$${file.reference.test-integration}
-</concat>
-				</then>
-				<else>
-					<concat destfile="${project.dir}/modules/@{src.dir.name}/nbproject/project.properties" append="true">file.reference.test-unit=@{src.dir}/test/unit
-test.integration.dir=
-</concat>
-				</else>
-			</if>
 		</sequential>
 	</macrodef>
 
@@ -66,12 +26,7 @@ test.integration.dir=
 					src.dir.name="${src.dir.name}"
 				/>
 
-				<unzip src="${project.dir}/CleanModule.zip" dest="${project.dir}/modules/${src.dir.name}/" />
-
-				<append-module-properties
-					src.dir="${src.dir}"
-					src.dir.name="${src.dir.name}"
-				/>
+				<unzip src="CleanModule.zip" dest="${module.projects.dir}/${src.dir.name}/" />
 			</build.diff>
 		</common-build>
 

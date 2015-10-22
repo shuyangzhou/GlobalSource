@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,11 +33,18 @@ public class CreateProject {
 			throw new IllegalArgumentException("Incorrect Number of arguments");
 		}
 
+		PropertyLoader propertyLoader = new PropertyLoader();
+
+		Properties properties =
+			propertyLoader.loadPropertyFile("build.properties");
+
+		String portalDir = properties.getProperty("project.dir");
+
 		ProjectInfo projectInfo = new ProjectInfo(
 			args[0], args[1], _reorderModules(args[2], args[1]),
 			_reorderModules(args[3], args[1]));
 
-		_appendList(projectInfo);
+		_appendList(projectInfo, portalDir);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -58,7 +66,7 @@ public class CreateProject {
 		StreamResult streamResult = null;
 
 		streamResult = new StreamResult(
-			new File("portal/nbproject/project.xml"));
+			new File(portalDir + "/nbproject/project.xml"));
 
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		transformer.setOutputProperty(
@@ -66,14 +74,14 @@ public class CreateProject {
 		transformer.transform(source, streamResult);
 	}
 
-	private static void _appendList(ProjectInfo projectInfo)
+	private static void _appendList(ProjectInfo projectInfo, String portalDir)
 		throws IOException {
 
 		try (
 			PrintWriter printWriter = new PrintWriter(
 				new BufferedWriter(
 					new FileWriter(
-						"portal/nbproject/project.properties", true)))) {
+						portalDir + "/nbproject/project.properties", true)))) {
 
 			StringBuilder sb = new StringBuilder("javac.classpath=\\\n");
 

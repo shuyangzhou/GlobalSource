@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -39,9 +40,16 @@ public class CreateModule {
 			args[0], args[1], args[2], _reorderModules(args[3], args[1]),
 			_reorderModules(args[4], args[1]), args[5].split(","));
 
-		_replaceProjectName(projectInfo);
+		PropertyLoader propertyLoader = new PropertyLoader();
 
-		_appendProperties(projectInfo);
+		Properties properties =
+			propertyLoader.loadPropertyFile("build.properties");
+
+		String moduleDir = properties.getProperty("module.projects.dir");
+
+		_replaceProjectName(projectInfo, moduleDir);
+
+		_appendProperties(projectInfo, properties, moduleDir);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -63,7 +71,7 @@ public class CreateModule {
 		StreamResult streamResult = null;
 
 		String fileName =
-			"portal/modules/" + projectInfo.getProjectName() +
+			moduleDir + "/" + projectInfo.getProjectName() +
 				"/nbproject/project.xml";
 
 		streamResult = new StreamResult(new File(fileName));
@@ -127,34 +135,52 @@ public class CreateModule {
 		}
 	}
 
-	private static void _appendProperties(ProjectInfo projectInfo)
+	private static void _appendProperties(
+		ProjectInfo projectInfo, Properties properties, String moduleDir)
 		throws Exception {
 
 		try (
 			PrintWriter printWriter = new PrintWriter(
 				new BufferedWriter(
 					new FileWriter(
-						"portal/modules/" + projectInfo.getProjectName() +
+						moduleDir + "/" + projectInfo.getProjectName() +
 							"/nbproject/project.properties",
 						true)))) {
 
-			StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
-			StringBuilder testSB = new StringBuilder(
-				"javac.test.classpath=\\\n");
+			StringBuilder projectSB = new StringBuilder();
+
+			projectSB.append("excludes=");
+			projectSB.append(properties.getProperty("exclude.types"));
+			projectSB.append("\n");
+
+			projectSB.append("application.title=");
+			projectSB.append(projectInfo.getFullPath());
+			projectSB.append("\n");
+
+			projectSB.append("dist.jar=${dist.dir}/");
+			projectSB.append(projectInfo.getProjectName());
+			projectSB.append(".jar\n");
+
+			_appendSourcePath(projectInfo.getProjectName(), projectInfo.getFullPath(), projectSB);
+
+			projectSB.append("javac.classpath=\\\n");
 
 			for (String module : projectInfo.getProjectLibs()) {
 				if (!module.equals("")) {
-					_appendReferenceProperties(printWriter, module, javacSB);
+					_appendReferenceProperties(printWriter, module, projectSB);
 				}
 			}
 
 			Set<String> importShared = new HashSet<>();
 
 			File libFolder = new File(
-				"portal/modules/" + projectInfo.getProjectName() + "/lib");
+				moduleDir + "/" + projectInfo.getProjectName() + "/lib");
+
+			StringBuilder testSB = new StringBuilder(
+				"javac.test.classpath=\\\n");
 
 			if (libFolder.exists()) {
-				_appendLibFolders(libFolder, javacSB, testSB);
+				_appendLibFolders(libFolder, projectSB, testSB);
 			}
 
 			_appendImportSharedList(
@@ -164,44 +190,44 @@ public class CreateModule {
 
 			for (String module : importShared) {
 				if (!module.equals("")) {
-					_appendReferenceProperties(printWriter, module, javacSB);
+					_appendReferenceProperties(printWriter, module, projectSB);
 
 					File importLibFolder = new File(
-						"portal/modules/" + module + "/lib");
+						moduleDir + "/" + module + "/lib");
 
 					if (importLibFolder.exists()) {
-						_appendLibFolders(importLibFolder, javacSB, testSB);
+						_appendLibFolders(importLibFolder, projectSB, testSB);
 					}
 				}
 			}
 
 			_appendJavacClasspath(
 				new File(projectInfo.getPortalDir() + "/lib/development"),
-				javacSB);
+				projectSB);
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/global"), javacSB);
+				new File(projectInfo.getPortalDir() + "/lib/global"), projectSB);
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/portal"), javacSB);
+				new File(projectInfo.getPortalDir() + "/lib/portal"), projectSB);
 
-			javacSB.setLength(javacSB.length() - 3);
+			projectSB.setLength(projectSB.length() - 3);
 
 			if (projectInfo.getProjectName().equals("portal-impl")) {
-				javacSB.append("\nfile.reference.portal-test-internal-src=");
-				javacSB.append(projectInfo.getPortalDir());
-				javacSB.append("/portal-test-internal/src\n");
-				javacSB.append(
+				projectSB.append("\nfile.reference.portal-test-internal-src=");
+				projectSB.append(projectInfo.getPortalDir());
+				projectSB.append("/portal-test-internal/src\n");
+				projectSB.append(
 					"src.test.dir=${file.reference.portal-test-internal-src}");
 			}
 
 			if (projectInfo.getProjectName().equals("portal-service")) {
-				javacSB.append("\nfile.reference.portal-test-src=");
-				javacSB.append(projectInfo.getPortalDir());
-				javacSB.append("/portal-test/src\n");
-				javacSB.append(
+				projectSB.append("\nfile.reference.portal-test-src=");
+				projectSB.append(projectInfo.getPortalDir());
+				projectSB.append("/portal-test/src\n");
+				projectSB.append(
 					"src.test.dir=${file.reference.portal-test-src}");
 			}
 
-			printWriter.println(javacSB.toString());
+			printWriter.println(projectSB.toString());
 
 			testSB.append("\t${build.classes.dir}:\\\n");
 			testSB.append("\t${javac.classpath}");
@@ -232,6 +258,86 @@ public class CreateModule {
 		javacSB.append("\t${reference.");
 		javacSB.append(module);
 		javacSB.append(".jar}:\\\n");
+	}
+
+	private static void _appendSourcePath(String moduleName, String modulePath, StringBuilder projectSB) {
+		if (new File(modulePath + "/docroot").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-src=");
+			projectSB.append(modulePath);
+			projectSB.append("/docroot/WEB-INF/src\n");
+		}
+		else if (new File(modulePath + "/src").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-src=");
+			projectSB.append(modulePath);
+			projectSB.append("/src");
+
+			if(new File(modulePath + "/src/main/java").exists()) {
+				projectSB.append("/main/java\n");
+			}
+			else {
+				projectSB.append("\n");
+			}
+		}
+
+		projectSB.append("src.");
+		projectSB.append(moduleName);
+		projectSB.append(".dir=${file.reference.");
+		projectSB.append(moduleName);
+		projectSB.append("-src}\n");
+
+		if (new File(modulePath + "/test/unit").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit=");
+			projectSB.append(modulePath);
+			projectSB.append("/test/unit\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".unit.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit}\n");
+		}
+		else if(new File(modulePath + "/src/test/java").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit=");
+			projectSB.append(modulePath);
+			projectSB.append("/src/test/java\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".unit.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit}\n");
+		}
+
+		if (new File(modulePath + "/test/integration").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration=");
+			projectSB.append(modulePath);
+			projectSB.append("/test/integration\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".integration.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration}\n");
+		}
+		else if(new File(modulePath + "/src/testIntegration/java").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration=");
+			projectSB.append(modulePath);
+			projectSB.append("/src/testIntegration/java\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".integration.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration}\n");
+		}
 	}
 
 	private static void _createConfiguration(
@@ -268,7 +374,7 @@ public class CreateModule {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		_createRoots(sourceRootsElement, projectInfo.getFullPath(), "src.dir");
+		_createRoots(sourceRootsElement, projectInfo.getFullPath(), "src." + projectInfo.getProjectName() + ".dir");
 
 		if (projectInfo.getProjectName().equals("portal-impl") ||
 			projectInfo.getProjectName().equals("portal-service")) {
@@ -435,12 +541,12 @@ public class CreateModule {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	private static void _replaceProjectName(ProjectInfo projectInfo)
+	private static void _replaceProjectName(ProjectInfo projectInfo, String moduleDir)
 		throws IOException {
 
 		File file =
 			new File(
-				"portal/modules/" + projectInfo.getProjectName() +
+				moduleDir + "/" + projectInfo.getProjectName() +
 					"/build.xml");
 
 		String content = new String(Files.readAllBytes(file.toPath()));
