@@ -1,6 +1,7 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.ModuleBuildParser.ModuleInfo;
+import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedWriter;
@@ -35,16 +36,22 @@ import org.w3c.dom.Element;
 public class CreateModule {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 6) {
-			throw new IllegalArgumentException("Incorrect Number of arguments");
-		}
-
-		ProjectInfo projectInfo = new ProjectInfo(
-			args[0], args[1], args[2], _reorderModules(args[3], args[1]),
-			_reorderModules(args[4], args[1]), args[5].split(","));
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
+
+		String srcDirName = arguments.get("src.dir.name");
+		String portalDir = properties.getProperty("portal.dir");
+		String srcDir = arguments.get("src.dir");
+		String projectDependencies = arguments.get("project.dependencies");
+		String jarDependencies = arguments.get("jar.dependencies");
+		String moduleList = arguments.get("module.list");
+
+		ProjectInfo projectInfo = new ProjectInfo(
+			srcDirName, portalDir, srcDir,
+			_reorderModules(projectDependencies, portalDir),
+			_reorderModules(jarDependencies, portalDir), moduleList.split(","));
 
 		String moduleDir = properties.getProperty("module.projects.dir");
 
