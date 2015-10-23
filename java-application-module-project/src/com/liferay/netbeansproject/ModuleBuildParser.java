@@ -35,6 +35,13 @@ public class ModuleBuildParser {
 						String importSharedProjectName = split[split.length-1];
 
 						sb.append(importSharedProjectName);
+
+						if(line.startsWith("testCompile project") ||
+							line.startsWith("testIntegrationCompile project")) {
+
+							sb.append("-testCompile");
+
+						}
 						sb.append(":");
 					}
 				}

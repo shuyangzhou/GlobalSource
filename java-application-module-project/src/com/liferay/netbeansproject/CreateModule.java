@@ -82,7 +82,8 @@ public class CreateModule {
 	}
 
 	private static void _appendImportSharedList(
-			Set<String> importShared, ProjectInfo projectInfo, String fullPath)
+		Set<String> importShared, Set<String> testImportShared,
+		ProjectInfo projectInfo, String fullPath)
 		throws Exception {
 
 		String importSharedList = ModuleBuildParser.parseBuildFile(fullPath);
@@ -96,7 +97,13 @@ public class CreateModule {
 					importShared.add(module);
 
 					_appendImportSharedList(
-						importShared, projectInfo, moduleNameMap.get(module));
+						importShared, testImportShared, projectInfo,
+						moduleNameMap.get(module));
+				}
+				else if (moduleNameMap.containsKey(
+					module.replace("-testCompile", ""))) {
+
+					testImportShared.add(module.replace("-testCompile", ""));
 				}
 			}
 		}
@@ -160,7 +167,8 @@ public class CreateModule {
 			projectSB.append(projectInfo.getProjectName());
 			projectSB.append(".jar\n");
 
-			_appendSourcePath(projectInfo.getProjectName(), projectInfo.getFullPath(), projectSB);
+			_appendSourcePath(projectInfo.getProjectName(),
+				projectInfo.getFullPath(), projectSB);
 
 			projectSB.append("javac.classpath=\\\n");
 
@@ -171,6 +179,7 @@ public class CreateModule {
 			}
 
 			Set<String> importShared = new HashSet<>();
+			Set<String> testImportShared = new HashSet<>();
 
 			File libFolder = new File(
 				moduleDir + "/" + projectInfo.getProjectName() + "/lib");
@@ -183,13 +192,13 @@ public class CreateModule {
 			}
 
 			_appendImportSharedList(
-				importShared, projectInfo, projectInfo.getFullPath());
-
-			projectInfo.setImportShared(importShared);
+				importShared, testImportShared,
+				projectInfo, projectInfo.getFullPath());
 
 			for (String module : importShared) {
 				if (!module.equals("")) {
-					_appendReferenceProperties(printWriter, module, projectSB);
+						_appendReferenceProperties(
+							printWriter, module, projectSB);
 
 					File importLibFolder = new File(
 						moduleDir + "/" + module + "/lib");
@@ -200,13 +209,32 @@ public class CreateModule {
 				}
 			}
 
+			for (String module : testImportShared) {
+				if (!module.equals("")) {
+						_appendReferenceProperties(
+							printWriter, module, testSB);
+
+					File importLibFolder = new File(
+						moduleDir + "/" + module + "/lib");
+
+					if (importLibFolder.exists()) {
+						_appendLibFolders(importLibFolder, projectSB, testSB);
+					}
+				}
+			}
+			importShared.addAll(testImportShared);
+
+			projectInfo.setImportShared(importShared);
+
 			_appendJavacClasspath(
 				new File(projectInfo.getPortalDir() + "/lib/development"),
 				projectSB);
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/global"), projectSB);
+				new File(projectInfo.getPortalDir() + "/lib/global"),
+				projectSB);
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/portal"), projectSB);
+				new File(projectInfo.getPortalDir() + "/lib/portal"),
+				projectSB);
 
 			projectSB.setLength(projectSB.length() - 3);
 
@@ -259,7 +287,9 @@ public class CreateModule {
 		javacSB.append(".jar}:\\\n");
 	}
 
-	private static void _appendSourcePath(String moduleName, String modulePath, StringBuilder projectSB) {
+	private static void _appendSourcePath(String moduleName, String modulePath,
+		StringBuilder projectSB) {
+
 		if (new File(modulePath + "/docroot").exists()) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
@@ -546,7 +576,8 @@ public class CreateModule {
 		return portalSourceList.toArray(new String[portalSourceList.size()]);
 	}
 
-	private static void _replaceProjectName(ProjectInfo projectInfo, String moduleDir)
+	private static void _replaceProjectName(
+		ProjectInfo projectInfo, String moduleDir)
 		throws IOException {
 
 		File file =
