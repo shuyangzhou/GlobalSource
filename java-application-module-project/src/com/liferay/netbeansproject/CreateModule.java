@@ -30,6 +30,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.apache.commons.lang3.ArrayUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,7 +52,8 @@ public class CreateModule {
 		ProjectInfo projectInfo = new ProjectInfo(
 			srcDirName, portalDir, srcDir,
 			_reorderModules(projectDependencies, portalDir),
-			_reorderModules(jarDependencies, portalDir), moduleList.split(","));
+			_reorderModules(jarDependencies, portalDir),
+			StringUtil.split(moduleList, ','));
 
 		String moduleDir = properties.getProperty("module.projects.dir");
 
@@ -557,33 +559,38 @@ public class CreateModule {
 	private static String[] _reorderModules(
 		String originalOrder, String portalDir) {
 
-		String[] modules = originalOrder.split(",");
+		String[] modules = StringUtil.split(originalOrder, ',');
 
-		int i = 0;
+		if (modules.length > 0) {
 
-		List<String> moduleSourceList = new ArrayList<>();
+			int i = 0;
 
-		while (modules[i].startsWith(portalDir + "/modules")) {
-			moduleSourceList.add(modules[i]);
+			List<String> moduleSourceList = new ArrayList<>();
 
-			i++;
+			while (modules[i].startsWith(portalDir + "/modules")) {
+				moduleSourceList.add(modules[i]);
+
+				i++;
+			}
+
+			List<String> portalSourceList = new ArrayList<>();
+
+			while (i < modules.length) {
+				portalSourceList.add(modules[i]);
+
+				i++;
+			}
+
+			Collections.sort(portalSourceList);
+
+			Collections.sort(moduleSourceList);
+
+			portalSourceList.addAll(moduleSourceList);
+
+			return portalSourceList.toArray(new String[portalSourceList.size()]);
 		}
 
-		List<String> portalSourceList = new ArrayList<>();
-
-		while (i < modules.length) {
-			portalSourceList.add(modules[i]);
-
-			i++;
-		}
-
-		Collections.sort(portalSourceList);
-
-		Collections.sort(moduleSourceList);
-
-		portalSourceList.addAll(moduleSourceList);
-
-		return portalSourceList.toArray(new String[portalSourceList.size()]);
+		return ArrayUtils.EMPTY_STRING_ARRAY;
 	}
 
 	private static void _replaceProjectName(
@@ -597,8 +604,8 @@ public class CreateModule {
 
 		String content = new String(Files.readAllBytes(file.toPath()));
 
-		content = content.replaceAll(
-			"%placeholder%", projectInfo.getProjectName());
+		content = StringUtil.replace(
+			content, "%placeholder%",projectInfo.getProjectName());
 
 		Files.write(file.toPath(), content.getBytes());
 	}
