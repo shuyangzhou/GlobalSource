@@ -2,7 +2,6 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.ModuleBuildParser.ModuleInfo;
 import com.liferay.netbeansproject.util.PropertiesUtil;
-import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -84,8 +83,8 @@ public class CreateModule {
 	}
 
 	private static void _appendImportSharedList(
-			Set<String> importModuleNames, Set<String> testImportModuleNames,
-			ProjectInfo projectInfo, Path modulePath)
+			Set<ModuleInfo> importModuleNames, ProjectInfo projectInfo,
+			Path modulePath)
 		throws Exception {
 
 		Map<String, Path> moduleMap = projectInfo.getModuleMap();
@@ -95,19 +94,15 @@ public class CreateModule {
 
 			String moduleName = moduleInfo.getModuleName();
 
-			if (!moduleMap.containsKey(moduleName)) {
-				continue;
-			}
+			if (!_checkModuleInfoSetContains(importModuleNames, moduleName)) {
+				if (!moduleMap.containsKey(moduleName)) {
+					continue;
+				}
 
-			if (moduleInfo.isTest()) {
-				testImportModuleNames.add(moduleName);
-			}
-			else {
-				importModuleNames.add(moduleName);
+				importModuleNames.add(moduleInfo);
 
 				_appendImportSharedList(
-					importModuleNames, testImportModuleNames, projectInfo,
-					moduleMap.get(moduleName));
+					importModuleNames, projectInfo, moduleMap.get(moduleName));
 			}
 		}
 	}
@@ -191,41 +186,31 @@ public class CreateModule {
 				_appendLibFolders(libFolder, projectSB, testSB);
 			}
 
-			Set<String> importShared = new HashSet<>();
-			Set<String> testImportShared = new HashSet<>();
+			Set<ModuleInfo> importShared = new HashSet<>();
 
 			_appendImportSharedList(
-				importShared, testImportShared,
-				projectInfo, Paths.get(projectInfo.getFullPath()));
+				importShared, projectInfo,
+				Paths.get(projectInfo.getFullPath()));
 
-			for (String module : importShared) {
-				if (!module.equals("")) {
-						_appendReferenceProperties(
-							printWriter, module, projectSB);
+			for (ModuleInfo moduleInfo : importShared) {
+				String moduleName = moduleInfo.getModuleName();
 
-					File importLibFolder = new File(
-						moduleDir + "/" + module + "/lib");
+				if(moduleInfo.isTest()) {
+					_appendReferenceProperties(
+						printWriter, moduleName, testSB);
+				}
+				else {
+					_appendReferenceProperties(
+						printWriter, moduleName, projectSB);
+				}
 
-					if (importLibFolder.exists()) {
-						_appendLibFolders(importLibFolder, projectSB, testSB);
-					}
+				File importLibFolder =
+					new File(moduleDir + "/" + moduleName + "/lib");
+
+				if (importLibFolder.exists()) {
+					_appendLibFolders(importLibFolder, projectSB, testSB);
 				}
 			}
-
-			for (String module : testImportShared) {
-				if (!module.equals("")) {
-						_appendReferenceProperties(
-							printWriter, module, testSB);
-
-					File importLibFolder = new File(
-						moduleDir + "/" + module + "/lib");
-
-					if (importLibFolder.exists()) {
-						_appendLibFolders(importLibFolder, projectSB, testSB);
-					}
-				}
-			}
-			importShared.addAll(testImportShared);
 
 			projectInfo.setImportShared(importShared);
 
@@ -372,6 +357,20 @@ public class CreateModule {
 		}
 	}
 
+	private static boolean _checkModuleInfoSetContains(
+		Set<ModuleInfo> moduleInfoSet, String testName) {
+
+		for (ModuleInfo moduleInfo : moduleInfoSet) {
+			String moduleName = moduleInfo.getModuleName();
+
+			if (moduleName.equals(testName)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private static void _createConfiguration(
 			Element projectElement, ProjectInfo projectInfo)
 		throws IOException {
@@ -512,10 +511,8 @@ public class CreateModule {
 
 		configurationElement.appendChild(referencesElement);
 
-		for (String module : projectInfo.getImportShared()) {
-			if (!module.equals("")) {
-				_createReference(referencesElement, module);
-			}
+		for (ModuleInfo moduleInfo : projectInfo.getImportShared()) {
+			_createReference(referencesElement, moduleInfo.getModuleName());
 		}
 
 		for (String module : projectInfo.getProjectLibs()) {
@@ -604,7 +601,7 @@ public class CreateModule {
 			return _fullPath;
 		}
 
-		public Set<String> getImportShared() {
+		public Set<ModuleInfo> getImportShared() {
 			return _importShared;
 		}
 
@@ -632,7 +629,7 @@ public class CreateModule {
 			return _projectName;
 		}
 
-		public void setImportShared(Set<String> importShared) {
+		public void setImportShared(Set<ModuleInfo> importShared) {
 			_importShared = importShared;
 		}
 
@@ -664,7 +661,7 @@ public class CreateModule {
 		}
 
 		private final String _fullPath;
-		private Set<String> _importShared;
+		private Set<ModuleInfo> _importShared;
 		private final String[] _jarLib;
 		private final String[] _moduleList;
 		private final Map<String, Path> _moduleMap;
