@@ -1,5 +1,6 @@
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -30,20 +32,23 @@ import org.w3c.dom.Element;
 public class CreateProject {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 4) {
-			throw new IllegalArgumentException("Incorrect Number of arguments");
-		}
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String portalDir = properties.getProperty("project.dir");
+		String projectName = properties.getProperty("project.name");
+		String portalDir = properties.getProperty("portal.dir");
+		String moduleList = arguments.get("module.list");
+		String umbrellaSourceList = arguments.get("umbrella.source.list");
 
 		ProjectInfo projectInfo = new ProjectInfo(
-			args[0], args[1], _reorderModules(args[2], args[1]),
-			_reorderModules(args[3], args[1]));
+			projectName, portalDir, _reorderModules(moduleList, portalDir),
+			_reorderModules(umbrellaSourceList, portalDir));
 
-		_appendList(projectInfo, portalDir);
+		String projectDir = properties.getProperty("project.dir");
+
+		_appendList(projectInfo, projectDir);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -65,7 +70,7 @@ public class CreateProject {
 		StreamResult streamResult = null;
 
 		streamResult = new StreamResult(
-			new File(portalDir + "/nbproject/project.xml"));
+			new File(projectDir + "/nbproject/project.xml"));
 
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		transformer.setOutputProperty(

@@ -91,10 +91,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		</for>
 
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes" classpathref="project.lib.path">
-			<arg value="${project.name}" />
-			<arg value="${portal.dir}" />
-			<arg value="${module.list}" />
-			<arg value="${umbrella.source.list}" />
+			<arg value="module.list=${module.list}" />
+			<arg value="umbrella.source.list=${umbrella.source.list}" />
 		</java>
 	</target>
 
