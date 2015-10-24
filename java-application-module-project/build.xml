@@ -78,12 +78,11 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 						</if>
 
 						<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes" classpathref="project.lib.path">
-							<arg value="${src.dir.name}" />
-							<arg value="${portal.dir}" />
-							<arg value="${src.dir}" />
-							<arg value="${project.dependencies}" />
-							<arg value="${jar.dependencies}" />
-							<arg value="${module.list}" />
+							<arg value="src.dir.name=${src.dir.name}" />
+							<arg value="src.dir=${src.dir}" />
+							<arg value="project.dependencies=${project.dependencies}" />
+							<arg value="jar.dependencies=${jar.dependencies}" />
+							<arg value="module.list=${module.list}" />
 						</java>
 					</then>
 				</if>
@@ -91,10 +90,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		</for>
 
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes" classpathref="project.lib.path">
-			<arg value="${project.name}" />
-			<arg value="${portal.dir}" />
-			<arg value="${module.list}" />
-			<arg value="${umbrella.source.list}" />
+			<arg value="module.list=${module.list}" />
+			<arg value="umbrella.source.list=${umbrella.source.list}" />
 		</java>
 	</target>
 

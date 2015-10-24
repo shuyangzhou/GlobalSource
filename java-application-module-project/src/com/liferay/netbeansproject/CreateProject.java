@@ -1,6 +1,8 @@
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
+import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -15,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -24,26 +27,30 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.apache.commons.lang3.ArrayUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 public class CreateProject {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 4) {
-			throw new IllegalArgumentException("Incorrect Number of arguments");
-		}
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String portalDir = properties.getProperty("project.dir");
+		String projectName = properties.getProperty("project.name");
+		String portalDir = properties.getProperty("portal.dir");
+		String moduleList = arguments.get("module.list");
+		String umbrellaSourceList = arguments.get("umbrella.source.list");
 
 		ProjectInfo projectInfo = new ProjectInfo(
-			args[0], args[1], _reorderModules(args[2], args[1]),
-			_reorderModules(args[3], args[1]));
+			projectName, portalDir, _reorderModules(moduleList, portalDir),
+			_reorderModules(umbrellaSourceList, portalDir));
 
-		_appendList(projectInfo, portalDir);
+		String projectDir = properties.getProperty("project.dir");
+
+		_appendList(projectInfo, projectDir);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -65,7 +72,7 @@ public class CreateProject {
 		StreamResult streamResult = null;
 
 		streamResult = new StreamResult(
-			new File(portalDir + "/nbproject/project.xml"));
+			new File(projectDir + "/nbproject/project.xml"));
 
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		transformer.setOutputProperty(
@@ -240,33 +247,38 @@ public class CreateProject {
 	private static String[] _reorderModules(
 		String originalOrder, String portalDir) {
 
-		String[] modules = originalOrder.split(",");
+		String[] modules = StringUtil.split(originalOrder, ',');
 
-		int i = 0;
+		if (modules.length > 0) {
 
-		List<String> moduleSourceList = new ArrayList<>();
+			int i = 0;
 
-		while (modules[i].startsWith(portalDir + "/modules")) {
-			moduleSourceList.add(modules[i]);
+			List<String> moduleSourceList = new ArrayList<>();
 
-			i++;
+			while (modules[i].startsWith(portalDir + "/modules")) {
+				moduleSourceList.add(modules[i]);
+
+				i++;
+			}
+
+			List<String> portalSourceList = new ArrayList<>();
+
+			while (i < modules.length) {
+				portalSourceList.add(modules[i]);
+
+				i++;
+			}
+
+			Collections.sort(portalSourceList);
+
+			Collections.sort(moduleSourceList);
+
+			portalSourceList.addAll(moduleSourceList);
+
+			return portalSourceList.toArray(new String[portalSourceList.size()]);
 		}
 
-		List<String> portalSourceList = new ArrayList<>();
-
-		while (i < modules.length) {
-			portalSourceList.add(modules[i]);
-
-			i++;
-		}
-
-		Collections.sort(portalSourceList);
-
-		Collections.sort(moduleSourceList);
-
-		portalSourceList.addAll(moduleSourceList);
-
-		return portalSourceList.toArray(new String[portalSourceList.size()]);
+		return ArrayUtils.EMPTY_STRING_ARRAY;
 	}
 
 	private static Document _document;
