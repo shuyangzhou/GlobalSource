@@ -48,7 +48,7 @@ public class CreateModule {
 			_reorderModules(arguments.get("jar.dependencies"), portalDir),
 			StringUtil.split(arguments.get("module.list"), ','));
 
-		String moduleDir = properties.getProperty("module.projects.dir");
+		String moduleDir = properties.getProperty("project.dir") + "/modules";
 
 		_replaceProjectName(projectInfo, moduleDir);
 
@@ -299,7 +299,7 @@ public class CreateModule {
 			projectSB.append(modulePath);
 			projectSB.append("/src");
 
-			if(new File(modulePath + "/src/main/java").exists()) {
+			if(new File(modulePath + "/src/main").exists()) {
 				projectSB.append("/main/java\n");
 			}
 			else {
@@ -398,9 +398,14 @@ public class CreateModule {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		_createRoots(
-			sourceRootsElement, projectInfo.getFullPath(),
-			"src." + projectInfo.getProjectName() + ".dir");
+		String projectPath = projectInfo.getFullPath();
+
+		if (!(new File(projectPath + "/src/main").exists()) ||
+			new File(projectPath + "/src/main/java").exists()) {
+
+			_createRoots(sourceRootsElement, projectInfo.getFullPath(),
+				"src." + projectInfo.getProjectName() + ".dir");
+		}
 
 		if (projectInfo.getProjectName().equals("portal-impl") ||
 			projectInfo.getProjectName().equals("portal-service")) {
@@ -410,14 +415,15 @@ public class CreateModule {
 
 		Element testRootsElement = _document.createElement("test-roots");
 
-		if (new File(projectInfo.getFullPath() + "/test/unit").exists()) {
+		if (new File(projectPath + "/test/unit").exists() ||
+			new File(projectPath + "/src/test").exists()) {
 			_createRoots(
 				testRootsElement,
 				"test." + projectInfo.getProjectName() + ".unit.dir");
 		}
 
-		if (new File(
-			projectInfo.getFullPath() + "/test/integration").exists()) {
+		if (new File(projectPath + "/test/integration").exists() ||
+			new File(projectPath + "/src/testIntegration").exists()) {
 
 			_createRoots(
 				testRootsElement,

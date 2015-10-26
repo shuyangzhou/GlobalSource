@@ -35,7 +35,7 @@ public class GradleResolver {
 			Paths.get("build.properties"));
 
 		Path moduleProjectsDirPath = Paths.get(
-			properties.getProperty("module.projects.dir"));
+			properties.getProperty("project.dir") + "/modules");
 
 		StringBuilder sb = new StringBuilder();
 

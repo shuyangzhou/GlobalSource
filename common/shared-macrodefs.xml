@@ -31,7 +31,7 @@
 	</macrodef>
 
 	<macrodef name="gradle-execute">
-		<attribute default="${module.projects.dir}" name="dir" />
+		<attribute default="${project.dir}" name="dir" />
 		<attribute default="true" name="failonerror" />
 		<attribute default="true" name="forcedcacheenabled" />
 		<attribute name="task" />
@@ -50,7 +50,7 @@
 				</else>
 			</if>
 
-			<exec dir="@{dir}" executable="${portal.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
+			<exec dir="@{dir}/modules" executable="${portal.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
 				<args />
 				<arg value="@{task}" />
 			</exec>
@@ -150,9 +150,7 @@
 		<sequential>
 			<delete file="settings.gradle" />
 			<delete dir="classes" />
-			<delete dir="${project.dir}/modules" />
-			<delete dir="${project.dir}/nbproject" />
-			<delete dir="${module.projects.dir}" />
+			<delete dir="${project.dir}" />
 		</sequential>
 	</macrodef>
 </project>

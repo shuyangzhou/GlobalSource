@@ -8,7 +8,7 @@
 		<attribute name="src.dir.name" />
 
 		<sequential>
-			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=${module.projects.dir}/@{src.dir.name}
+			<concat destfile="${project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=${project.dir}/modules/@{src.dir.name}
 reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
 </concat>
 			<append-list
@@ -26,7 +26,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 					src.dir.name="${src.dir.name}"
 				/>
 
-				<unzip src="CleanModule.zip" dest="${module.projects.dir}/${src.dir.name}/" />
+				<unzip src="CleanModule.zip" dest="${project.dir}/modules/${src.dir.name}/" />
 			</build.diff>
 		</common-build>
 
