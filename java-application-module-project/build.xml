@@ -55,7 +55,6 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 						<property file="jar-dependency.properties" prefix="jar." />
 
 						<local name="project.dependencies" />
-						<local name="jar.dependencies" />
 
 						<if>
 							<isset property="${src.dir.name}" />
@@ -67,21 +66,10 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 							</else>
 						</if>
 
-						<if>
-							<isset property="jar.${src.dir.name}" />
-							<then>
-								<propertycopy name="jar.dependencies" from="jar.${src.dir.name}" override="true" />
-							</then>
-							<else>
-								<property name="jar.dependencies" value="" />
-							</else>
-						</if>
-
 						<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes">
 							<arg value="src.dir.name=${src.dir.name}" />
 							<arg value="src.dir=${src.dir}" />
 							<arg value="project.dependencies=${project.dependencies}" />
-							<arg value="jar.dependencies=${jar.dependencies}" />
 							<arg value="module.list=${module.list}" />
 						</java>
 					</then>

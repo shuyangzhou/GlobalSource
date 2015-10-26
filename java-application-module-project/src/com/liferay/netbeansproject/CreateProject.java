@@ -12,11 +12,8 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,12 +35,10 @@ public class CreateProject {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String portalDir = properties.getProperty("portal.dir");
-
 		ProjectInfo projectInfo = new ProjectInfo(
-			properties.getProperty("project.name"), portalDir,
-			_reorderModules(arguments.get("module.list"), portalDir),
-			_reorderModules(arguments.get("umbrella.source.list"), portalDir));
+			properties.getProperty("project.name"),
+			StringUtil.split(arguments.get("module.list"), ','),
+			StringUtil.split(arguments.get("umbrella.source.list"), ','));
 
 		String projectDir = properties.getProperty("project.dir");
 
@@ -241,53 +236,12 @@ public class CreateProject {
 		sourceRootsElement.appendChild(rootElement);
 	}
 
-	private static String[] _reorderModules(
-		String originalOrder, String portalDir) {
-
-		String[] modules = StringUtil.split(originalOrder, ',');
-
-		if (modules.length > 0) {
-
-			int i = 0;
-
-			List<String> moduleSourceList = new ArrayList<>();
-
-			while (modules[i].startsWith(portalDir + "/modules")) {
-				moduleSourceList.add(modules[i]);
-
-				i++;
-			}
-
-			List<String> portalSourceList = new ArrayList<>();
-
-			while (i < modules.length) {
-				portalSourceList.add(modules[i]);
-
-				i++;
-			}
-
-			Collections.sort(portalSourceList);
-
-			Collections.sort(moduleSourceList);
-
-			portalSourceList.addAll(moduleSourceList);
-
-			return portalSourceList.toArray(new String[portalSourceList.size()]);
-		}
-
-		return new String[0];
-	}
-
 	private static Document _document;
 
 	private static class ProjectInfo {
 
 		public String[] getModules() {
 			return _modules;
-		}
-
-		public String getPortalDir() {
-			return _portalDir;
 		}
 
 		public String getProjectName() {
@@ -299,12 +253,10 @@ public class CreateProject {
 		}
 
 		private ProjectInfo(
-			String projectName, String portalDir, String[] modules,
+			String projectName, String[] modules,
 			String[] sources) {
 
 			_projectName = projectName;
-
-			_portalDir = portalDir;
 
 			_modules = modules;
 
@@ -312,7 +264,6 @@ public class CreateProject {
 		}
 
 		private final String[] _modules;
-		private final String _portalDir;
 		private final String _projectName;
 		private final String[] _sources;
 

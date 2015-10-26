@@ -14,10 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,8 +42,7 @@ public class CreateModule {
 
 		ProjectInfo projectInfo = new ProjectInfo(
 			arguments.get("src.dir.name"), portalDir, arguments.get("src.dir"),
-			_reorderModules(arguments.get("project.dependencies"), portalDir),
-			_reorderModules(arguments.get("jar.dependencies"), portalDir),
+			StringUtil.split(arguments.get("project.dependencies"), ','),
 			StringUtil.split(arguments.get("module.list"), ','));
 
 		String moduleDir = properties.getProperty("project.dir") + "/modules";
@@ -546,29 +543,6 @@ public class CreateModule {
 		sourceRootsElement.appendChild(rootElement);
 	}
 
-	private static String[] _reorderModules(
-		String originalOrder, String portalDir) {
-
-		String[] modules = StringUtil.split(originalOrder, ',');
-
-		List<String> moduleSourceList = new ArrayList<>();
-
-		List<String> portalSourceList = new ArrayList<>();
-
-		for (String module : modules) {
-			if (module.startsWith(portalDir + "/modules")) {
-				moduleSourceList.add(module);
-			}
-			else {
-				portalSourceList.add(module);
-			}
-		}
-
-		portalSourceList.addAll(moduleSourceList);
-
-		return portalSourceList.toArray(new String[portalSourceList.size()]);
-	}
-
 	private static void _replaceProjectName(
 		ProjectInfo projectInfo, String moduleDir)
 		throws IOException {
@@ -598,14 +572,6 @@ public class CreateModule {
 			return _dependenciesModuleMap;
 		}
 
-		public String[] getJarLibs() {
-			return _jarLib;
-		}
-
-		public String[] getModuleList() {
-			return _moduleList;
-		}
-
 		public Map<String, Path> getModuleMap() {
 			return _moduleMap;
 		}
@@ -630,7 +596,7 @@ public class CreateModule {
 
 		private ProjectInfo(
 			String projectName, String portalDir, String fullPath,
-			String[] projectLibs, String[] jarLibs, String[] moduleList) {
+			String[] projectLibs, String[] moduleList) {
 
 			_projectName = projectName;
 
@@ -639,10 +605,6 @@ public class CreateModule {
 			_fullPath = fullPath;
 
 			_projectLib = projectLibs;
-
-			_jarLib = jarLibs;
-
-			_moduleList = moduleList;
 
 			_moduleMap = new HashMap<>();
 
@@ -657,8 +619,6 @@ public class CreateModule {
 
 		private final String _fullPath;
 		private Map<String, ModuleInfo> _dependenciesModuleMap;
-		private final String[] _jarLib;
-		private final String[] _moduleList;
 		private final Map<String, Path> _moduleMap;
 		private final String _portalDir;
 		private final String[] _projectLib;
