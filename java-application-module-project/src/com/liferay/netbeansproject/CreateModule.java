@@ -310,6 +310,19 @@ public class CreateModule {
 		projectSB.append(moduleName);
 		projectSB.append("-src}\n");
 
+		if (new File(modulePath + "/src/main/resources").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-resources=");
+			projectSB.append(modulePath);
+			projectSB.append("/src/main/resources\n");
+			projectSB.append("src.");
+			projectSB.append(moduleName);
+			projectSB.append(".resources.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-resources}\n");
+		}
+
 		if (new File(modulePath + "/test/unit").exists()) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
@@ -335,6 +348,19 @@ public class CreateModule {
 			projectSB.append("-test-unit}\n");
 		}
 
+		if(new File(modulePath + "/src/test/resources").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit-resources=");
+			projectSB.append(modulePath);
+			projectSB.append("/src/test/resources\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".unit.resources.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-unit-resources}\n");
+		}
+
 		if (new File(modulePath + "/test/integration").exists()) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
@@ -358,6 +384,19 @@ public class CreateModule {
 			projectSB.append(".integration.dir=${file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration}\n");
+		}
+
+		if(new File(modulePath + "/src/testIntegration/resources").exists()) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration-resources=");
+			projectSB.append(modulePath);
+			projectSB.append("/src/testIntegration/resources\n");
+			projectSB.append("test.");
+			projectSB.append(moduleName);
+			projectSB.append(".integration.resources.dir=${file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-test-integration-resources}\n");
 		}
 	}
 
@@ -400,8 +439,13 @@ public class CreateModule {
 		if (!(new File(projectPath + "/src/main").exists()) ||
 			new File(projectPath + "/src/main/java").exists()) {
 
-			_createRoots(sourceRootsElement, projectInfo.getFullPath(),
+			_createRoots(sourceRootsElement, projectPath + "/java",
 				"src." + projectInfo.getProjectName() + ".dir");
+		}
+
+		if (new File(projectPath + "/src/main/resources").exists()) {
+			_createRoots(sourceRootsElement, projectPath + "/resources",
+				"src." + projectInfo.getProjectName() + ".resources.dir");
 		}
 
 		if (projectInfo.getProjectName().equals("portal-impl") ||
@@ -415,16 +459,28 @@ public class CreateModule {
 		if (new File(projectPath + "/test/unit").exists() ||
 			new File(projectPath + "/src/test").exists()) {
 			_createRoots(
-				testRootsElement,
+				testRootsElement, projectPath + "/unit/test",
 				"test." + projectInfo.getProjectName() + ".unit.dir");
+		}
+
+		if (new File(projectPath + "/src/test/resources").exists()) {
+			_createRoots(sourceRootsElement, projectPath + "/unit/resources",
+				"test." + projectInfo.getProjectName() + ".unit.resources.dir");
 		}
 
 		if (new File(projectPath + "/test/integration").exists() ||
 			new File(projectPath + "/src/testIntegration").exists()) {
 
 			_createRoots(
-				testRootsElement,
+				testRootsElement, projectPath + "/integration/test",
 				"test." + projectInfo.getProjectName() + ".integration.dir");
+		}
+
+		if (new File(projectPath + "/src/testIntegration/resources").exists()) {
+			_createRoots(sourceRootsElement,
+				projectPath + "/integration/resources",
+				"test." + projectInfo.getProjectName() +
+					".integration.resources.dir");
 		}
 
 		dataElement.appendChild(testRootsElement);
