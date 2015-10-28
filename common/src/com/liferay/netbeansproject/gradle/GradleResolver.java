@@ -98,6 +98,11 @@ public class GradleResolver {
 
 		dependency = projectMatcher.replaceAll("");
 
+		Matcher unusedDependencyMatcher =
+			_unusedDependencyPattern.matcher(dependency);
+
+		dependency = unusedDependencyMatcher.replaceAll("");
+
 		Matcher portalMatcher = _portalPattern.matcher(dependency);
 
 		String gradleContent = StringUtil.replace(
@@ -142,4 +147,7 @@ public class GradleResolver {
 		Pattern.compile(
 			"\t(compile|provided|testCompile|testIntegrationCompile|"
 				+ "frontendThemes)\\s*project.*\\n");
+
+	private static final Pattern _unusedDependencyPattern =
+		Pattern.compile("\tconfigAdmin\\s*group.*\\n");
 }
