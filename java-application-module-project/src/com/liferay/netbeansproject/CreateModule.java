@@ -13,13 +13,16 @@ import java.nio.file.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 
 import java.util.Queue;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -145,6 +148,18 @@ public class CreateModule {
 		}
 	}
 
+	private static void _appendLibJars(
+		Set<String> dependencies, StringBuilder sb) {
+
+		for (String jar : dependencies) {
+			if (!jar.isEmpty()) {
+				sb.append("\t");
+				sb.append(jar);
+				sb.append(":\\\n");
+			}
+		}
+	}
+
 	private static void _appendProperties(
 		ProjectInfo projectInfo, Properties properties, String moduleDir)
 		throws Exception {
@@ -185,8 +200,30 @@ public class CreateModule {
 			File libFolder = new File(
 				moduleDir + "/" + projectInfo.getProjectName() + "/lib");
 
+			Properties dependencyProperties =
+				PropertiesUtil.loadProperties(
+					Paths.get(
+						moduleDir + "/" + projectInfo.getProjectName() +
+							"/GradleDependency.properties"));
+
 			StringBuilder testSB = new StringBuilder(
 				"javac.test.classpath=\\\n");
+
+			String compileDependencies =
+				dependencyProperties.getProperty("compile");
+
+			Set<String> compileSet = new HashSet<>();
+
+			compileSet.addAll(
+				Arrays.asList(compileDependencies.split(File.pathSeparator)));
+
+			String compileTestDependencies =
+				dependencyProperties.getProperty("compileTest");
+
+			Set<String> compileTestSet = new HashSet<>();
+
+			compileTestSet.addAll(Arrays.asList(
+				compileTestDependencies.split(File.pathSeparator)));
 
 			if (libFolder.exists()) {
 				_appendLibFolders(libFolder, projectSB, testSB);
@@ -208,13 +245,27 @@ public class CreateModule {
 						printWriter, moduleName, projectSB);
 				}
 
-				File importLibFolder =
-					new File(moduleDir + "/" + moduleName + "/lib");
+				Properties moduleDependencyProperties =
+					PropertiesUtil.loadProperties(
+						Paths.get(
+							moduleDir + "/" + moduleName +
+								"/GradleDependency.properties"));
 
-				if (importLibFolder.exists()) {
-					_appendLibFolders(importLibFolder, projectSB, testSB);
-				}
+				compileDependencies =
+					moduleDependencyProperties.getProperty("compile");
+
+				compileSet.addAll(Arrays.asList(
+					compileDependencies.split(File.pathSeparator)));
+
+				compileTestDependencies =
+					moduleDependencyProperties.getProperty("compileTest");
+
+				compileTestSet.addAll(Arrays.asList(
+					compileTestDependencies.split(File.pathSeparator)));
 			}
+
+			_appendLibJars(compileSet, projectSB);
+			_appendLibJars(compileTestSet, testSB);
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 

@@ -17,13 +17,11 @@ configurations {
 
 *insert-dependencies*
 
-task copyDependencies(type: Copy) {
-	from configurations.compile
-	into "$buildDir"
-}
-task copyTestDependencies(type: Copy) {
-	from configurations.testConfiguration
-	into "$buildDir/test"
-}
+FileCollection javaClasspath = files(*insert-classpath*)
 
-copyDependencies.dependsOn copyTestDependencies
+task(createJarDependencies, dependsOn: 'classes', type: JavaExec) {
+	main = "com.liferay.netbeansproject.gradle.GradleDependencyExtractor"
+	classpath = javaClasspath
+	args configurations.compile.asPath
+	args configurations.testConfiguration.asPath
+}

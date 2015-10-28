@@ -105,6 +105,11 @@ public class GradleResolver {
 
 		Matcher portalMatcher = _portalPattern.matcher(dependency);
 
+		defaultGradleContent =
+			StringUtil.replace(
+				defaultGradleContent, "*insert-classpath*",
+				"\"" + System.getProperty("user.dir") + "/classes\"");
+
 		String gradleContent = StringUtil.replace(
 			defaultGradleContent, "*insert-dependencies*",
 			_replaceKeywords(portalMatcher.replaceAll("")));
