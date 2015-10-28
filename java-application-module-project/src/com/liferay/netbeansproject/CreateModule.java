@@ -13,13 +13,16 @@ import java.nio.file.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 
 import java.util.Queue;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -123,24 +126,14 @@ public class CreateModule {
 		}
 	}
 
-	private static void _appendLibFolders(
-		File libFolder, StringBuilder javacSB, StringBuilder testSB) {
+	private static void _appendLibJars(
+		Set<String> dependencies, StringBuilder sb) {
 
-		for (File jar : libFolder.listFiles()) {
-			String jarName = jar.getName();
-
-			if (jarName.endsWith(".jar")) {
-				javacSB.append("\t");
-				javacSB.append(jar.getAbsolutePath());
-				javacSB.append(":\\\n");
-			}
-
-			if (jarName.equals("test")) {
-				for (File testJar : jar.listFiles()) {
-					testSB.append("\t");
-					testSB.append(testJar.getAbsolutePath());
-					testSB.append(":\\\n");
-				}
+		for (String jar : dependencies) {
+			if (!jar.isEmpty()) {
+				sb.append("\t");
+				sb.append(jar);
+				sb.append(":\\\n");
 			}
 		}
 	}
@@ -182,15 +175,33 @@ public class CreateModule {
 				}
 			}
 
-			File libFolder = new File(
-				moduleDir + "/" + projectInfo.getProjectName() + "/lib");
+			Properties dependencyProperties =
+				PropertiesUtil.loadProperties(
+					Paths.get(
+						moduleDir + "/" + projectInfo.getProjectName() +
+							"/GradleDependency.properties"));
 
 			StringBuilder testSB = new StringBuilder(
 				"javac.test.classpath=\\\n");
 
-			if (libFolder.exists()) {
-				_appendLibFolders(libFolder, projectSB, testSB);
-			}
+			testSB.append("\t${build.classes.dir}:\\\n");
+			testSB.append("\t${javac.classpath}:\\\n");
+
+			String compileDependencies =
+				dependencyProperties.getProperty("compile");
+
+			Set<String> compileSet = new HashSet<>();
+
+			compileSet.addAll(
+				Arrays.asList(compileDependencies.split(File.pathSeparator)));
+
+			String compileTestDependencies =
+				dependencyProperties.getProperty("compileTest");
+
+			Set<String> compileTestSet = new HashSet<>();
+
+			compileTestSet.addAll(Arrays.asList(
+				compileTestDependencies.split(File.pathSeparator)));
 
 			Map<String, ModuleInfo> dependenciesModuleMap =
 				_parseModuleDependencies(
@@ -208,13 +219,27 @@ public class CreateModule {
 						printWriter, moduleName, projectSB);
 				}
 
-				File importLibFolder =
-					new File(moduleDir + "/" + moduleName + "/lib");
+				Properties moduleDependencyProperties =
+					PropertiesUtil.loadProperties(
+						Paths.get(
+							moduleDir + "/" + moduleName +
+								"/GradleDependency.properties"));
 
-				if (importLibFolder.exists()) {
-					_appendLibFolders(importLibFolder, projectSB, testSB);
-				}
+				compileDependencies =
+					moduleDependencyProperties.getProperty("compile");
+
+				compileSet.addAll(Arrays.asList(
+					compileDependencies.split(File.pathSeparator)));
+
+				compileTestDependencies =
+					moduleDependencyProperties.getProperty("compileTest");
+
+				compileTestSet.addAll(Arrays.asList(
+					compileTestDependencies.split(File.pathSeparator)));
 			}
+
+			_appendLibJars(compileSet, projectSB);
+			_appendLibJars(compileTestSet, testSB);
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 
@@ -248,8 +273,7 @@ public class CreateModule {
 
 			printWriter.println(projectSB.toString());
 
-			testSB.append("\t${build.classes.dir}:\\\n");
-			testSB.append("\t${javac.classpath}");
+			testSB.setLength(testSB.length() - 3);
 
 			printWriter.println(testSB.toString());
 		}
