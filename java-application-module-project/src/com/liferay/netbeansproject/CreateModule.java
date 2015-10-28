@@ -126,28 +126,6 @@ public class CreateModule {
 		}
 	}
 
-	private static void _appendLibFolders(
-		File libFolder, StringBuilder javacSB, StringBuilder testSB) {
-
-		for (File jar : libFolder.listFiles()) {
-			String jarName = jar.getName();
-
-			if (jarName.endsWith(".jar")) {
-				javacSB.append("\t");
-				javacSB.append(jar.getAbsolutePath());
-				javacSB.append(":\\\n");
-			}
-
-			if (jarName.equals("test")) {
-				for (File testJar : jar.listFiles()) {
-					testSB.append("\t");
-					testSB.append(testJar.getAbsolutePath());
-					testSB.append(":\\\n");
-				}
-			}
-		}
-	}
-
 	private static void _appendLibJars(
 		Set<String> dependencies, StringBuilder sb) {
 
@@ -197,9 +175,6 @@ public class CreateModule {
 				}
 			}
 
-			File libFolder = new File(
-				moduleDir + "/" + projectInfo.getProjectName() + "/lib");
-
 			Properties dependencyProperties =
 				PropertiesUtil.loadProperties(
 					Paths.get(
@@ -224,10 +199,6 @@ public class CreateModule {
 
 			compileTestSet.addAll(Arrays.asList(
 				compileTestDependencies.split(File.pathSeparator)));
-
-			if (libFolder.exists()) {
-				_appendLibFolders(libFolder, projectSB, testSB);
-			}
 
 			Map<String, ModuleInfo> dependenciesModuleMap =
 				_parseModuleDependencies(
