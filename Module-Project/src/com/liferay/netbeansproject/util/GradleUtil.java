@@ -5,7 +5,7 @@
  */
 package com.liferay.netbeansproject.util;
 
-import com.liferay.netbeansproject.container.Module.ProjectDependency;
+import com.liferay.netbeansproject.container.Module.ModuleDependency;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -45,7 +45,7 @@ public class GradleUtil {
 
 		return dependencies;
 	}
-	public static List<ProjectDependency> getProjectDependencies(
+	public static List<ModuleDependency> getModuleDependencies(
 			Path modulePath)
 		throws Exception {
 
@@ -55,7 +55,7 @@ public class GradleUtil {
 			return Collections.emptyList();
 		}
 
-		List<ProjectDependency> moduleInfos = new ArrayList<>();
+		List<ModuleDependency> moduleInfos = new ArrayList<>();
 
 		try(BufferedReader bufferedReader = Files.newBufferedReader(
 			gradleFilePath, Charset.defaultCharset())) {
@@ -102,8 +102,7 @@ public class GradleUtil {
 						test = true;
 					}
 
-					moduleInfos.add(
-						new ProjectDependency(parts, test));
+					moduleInfos.add(new ModuleDependency(parts, test));
 				}
 			}
 		}

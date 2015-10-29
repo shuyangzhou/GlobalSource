@@ -5,7 +5,9 @@
  */
 package com.liferay.netbeansproject.container;
 
+import com.liferay.netbeansproject.GradleDependencyResolver;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,18 +43,28 @@ public class Module {
 		return _testIntegrationResourcePath;
 	}
 
-	public List<String> getJarDependencies() {
-		return _jarDependencies;
+	public List<Path> getJarDependenciesPaths(
+		GradleDependencyResolver gradleDependencyResolver) {
+
+		List<Path> jarDependenciesPaths = new ArrayList<>(
+			_jarDependencies.size());
+
+		for (String jarDependency : _jarDependencies) {
+			jarDependenciesPaths.add(
+				gradleDependencyResolver.resolve(jarDependency));
+		}
+
+		return jarDependenciesPaths;
 	}
 
-	public List<ProjectDependency> getProjectDependencies() {
-		return _projectDependencies;
+	public List<ModuleDependency> getModuleDependencies() {
+		return _moduleDependencies;
 	}
 
 	public Module(Path modulePath, Path sourcePath, Path sourceResourcePath,
 		Path testUnitPath, Path testUnitResourcePath, Path testIntegrationPath,
 		Path testIntegrationResourcePath, List<String> jarDependencies,
-		List<ProjectDependency> projectDependencies) {
+		List<ModuleDependency> moduleDependencies) {
 
 		_modulePath = modulePath;
 		_sourcePath = sourcePath;
@@ -62,7 +74,7 @@ public class Module {
 		_testIntegrationPath = testIntegrationPath;
 		_testIntegrationResourcePath = testIntegrationResourcePath;
 		_jarDependencies = jarDependencies;
-		_projectDependencies = projectDependencies;
+		_moduleDependencies = moduleDependencies;
 	}
 
 	private final Path _modulePath;
@@ -73,24 +85,24 @@ public class Module {
 	private final Path _testIntegrationPath;
 	private final Path _testIntegrationResourcePath;
 	private final List<String> _jarDependencies;
-	private final List<ProjectDependency> _projectDependencies;
+	private final List<ModuleDependency> _moduleDependencies;
 
-	public static class ProjectDependency {
+	public static class ModuleDependency {
 
-		public String[] getDependency() {
-			return _dependency;
+		public ModuleDependency(Module module, boolean test) {
+			_module = module;
+			_test = test;
+		}
+
+		public Module getModule() {
+			return _module;
 		}
 
 		public boolean isTest() {
 			return _test;
 		}
 
-		public ProjectDependency(String[] dependency, boolean test) {
-			_dependency = dependency;
-			_test = test;
-		}
-
-		private final String[] _dependency;
+		private final String _modulePath;
 		private final boolean _test;
 
 	}

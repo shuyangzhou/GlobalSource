@@ -7,21 +7,26 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.container.Module.ProjectDependency;
+import com.liferay.netbeansproject.container.Module.ModuleDependency;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitor;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -32,18 +37,67 @@ public class ModuleProject {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		Path portalDirPath = Paths.get(properties.getProperty("portal.dir"));
+		final Set<Path> blackListPaths = new HashSet<>();
 
-		FileVisitor test = new PortalFileVisitor();
+		final StringBuilder dependenciesSB = new StringBuilder();
 
-		Files.walkFileTree(portalDirPath, test);
+		// TODO 1) populate the blackListPaths from properties
 
-		System.out.println(_dependenciesSB);
+		Files.walkFileTree(
+			Paths.get(properties.getProperty("portal.dir")),
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(
+					Path dir, BasicFileAttributes attrs) throws IOException {
+
+					if (blackListPaths.contains(dir)) {
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					if (Files.exists(dir.resolve("src"))) {
+						try {
+							Module module = ModuleProject.createModule(dir, dependenciesSB);
+						}
+						catch (Exception ex) {
+							Logger.getLogger(ModuleProject.class.getName()).log(Level.SEVERE, null, ex);
+						}
+
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					return FileVisitResult.CONTINUE;
+//					if (dir.endsWith(".gradle")) {
+//						return FileVisitResult.SKIP_SUBTREE;
+//					}
+//
+//					else if (dir.endsWith("sample")) {
+//						return FileVisitResult.SKIP_SUBTREE;
+//					}
+//
+//					else if (dir.endsWith("src")) {
+//						Path parentPath = dir.getParent();
+//
+//						try {
+//							Module module = ModuleProject.createModule(parentPath);
+//
+//							linkModuletoMap(module, parentPath.getParent());
+//						}
+//						catch (Exception ex) {
+////							Logger.getLogger(PortalFileVisitor.class.getName()).log(
+////								Level.SEVERE, null, ex);
+//						}
+//						return FileVisitResult.SKIP_SUBTREE;
+//					}
+//					return FileVisitResult.CONTINUE;
+				}
+
+			});
+
+		System.out.println(dependenciesSB);
 	}
 
-	public static Module createModule(Path modulePath) throws Exception {
-		Path sourcePath = _resolveSourcePath(modulePath);
-
+	public static Module createModule(Path modulePath, StringBuilder dependenciesSB) throws Exception {
 		Path testUnitPath = _resolveTestPath(modulePath, "unit");
 
 		Path testIntegrationPath = _resolveTestPath(modulePath, "integration");
@@ -55,8 +109,8 @@ public class ModuleProject {
 		Path testIntegrationResourcePath =
 			_resolveResourcePath(modulePath, "integration");
 
-		List<ProjectDependency> projectDependencyList =
-			GradleUtil.getProjectDependencies(modulePath);
+		List<ModuleDependency> projectDependencyList =
+			GradleUtil.getModuleDependencies(modulePath);
 
 		String dependencies = GradleUtil.getJarDependencies(modulePath);
 
@@ -65,7 +119,7 @@ public class ModuleProject {
 		List<String> jarDependencyList = _formatDependency(dependencies);
 
 		return new Module(
-			modulePath, sourcePath, sourceResourcePath, testUnitPath,
+			modulePath, _resolveSourcePath(modulePath), sourceResourcePath, testUnitPath,
 			testUnitResourcePath, testIntegrationPath,
 			testIntegrationResourcePath, jarDependencyList,
 			projectDependencyList);
@@ -104,14 +158,16 @@ public class ModuleProject {
 
 		return null;
 	}
-	private static Path _resolveSourcePath(Path modulePath) {
-		if (Files.exists(modulePath.resolve(
-			"src" + File.separator + "main" + File.separator + "java"))) {
 
-			return modulePath.resolve(
-				"src" + File.separator + "main" + File.separator + "java");
+	private static Path _resolveSourcePath(Path modulePath) {
+
+		Path mainJavaPath = modulePath.resolve(_mainJavaPath);
+
+		if (Files.exists(mainJavaPath)) {
+			return mainJavaPath;
 		}
-		else if (Files.exists(modulePath.resolve(
+		
+		if (Files.exists(modulePath.resolve(
 			"src" + File.separator + "main"))) {
 
 			return null;
@@ -144,5 +200,5 @@ public class ModuleProject {
 
 	private static final Map<Path, List<Module>> _projectMap = new HashMap<>();
 
-	private static final StringBuilder _dependenciesSB = new StringBuilder();
+	private static final Path _mainJavaPath = Paths.get("src", "main", "java");
 }
