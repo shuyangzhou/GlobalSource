@@ -107,8 +107,8 @@ public class GradleResolver {
 
 		defaultGradleContent =
 			StringUtil.replace(
-				defaultGradleContent, "*insert-classpath*",
-				"\"" + System.getProperty("user.dir") + "/classes\"");
+				defaultGradleContent, "*insert-filepath*",
+				"\"" + gradleFilePath.getParent() + "/dependency.properties\"");
 
 		String gradleContent = StringUtil.replace(
 			defaultGradleContent, "*insert-dependencies*",
