@@ -106,8 +106,9 @@
 	</concat>
 
 			<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=${portal.dir}/portal-web/docroot
-	src.portal-web.dir=$${file.reference.portal-web.src}
-
+src.portal-web.dir=$${file.reference.portal-web.src}
+file.reference.portal-web-functional.src=${portal.dir}/portal-web/test/functional
+src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 	</concat>
 
 			<for param="module">
