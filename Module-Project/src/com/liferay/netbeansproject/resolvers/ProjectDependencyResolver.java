@@ -12,15 +12,16 @@
  * details.
  */
 
-package com.liferay.netbeansproject;
+package com.liferay.netbeansproject.resolvers;
 
-import java.nio.file.Path;
+import com.liferay.netbeansproject.container.Module;
 
 /**
- * @author Shuyang Zhou
+ *
+ * @author Tom Wang
  */
-public interface GradleDependencyResolver {
+public interface ProjectDependencyResolver {
 
-	public Path resolve(String gradleDependencyString);
+	public Module resolve(String modulePath);
 
 }

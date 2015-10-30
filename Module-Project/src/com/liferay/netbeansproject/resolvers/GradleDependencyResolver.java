@@ -12,16 +12,18 @@
  * details.
  */
 
-package com.liferay.netbeansproject;
+package com.liferay.netbeansproject.resolvers;
 
-import java.io.IOException;
+import com.liferay.netbeansproject.container.Module;
+import com.liferay.netbeansproject.container.Module.JarDependency;
+
+import java.util.List;
 
 /**
  * @author Shuyang Zhou
  */
-public class NewClass {
-	public static void main(String[] args) throws IOException {
-		ModuleProject.main(args);
-		ModuleProject.main(args);
-	}
+public interface GradleDependencyResolver {
+
+	public List<JarDependency> resolve(Module module);
+
 }

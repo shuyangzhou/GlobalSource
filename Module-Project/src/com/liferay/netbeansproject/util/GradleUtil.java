@@ -1,16 +1,28 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
  */
+
 package com.liferay.netbeansproject.util;
 
 import com.liferay.netbeansproject.container.Module.ModuleDependency;
+
 import java.io.BufferedReader;
 import java.io.IOException;
+
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,21 +31,19 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author tom
+ * @author Tom Wang
  */
 public class GradleUtil {
 
-	public static String getJarDependencies(Path modulePath)
-		throws Exception {
-
+	public static String getJarDependencies(Path modulePath) throws Exception {
 		String dependencies = _extractDependency(modulePath);
 
 		Matcher projectMatcher = _projectPattern.matcher(dependencies);
 
 		dependencies = projectMatcher.replaceAll("");
 
-		Matcher unusedDependencyMatcher =
-			_unusedDependencyPattern.matcher(dependencies);
+		Matcher unusedDependencyMatcher = _unusedDependencyPattern.matcher(
+			dependencies);
 
 		dependencies = unusedDependencyMatcher.replaceAll("");
 
@@ -41,12 +51,10 @@ public class GradleUtil {
 
 		dependencies = portalMatcher.replaceAll("");
 
-		dependencies = _replaceKeywords(dependencies);
-
-		return dependencies;
+		return _replaceKeywords(dependencies);
 	}
-	public static List<ModuleDependency> getModuleDependencies(
-			Path modulePath)
+
+	public static List<ModuleDependency> getModuleDependencies(Path modulePath)
 		throws Exception {
 
 		Path gradleFilePath = modulePath.resolve("build.gradle");
@@ -57,8 +65,9 @@ public class GradleUtil {
 
 		List<ModuleDependency> moduleInfos = new ArrayList<>();
 
-		try(BufferedReader bufferedReader = Files.newBufferedReader(
-			gradleFilePath, Charset.defaultCharset())) {
+		try(
+			BufferedReader bufferedReader = Files.newBufferedReader(
+				gradleFilePath, Charset.defaultCharset())) {
 
 			String line = null;
 
@@ -87,22 +96,15 @@ public class GradleUtil {
 
 					String moduleLocation = line.substring(index1 + 1, index2);
 
-					String[] parts = StringUtil.split(moduleLocation, ':');
-
-					if (parts.length == 0) {
-						throw new IllegalStateException(
-							"Broken syntax in " + gradleFilePath);
-					}
-
 					boolean test = false;
 
-					if(line.startsWith("testCompile project") ||
+					if (line.startsWith("testCompile project") ||
 						line.startsWith("testIntegrationCompile project")) {
 
 						test = true;
 					}
 
-					moduleInfos.add(new ModuleDependency(parts, test));
+					moduleInfos.add(new ModuleDependency(moduleLocation, test));
 				}
 			}
 		}
@@ -121,18 +123,11 @@ public class GradleUtil {
 
 		String content = new String(Files.readAllBytes(buildGradlePath));
 
-		Matcher jenkinsMatcher = _jenkinsPattern.matcher(content);
-
 		StringBuilder sb = new StringBuilder();
-
-		while(jenkinsMatcher.find()) {
-			sb.append(jenkinsMatcher.group(0));
-			sb.append('\n');
-		}
 
 		Matcher dependencyMatcher = _dependencyPattern.matcher(content);
 
-		while(dependencyMatcher.find()) {
+		while (dependencyMatcher.find()) {
 			sb.append(dependencyMatcher.group(0));
 			sb.append('\n');
 		}
@@ -156,28 +151,20 @@ public class GradleUtil {
 
 		dependencies = StringUtil.replace(dependencies, "dependencies {", "");
 		dependencies = StringUtil.replace(dependencies, "}", "");
-		
+
 		return StringUtil.replace(
 			dependencies, "testCompile", "testConfiguration");
 	}
 
-	private static final Pattern _dependencyPattern =
-		Pattern.compile("dependencies(\\s*)\\{[^}]*}");
-
-	private static final Pattern _jenkinsPattern =
-		Pattern.compile("String jenkins.*");
-
-	private static final Pattern _portalPattern =
-		Pattern.compile(
-			"\t(compile|provided|testCompile|testIntegrationCompile)\\s*group:"
-				+ "\\s\"com\\.liferay\\.portal\".*\\n");
-
-	private static final Pattern _projectPattern =
-		Pattern.compile(
-			"\t(compile|provided|testCompile|testIntegrationCompile|"
-				+ "frontendThemes)\\s*project.*\\n");
-
-	private static final Pattern _unusedDependencyPattern =
-		Pattern.compile("\tconfigAdmin\\s*group.*\\n");
+	private static final Pattern _dependencyPattern = Pattern.compile(
+		"dependencies(\\s*)\\{[^}]*}");
+	private static final Pattern _portalPattern = Pattern.compile(
+		"\t(compile|provided|testCompile|testIntegrationCompile)\\s*group:" +
+			"\\s\"com\\.liferay\\.portal\".*\\n");
+	private static final Pattern _projectPattern = Pattern.compile(
+		"\t(compile|provided|testCompile|testIntegrationCompile|" +
+			"frontendThemes)\\s*project.*\\n");
+	private static final Pattern _unusedDependencyPattern = Pattern.compile(
+		"\tconfigAdmin\\s*group.*\\n");
 
 }
