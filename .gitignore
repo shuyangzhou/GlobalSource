@@ -22,3 +22,7 @@ java-application-module-project/classes/
 java-application-module-project/portal/modules/
 java-application-module-project/portal/nbproject/
 java-application-module-project/build/
+
+Module-Project/build/*
+Module-Project/classes/*
+Module-Project/manifest.mf

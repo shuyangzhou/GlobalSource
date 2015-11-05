@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
 package com.liferay.netbeansproject.gradle;
 
 import com.liferay.netbeansproject.util.PropertiesUtil;
@@ -17,6 +31,10 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ *
+ * @author Tom Wang
+ */
 public class GradleResolver {
 
 	public static void main(String[] args) throws Exception {
@@ -71,14 +89,7 @@ public class GradleResolver {
 
 		String content = new String(Files.readAllBytes(buildGradlePath));
 
-		Matcher jenkinsMatcher = _jenkinsPattern.matcher(content);
-
 		StringBuilder sb = new StringBuilder();
-
-		while(jenkinsMatcher.find()) {
-			sb.append(jenkinsMatcher.group(0));
-			sb.append('\n');
-		}
 
 		Matcher dependencyMatcher = _dependencyPattern.matcher(content);
 
@@ -111,7 +122,7 @@ public class GradleResolver {
 		defaultGradleContent =
 			StringUtil.replace(
 				defaultGradleContent, "*insert-filepath*",
-				"\"" + dependencyPropertiesPath.toString() + "\"");
+				dependencyPropertiesPath.toString());
 
 		String gradleContent = StringUtil.replace(
 			defaultGradleContent, "*insert-dependencies*",
@@ -142,9 +153,6 @@ public class GradleResolver {
 
 	private static final Pattern _dependencyPattern =
 		Pattern.compile("dependencies(\\s*)\\{[^}]*}");
-
-	private static final Pattern _jenkinsPattern =
-		Pattern.compile("String jenkins.*");
 
 	private static final Pattern _portalPattern =
 		Pattern.compile(

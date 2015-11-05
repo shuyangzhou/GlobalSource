@@ -15,7 +15,12 @@ configurations {
 	testConfiguration
 }
 
+String jenkinsCoreName = "jenkins-core"
+String jenkinsCoreVersion = "1.565.1"
+
+dependencies {
 *insert-dependencies*
+}
 
 task createJarDependencies {
 	StringBuilder sb = new StringBuilder();
@@ -26,7 +31,7 @@ task createJarDependencies {
 	sb.append("compileTest:")
 	sb.append(configurations.testConfiguration.asPath)
 
-	def file = new File(*insert-filepath*)
+	def file = new File("*insert-filepath*")
 
 	file.text = sb
 }
