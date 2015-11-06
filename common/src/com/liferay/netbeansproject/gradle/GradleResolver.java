@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -39,6 +40,10 @@ public class GradleResolver {
 
 		StringBuilder sb = new StringBuilder();
 
+		Pattern unusedConfigPattern = _createUnusedConfigPattern(
+			StringUtil.split(
+				properties.getProperty("ignored.gradle.configs"),','));
+
 		for(String module : StringUtil.split(moduleList, ',')) {
 			Path modulePath = Paths.get(module);
 
@@ -48,7 +53,7 @@ public class GradleResolver {
 
 			_createGradleFile(
 				defaultGradleContent, _extractDependency(modulePath),
-				moduleProjectPath.resolve("build.gradle"));
+				moduleProjectPath.resolve("build.gradle"), unusedConfigPattern);
 
 			sb.append("include \"");
 			sb.append(moduleName);
@@ -91,7 +96,8 @@ public class GradleResolver {
 	}
 
 	private static void _createGradleFile(
-			String defaultGradleContent, String dependency, Path gradleFilePath)
+			String defaultGradleContent, String dependency, Path gradleFilePath,
+			Pattern unusedDependencyPattern)
 		throws IOException {
 
 		Matcher projectMatcher = _projectPattern.matcher(dependency);
@@ -99,7 +105,7 @@ public class GradleResolver {
 		dependency = projectMatcher.replaceAll("");
 
 		Matcher unusedDependencyMatcher =
-			_unusedDependencyPattern.matcher(dependency);
+			unusedDependencyPattern.matcher(dependency);
 
 		dependency = unusedDependencyMatcher.replaceAll("");
 
@@ -120,6 +126,23 @@ public class GradleResolver {
 		Files.write(
 			gradleFilePath, Arrays.asList(gradleContent),
 			Charset.defaultCharset());
+	}
+
+	private static Pattern _createUnusedConfigPattern(String[] ignoredConfigs) {
+		List<String> ignoredGradleConfigsList = Arrays.asList(ignoredConfigs);
+
+		StringBuilder ignoredConfigSB = new StringBuilder("\t(");
+
+		for (String ignoredConfig : ignoredGradleConfigsList) {
+			ignoredConfigSB.append(ignoredConfig);
+			ignoredConfigSB.append("|");
+		}
+
+		ignoredConfigSB.setLength(ignoredConfigSB.length() - 1);
+
+		ignoredConfigSB.append(")\\s*group.*\\n");
+
+		return Pattern.compile(ignoredConfigSB.toString());
 	}
 
 	private static String _replaceKeywords(String dependency) {
@@ -155,7 +178,4 @@ public class GradleResolver {
 		Pattern.compile(
 			"\t(compile|provided|testCompile|testIntegrationCompile|"
 				+ "frontendThemes)\\s*project.*\\n");
-
-	private static final Pattern _unusedDependencyPattern =
-		Pattern.compile("\tconfigAdmin\\s*group.*\\n");
 }
