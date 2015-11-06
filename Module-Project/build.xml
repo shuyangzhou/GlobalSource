@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Liferay-Source-Netbeans-Project" default="build" basedir=".">
+
+	<import file="nbproject/build-impl.xml" />
+
+	<target name="build">
+		<mkdir dir="classes" />
+
+		<javac
+			debug="true"
+			destdir="classes"
+			includeantruntime="false" >
+
+			<src path="../common/src" />
+			<src path="src" />
+		</javac>
+
+		<java classname="com.liferay.netbeansproject.ModuleProject" classpath="classes" />
+	</target>
+</project>
