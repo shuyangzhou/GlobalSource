@@ -20,6 +20,7 @@ import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileVisitResult;
@@ -246,11 +247,23 @@ public class ModuleProject {
 		return null;
 	}
 
-	private static Path _resolveResourcePath(Path modulePath, String type) {
+	private static Path _resolveResourcePath(Path modulePath, String type)
+		throws IOException {
+
 		Path resourcePath = modulePath.resolve(
 			Paths.get("src", type, "resources"));
 
 		if (Files.exists(resourcePath)) {
+			File resourcePathFile = resourcePath.toFile();
+
+			File[] resourceFiles = resourcePathFile.listFiles();
+
+			if (resourceFiles.length == 1) {
+				if (resourceFiles[0].isHidden()) {
+					return null;
+				}
+			}
+
 			return resourcePath;
 		}
 
@@ -260,6 +273,16 @@ public class ModuleProject {
 			Paths.get("src", type, "resources"));
 
 		if (Files.exists(resourcePath)) {
+			File resourcePathFile = resourcePath.toFile();
+
+			File[] resourceFiles = resourcePathFile.listFiles();
+
+			if (resourceFiles.length == 1) {
+				if (resourceFiles[0].isHidden()) {
+					return null;
+				}
+			}
+
 			return resourcePath;
 		}
 
