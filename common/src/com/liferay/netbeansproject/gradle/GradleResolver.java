@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -102,12 +101,12 @@ public class GradleResolver {
 
 		Matcher projectMatcher = _projectPattern.matcher(dependency);
 
-		dependency = projectMatcher.replaceAll("");
+		dependency = projectMatcher.replaceAll("\n");
 
 		Matcher unusedDependencyMatcher =
 			unusedDependencyPattern.matcher(dependency);
 
-		dependency = unusedDependencyMatcher.replaceAll("");
+		dependency = unusedDependencyMatcher.replaceAll("\n");
 
 		Matcher portalMatcher = _portalPattern.matcher(dependency);
 
@@ -155,7 +154,9 @@ public class GradleResolver {
 			dependency, "jnaerator classifier: \"shaded\",", "compile");
 		dependency = StringUtil.replace(dependency, "provided", "compile");
 		dependency = StringUtil.replace(
-			dependency, "testIntegrationCompile", "testCompile");
+			dependency, "testIntegrationCompile", "testConfiguration");
+		dependency = StringUtil.replace(
+			dependency, "testDownload", "testConfiguration");
 
 		return  StringUtil.replace(
 			dependency, "testCompile", "testConfiguration");
@@ -174,6 +175,6 @@ public class GradleResolver {
 
 	private static final Pattern _projectPattern =
 		Pattern.compile(
-			"\t(compile|provided|testCompile|testIntegrationCompile|"
+			"\\s*(compile|provided|testCompile|testIntegrationCompile|"
 				+ "frontendThemes)\\s*project.*\\n");
 }
