@@ -633,17 +633,14 @@ public class CreateModule {
 		ProjectInfo projectInfo, String moduleDir)
 		throws IOException {
 
-		File file =
-			new File(
-				moduleDir + "/" + projectInfo.getProjectName() +
-					"/build.xml");
+		Path path = Paths.get(moduleDir, projectInfo.getProjectName(), "build.xml");
 
-		String content = new String(Files.readAllBytes(file.toPath()));
+		String content = new String(Files.readAllBytes(path));
 
 		content = StringUtil.replace(
 			content, "%placeholder%",projectInfo.getProjectName());
 
-		Files.write(file.toPath(), content.getBytes());
+		Files.write(path, content.getBytes());
 	}
 
 	private static Document _document;

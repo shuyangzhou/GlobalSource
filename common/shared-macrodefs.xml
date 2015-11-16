@@ -115,11 +115,12 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 				<path>
 					<dirset dir="${portal.dir}">
 						<include name="**/src"/>
+						<exclude name="**/build/**" />
 					</dirset>
 				</path>
 				<sequential>
-					<local name="src.dir" />
-					<local name="src.dir.name" />
+					<var name="src.dir" unset="true" />
+					<var name="src.dir.name" unset="true" />
 
 					<set-module-source-directory module="@{module}" />
 
@@ -128,7 +129,10 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 							<not>
 								<contains string="${exclude.modules}" substring="${src.dir.name}" />
 							</not>
-							<available file="${src.dir}/build.xml" />
+							<or>
+								<available file="${src.dir}/build.xml" />
+								<available file="${src.dir}/web.xml" />
+							</or>
 						</and>
 						<then>
 							<build.diff />

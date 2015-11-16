@@ -33,13 +33,14 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		<for param="module">
 			<path>
 				<dirset dir="${portal.dir}">
-					<include name="**/src"/>
+					<include name="**/src" />
+					<exclude name="**/build/**" />
 				</dirset>
 			</path>
 
 			<sequential>
-				<local name="src.dir" />
-				<local name="src.dir.name" />
+				<var name="src.dir" unset="true" />
+				<var name="src.dir.name" unset="true" />
 
 				<set-module-source-directory module="@{module}" />
 
@@ -48,7 +49,10 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 						<not>
 							<contains string="${exclude.modules}" substring="${src.dir.name}" />
 						</not>
-						<available file="${src.dir}/build.xml" />
+						<or>
+							<available file="${src.dir}/build.xml" />
+							<available file="${src.dir}/web.xml" />
+						</or>
 					</and>
 					<then>
 						<property file="project-dependency.properties" />
