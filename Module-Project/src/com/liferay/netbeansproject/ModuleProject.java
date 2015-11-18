@@ -58,6 +58,8 @@ public class ModuleProject {
 
 		final String blackListDirs = properties.getProperty("blackListDirs");
 
+		final Map<Path, Map<String, Module>> projectMap = new HashMap<>();
+
 		Files.walkFileTree(portalDirPath, new SimpleFileVisitor<Path>() {
 
 				@Override
@@ -76,6 +78,7 @@ public class ModuleProject {
 							Module module = ModuleProject._createModule(
 								jarDependenciesMap, path);
 
+							_linkModuletoMap(projectMap, module);
 						}
 						catch (Exception ex) {
 							Logger.getLogger(
@@ -145,6 +148,24 @@ public class ModuleProject {
 			_resolveResourcePath(modulePath, "integration"),
 			GradleUtil.getModuleDependencies(modulePath),
 			jarDependenciesMap.get(moduleFileName.toString()));
+	}
+
+	private static void _linkModuletoMap(
+		Map<Path, Map<String, Module>> projectMap, Module module) {
+
+		Path modulePath = module.getModulePath();
+
+		Path parentPath = modulePath.getParent();
+
+		Map<String, Module> moduleMap = projectMap.get(parentPath);
+
+		if (moduleMap == null) {
+			moduleMap = new HashMap<>();
+		}
+
+		moduleMap.put(module.getModuleName(), module);
+
+		projectMap.put(parentPath, moduleMap);
 	}
 
 	private static Map<String, List<JarDependency>> _processGradle(
