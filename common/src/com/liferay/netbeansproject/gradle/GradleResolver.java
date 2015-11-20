@@ -176,5 +176,5 @@ public class GradleResolver {
 	private static final Pattern _projectPattern =
 		Pattern.compile(
 			"\\s*(compile|provided|testCompile|testIntegrationCompile|"
-				+ "frontendThemes)\\s*project.*\\n");
+				+ "testDownload|frontendThemes)\\s*project.*\\n");
 }
