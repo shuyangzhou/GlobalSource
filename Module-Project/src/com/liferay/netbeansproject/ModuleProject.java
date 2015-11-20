@@ -14,7 +14,9 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.container.Module.JarDependency;
+import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedReader;
@@ -31,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Tom Wang
@@ -41,14 +45,50 @@ public class ModuleProject {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		Path projectDirPath = Paths.get(properties.getProperty("project.dir"));
+		final Path projectDirPath = Paths.get(
+			properties.getProperty("project.dir"));
 
 		_clean(projectDirPath);
 
 		Path portalDirPath = Paths.get(properties.getProperty("portal.dir"));
 
-		Map<String, List<JarDependency>> jarDependenciesMap =
+		final Map<String, List<JarDependency>> jarDependenciesMap =
 			_processGradle(portalDirPath);
+
+		final String blackListDirs = properties.getProperty("blackListDirs");
+
+		Files.walkFileTree(portalDirPath, new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(
+						Path path, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					Path dirFileName = path.getFileName();
+
+					if (blackListDirs.contains(dirFileName.toString())) {
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					if (Files.exists(path.resolve("src"))) {
+						try {
+							Module module = ModuleProject._createModule(
+								jarDependenciesMap, path);
+
+						}
+						catch (Exception ex) {
+							Logger.getLogger(
+								ModuleProject.class.getName()).log(
+									Level.SEVERE, null, ex);
+						}
+
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
 	}
 
 	private static void _clean(Path projectDirPath) throws IOException {
@@ -79,6 +119,31 @@ public class ModuleProject {
 			});
 
 		}
+	}
+
+	private static Module _createModule(
+			Map<String, List<JarDependency>> jarDependenciesMap,
+			Path modulePath)
+		throws Exception {
+
+		Path moduleFileName = modulePath.getFileName();
+
+		if (moduleFileName.endsWith("WEB-INF")) {
+			modulePath = modulePath.getParent();
+			modulePath = modulePath.getParent();
+
+			moduleFileName = modulePath.getFileName();
+		}
+
+		return new Module(
+			modulePath, _resolveSourcePath(modulePath),
+			_resolveResourcePath(modulePath, "main"),
+			_resolveTestPath(modulePath, _testUnitPath, "unit"),
+			_resolveResourcePath(modulePath, "test"),
+			_resolveTestPath(modulePath, _testIntegrationPath, "integration"),
+			_resolveResourcePath(modulePath, "integration"),
+			GradleUtil.getModuleDependencies(modulePath),
+			jarDependenciesMap.get(moduleFileName.toString()));
 	}
 
 	private static Map<String, List<JarDependency>> _processGradle(
@@ -158,4 +223,86 @@ public class ModuleProject {
 
 		return dependenciesMap;
 	}
+
+	private static Path _resolvePath(Path modulePath, Path pathType) {
+		modulePath = modulePath.resolve(pathType);
+
+		if (Files.exists(modulePath)) {
+			return modulePath;
+		}
+
+		modulePath = modulePath.getParent();
+
+		if (Files.exists(modulePath)) {
+			return null;
+		}
+
+		modulePath = modulePath.getParent();
+
+		if (Files.exists(modulePath)) {
+			return modulePath;
+		}
+
+		return null;
+	}
+
+	private static Path _resolveResourcePath(Path modulePath, String type) {
+		Path resourcePath = modulePath.resolve(
+			Paths.get("src", type, "resources"));
+
+		if (Files.exists(resourcePath)) {
+			return resourcePath;
+		}
+
+		resourcePath = modulePath.resolve(_docrootPath);
+
+		resourcePath = resourcePath.resolve(
+			Paths.get("src", type, "resources"));
+
+		if (Files.exists(resourcePath)) {
+			return resourcePath;
+		}
+
+		return null;
+	}
+
+	private static Path _resolveSourcePath(Path modulePath) {
+		Path sourcePath = _resolvePath(modulePath, _mainJavaPath);
+
+		if (sourcePath != null) {
+			return sourcePath;
+		}
+
+		else {
+			sourcePath = modulePath.resolve(_docrootPath);
+
+			return _resolvePath(sourcePath, _mainJavaPath);
+		}
+	}
+
+	private static Path _resolveTestPath(
+		Path modulePath, Path pathType, String type) {
+
+		Path testPath = modulePath.resolve(pathType);
+
+		if (Files.exists(testPath)) {
+			return testPath;
+		}
+
+		testPath = modulePath.resolve("test");
+
+		testPath = testPath.resolve(type);
+
+		if (Files.exists(testPath)) {
+			return testPath;
+		}
+
+		return null;
+	}
+
+	private static final Path _docrootPath = Paths.get("docroot", "WEB-INF");
+	private static final Path _mainJavaPath = Paths.get("src", "main", "java");
+	private static final Path _testIntegrationPath = Paths.get(
+		"src", "testIntegration", "java");
+	private static final Path _testUnitPath = Paths.get("src", "test", "java");
 }
