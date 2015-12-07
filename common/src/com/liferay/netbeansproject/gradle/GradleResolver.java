@@ -1,19 +1,16 @@
 package com.liferay.netbeansproject.gradle;
 
-import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
+import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,6 +154,8 @@ public class GradleResolver {
 			dependency, "testIntegrationCompile", "testConfiguration");
 		dependency = StringUtil.replace(
 			dependency, "testDownload", "testConfiguration");
+		dependency = StringUtil.replace(
+			dependency, "testLibs", "testConfiguration");
 
 		return  StringUtil.replace(
 			dependency, "testCompile", "testConfiguration");
@@ -176,5 +175,5 @@ public class GradleResolver {
 	private static final Pattern _projectPattern =
 		Pattern.compile(
 			"\\s*(compile|provided|testCompile|testIntegrationCompile|"
-				+ "testDownload|frontendThemes)\\s*project.*\\n");
+				+ "testDownload|testLibs|frontendThemes)\\s*project.*\\n");
 }
