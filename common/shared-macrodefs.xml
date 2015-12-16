@@ -141,11 +141,10 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 				</sequential>
 			</for>
 
-			<java classname="com.liferay.netbeansproject.gradle.GradleResolver" classpath="classes">
-				<arg value="module.list=${module.list}" />
+			<java classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
+				<arg value="${portal.dir}" />
+				<arg value="${project.dir}" />
 			</java>
-
-			<gradle-execute task="createJarDependencies" />
 		</sequential>
 	</macrodef>
 
