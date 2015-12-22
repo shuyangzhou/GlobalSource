@@ -11,7 +11,7 @@
 
 	<property environment="env" />
 
-	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classpath="../common/lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 
 	<macrodef name="append-list">
 		<attribute name="list" />
