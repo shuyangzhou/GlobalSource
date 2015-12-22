@@ -99,5 +99,11 @@ public class ProcessGradle {
 				System.out.println(line);
 			}
 		}
+		BufferedReader errorBR =
+			new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+		while ((line = br.readLine()) != null) {
+			System.out.println(line);
+		}
 	}
 }
