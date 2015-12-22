@@ -72,14 +72,14 @@ public class CreateProject {
 		transformer.transform(source, streamResult);
 	}
 
-	private static void _appendList(ProjectInfo projectInfo, String portalDir)
+	private static void _appendList(ProjectInfo projectInfo, String projectDir)
 		throws IOException {
 
 		try (
 			PrintWriter printWriter = new PrintWriter(
 				new BufferedWriter(
 					new FileWriter(
-						portalDir + "/nbproject/project.properties", true)))) {
+						projectDir + "/nbproject/project.properties", true)))) {
 
 			StringBuilder sb = new StringBuilder("javac.classpath=\\\n");
 
