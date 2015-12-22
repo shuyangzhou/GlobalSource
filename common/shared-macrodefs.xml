@@ -30,33 +30,6 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="gradle-execute">
-		<attribute default="${project.dir}" name="dir" />
-		<attribute default="true" name="failonerror" />
-		<attribute default="true" name="forcedcacheenabled" />
-		<attribute name="task" />
-		<element implicit="true" name="args" optional="true" />
-
-		<sequential>
-			<if>
-				<os family="unix" />
-				<then>
-					<property name="gradlew.suffix" value="" />
-
-					<chmod file="${portal.dir}/gradlew${gradlew.suffix}" perm="a+x" />
-				</then>
-				<else>
-					<property name="gradlew.suffix" value=".bat" />
-				</else>
-			</if>
-
-			<exec dir="@{dir}/modules" executable="${portal.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
-				<args />
-				<arg value="@{task}" />
-			</exec>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="set-module-source-directory">
 		<attribute name="module" />
 
@@ -141,11 +114,10 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 				</sequential>
 			</for>
 
-			<java classname="com.liferay.netbeansproject.gradle.GradleResolver" classpath="classes">
-				<arg value="module.list=${module.list}" />
+			<java classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
+				<arg value="${portal.dir}" />
+				<arg value="${project.dir}" />
 			</java>
-
-			<gradle-execute task="createJarDependencies" />
 		</sequential>
 	</macrodef>
 
