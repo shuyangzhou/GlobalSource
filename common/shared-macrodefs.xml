@@ -11,7 +11,7 @@
 
 	<property environment="env" />
 
-	<taskdef classpath="${portal.dir}/lib/development/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classpath="../common/lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 
 	<macrodef name="append-list">
 		<attribute name="list" />
@@ -27,33 +27,6 @@
 					<var name="@{list}" value="${@{list}},@{src.dir.name}" />
 				</else>
 			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="gradle-execute">
-		<attribute default="${project.dir}" name="dir" />
-		<attribute default="true" name="failonerror" />
-		<attribute default="true" name="forcedcacheenabled" />
-		<attribute name="task" />
-		<element implicit="true" name="args" optional="true" />
-
-		<sequential>
-			<if>
-				<os family="unix" />
-				<then>
-					<property name="gradlew.suffix" value="" />
-
-					<chmod file="${portal.dir}/gradlew${gradlew.suffix}" perm="a+x" />
-				</then>
-				<else>
-					<property name="gradlew.suffix" value=".bat" />
-				</else>
-			</if>
-
-			<exec dir="@{dir}/modules" executable="${portal.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
-				<args />
-				<arg value="@{task}" />
-			</exec>
 		</sequential>
 	</macrodef>
 
@@ -84,6 +57,8 @@
 	</macrodef>
 
 	<macrodef name="common-build">
+		<attribute name="project.dir" />
+		<attribute name="portal.dir" />
 		<element name="build.diff" />
 
 		<sequential>
@@ -98,22 +73,22 @@
 				<src path="src" />
 			</javac>
 
-			<unzip src="CleanProject.zip" dest="${project.dir}/" />
+			<unzip src="CleanProject.zip" dest="@{project.dir}/" />
 
-			<copy file="${project.dir}/nbproject/default.properties" tofile="${project.dir}/nbproject/project.properties" />
+			<copy file="@{project.dir}/nbproject/default.properties" tofile="@{project.dir}/nbproject/project.properties" />
 
-			<concat destfile="${project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
+			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
 	</concat>
 
-			<concat destfile="${project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=${portal.dir}/portal-web/docroot
+			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=@{portal.dir}/portal-web/docroot
 src.portal-web.dir=$${file.reference.portal-web.src}
-file.reference.portal-web-functional.src=${portal.dir}/portal-web/test/functional
+file.reference.portal-web-functional.src=@{portal.dir}/portal-web/test/functional
 src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 	</concat>
 
 			<for param="module">
 				<path>
-					<dirset dir="${portal.dir}">
+					<dirset dir="@{portal.dir}">
 						<include name="**/src"/>
 						<exclude name="**/build/**" />
 					</dirset>
@@ -141,19 +116,20 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 				</sequential>
 			</for>
 
-			<java classname="com.liferay.netbeansproject.gradle.GradleResolver" classpath="classes">
-				<arg value="module.list=${module.list}" />
+			<java classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
+				<arg value="@{portal.dir}" />
+				<arg value="@{project.dir}" />
 			</java>
-
-			<gradle-execute task="createJarDependencies" />
 		</sequential>
 	</macrodef>
 
 	<macrodef name="clean">
+		<attribute name="project.dir" />
+
 		<sequential>
 			<delete file="settings.gradle" />
 			<delete dir="classes" />
-			<delete dir="${project.dir}" />
+			<delete dir="@{project.dir}" />
 		</sequential>
 	</macrodef>
 </project>

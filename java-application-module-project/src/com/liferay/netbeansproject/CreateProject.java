@@ -8,15 +8,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -24,7 +21,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 public class CreateProject {
@@ -40,7 +36,7 @@ public class CreateProject {
 			StringUtil.split(arguments.get("module.list"), ','),
 			StringUtil.split(arguments.get("umbrella.source.list"), ','));
 
-		String projectDir = properties.getProperty("project.dir");
+		String projectDir = arguments.get("project.dir");
 
 		_appendList(projectInfo, projectDir);
 
@@ -72,14 +68,14 @@ public class CreateProject {
 		transformer.transform(source, streamResult);
 	}
 
-	private static void _appendList(ProjectInfo projectInfo, String portalDir)
+	private static void _appendList(ProjectInfo projectInfo, String projectDir)
 		throws IOException {
 
 		try (
 			PrintWriter printWriter = new PrintWriter(
 				new BufferedWriter(
 					new FileWriter(
-						portalDir + "/nbproject/project.properties", true)))) {
+						projectDir + "/nbproject/project.properties", true)))) {
 
 			StringBuilder sb = new StringBuilder("javac.classpath=\\\n");
 

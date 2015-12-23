@@ -10,17 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
-
 import java.util.Queue;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
@@ -30,7 +27,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 public class CreateModule {
@@ -41,14 +37,12 @@ public class CreateModule {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String portalDir = properties.getProperty("portal.dir");
-
 		ProjectInfo projectInfo = new ProjectInfo(
-			arguments.get("src.dir.name"), portalDir, arguments.get("src.dir"),
+			arguments.get("src.dir.name"), arguments.get("portal.dir"), arguments.get("src.dir"),
 			StringUtil.split(arguments.get("project.dependencies"), ','),
 			StringUtil.split(arguments.get("module.list"), ','));
 
-		String moduleDir = properties.getProperty("project.dir") + "/modules";
+		String moduleDir = arguments.get("project.dir") + "/modules";
 
 		_replaceProjectName(projectInfo, moduleDir);
 
@@ -175,6 +169,17 @@ public class CreateModule {
 				}
 			}
 
+			Path dependencyPropertiesPath =
+				Paths.get(
+					moduleDir, projectInfo.getProjectName(),
+					"dependency.properties");
+
+			if (!Files.exists(dependencyPropertiesPath)) {
+				Files.write(
+					dependencyPropertiesPath, Arrays.asList(
+						"compile:\ncompileTest:"));
+			}
+
 			Properties dependencyProperties =
 				PropertiesUtil.loadProperties(
 					Paths.get(
@@ -199,6 +204,10 @@ public class CreateModule {
 
 			String compileTestDependencies =
 				dependencyProperties.getProperty("compileTest");
+
+			if (compileTestDependencies == null) {
+				compileTestDependencies = "";
+			}
 
 			Set<String> compileTestSet = new HashSet<>();
 
@@ -633,7 +642,8 @@ public class CreateModule {
 		ProjectInfo projectInfo, String moduleDir)
 		throws IOException {
 
-		Path path = Paths.get(moduleDir, projectInfo.getProjectName(), "build.xml");
+		Path path =
+			Paths.get(moduleDir, projectInfo.getProjectName(), "build.xml");
 
 		String content = new String(Files.readAllBytes(path));
 
