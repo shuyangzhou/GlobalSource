@@ -1,0 +1,30 @@
+allprojects {
+	task printDependencies << {
+		StringBuilder sb = new StringBuilder();
+
+		["runtime", "testIntegrationRuntime"].each {
+			Configuration configuration = configurations.findByName it
+
+			if (configuration) {
+				if (configuration.name == "runtime") {
+					sb.append("compile=")
+				}
+				else {
+					sb.append("compileTest=")
+				}
+
+				configuration.files.each {
+					sb.append(it)
+					sb.append(":")
+				}
+				sb.append("\n")
+			}
+		}
+
+		if (!sb.toString().equals("")) {
+			def file = new File(dependencyDirectory + File.separator + project.getName())
+
+			file.text = sb
+		}
+	}
+}
