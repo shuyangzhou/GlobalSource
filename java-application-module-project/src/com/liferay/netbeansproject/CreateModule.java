@@ -10,17 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
-
 import java.util.Queue;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
@@ -30,7 +27,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 public class CreateModule {
@@ -179,11 +175,19 @@ public class CreateModule {
 				}
 			}
 
+			Path dependenciesDirPath = projectPath.resolve("dependencies");
+
+			Path dependenciesPath = dependenciesDirPath.resolve(
+				projectInfo.getProjectName());
+
+			if (!Files.exists(dependenciesPath)) {
+				Files.write(
+					dependenciesPath, Arrays.asList(
+						"compile:\ncompileTest:"));
+			}
+
 			Properties dependencyProperties =
-				PropertiesUtil.loadProperties(
-					Paths.get(
-						moduleDir, projectInfo.getProjectName(),
-						"dependency.properties"));
+				PropertiesUtil.loadProperties(dependenciesPath);
 
 			StringBuilder testSB = new StringBuilder(
 				"javac.test.classpath=\\\n");
@@ -203,6 +207,10 @@ public class CreateModule {
 
 			String compileTestDependencies =
 				dependencyProperties.getProperty("compileTest");
+
+			if (compileTestDependencies == null) {
+				compileTestDependencies = "";
+			}
 
 			Set<String> compileTestSet = new HashSet<>();
 
