@@ -48,11 +48,13 @@ public class CreateModule {
 			StringUtil.split(arguments.get("project.dependencies"), ','),
 			StringUtil.split(arguments.get("module.list"), ','));
 
-		String moduleDir = properties.getProperty("project.dir") + "/modules";
+		Path projectPath = Paths.get(properties.getProperty("project.dir"));
+
+		Path moduleDir = projectPath.resolve("modules");
 
 		_replaceProjectName(projectInfo, moduleDir);
 
-		_appendProperties(projectInfo, properties, moduleDir);
+		_appendProperties(projectInfo, properties, moduleDir, projectPath);
 
 		DocumentBuilderFactory documentBuilderFactory =
 			DocumentBuilderFactory.newInstance();
@@ -139,16 +141,18 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-		ProjectInfo projectInfo, Properties properties, String moduleDir)
+		ProjectInfo projectInfo, Properties properties, Path modulePath,
+			Path projectPath)
 		throws Exception {
 
+		Path projectPropertiesPath =
+			Paths.get(
+				modulePath.toString(), projectInfo.getProjectName(),
+				"nbproject", "project.properties");
 		try (
 			PrintWriter printWriter = new PrintWriter(
 				new BufferedWriter(
-					new FileWriter(
-						moduleDir + "/" + projectInfo.getProjectName() +
-							"/nbproject/project.properties",
-						true)))) {
+					new FileWriter(projectPropertiesPath.toFile(), true)))) {
 
 			StringBuilder projectSB = new StringBuilder();
 
@@ -223,10 +227,11 @@ public class CreateModule {
 						printWriter, moduleName, projectSB);
 				}
 
+				Path inheritedDependenciesPath = dependenciesDirPath.resolve(
+					moduleName);
+
 				Properties moduleDependencyProperties =
-					PropertiesUtil.loadProperties(
-						Paths.get(
-							moduleDir, moduleName, "dependency.properties"));
+					PropertiesUtil.loadProperties(inheritedDependenciesPath);
 
 				compileDependencies =
 					moduleDependencyProperties.getProperty("compile");
@@ -630,17 +635,19 @@ public class CreateModule {
 	}
 
 	private static void _replaceProjectName(
-		ProjectInfo projectInfo, String moduleDir)
+		ProjectInfo projectInfo, Path moduleDir)
 		throws IOException {
 
-		Path path = Paths.get(moduleDir, projectInfo.getProjectName(), "build.xml");
+		Path projectpath = moduleDir.resolve(projectInfo.getProjectName());
 
-		String content = new String(Files.readAllBytes(path));
+		Path buildXMLPath = projectpath.resolve("build.xml");
+
+		String content = new String(Files.readAllBytes(buildXMLPath));
 
 		content = StringUtil.replace(
 			content, "%placeholder%",projectInfo.getProjectName());
 
-		Files.write(path, content.getBytes());
+		Files.write(buildXMLPath, content.getBytes());
 	}
 
 	private static Document _document;
