@@ -81,6 +81,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 			</sequential>
 		</for>
 
+		<delete dir="${project.dir}/dependencies" />
+
 		<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
 			<arg value="module.list=${module.list}" />
 			<arg value="umbrella.source.list=${umbrella.source.list}" />
