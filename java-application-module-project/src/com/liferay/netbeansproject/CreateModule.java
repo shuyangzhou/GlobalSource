@@ -37,14 +37,13 @@ public class CreateModule {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String portalDir = properties.getProperty("portal.dir");
-
 		ProjectInfo projectInfo = new ProjectInfo(
-			arguments.get("src.dir.name"), portalDir, arguments.get("src.dir"),
+			arguments.get("src.dir.name"), arguments.get("portal.dir"),
+			Paths.get(arguments.get("src.dir")),
 			StringUtil.split(arguments.get("project.dependencies"), ','),
 			StringUtil.split(arguments.get("module.list"), ','));
 
-		Path projectPath = Paths.get(properties.getProperty("project.dir"));
+		Path projectPath = Paths.get(arguments.get("project.dir"));
 
 		Path moduleDir = projectPath.resolve("modules");
 
@@ -71,11 +70,12 @@ public class CreateModule {
 
 		StreamResult streamResult = null;
 
-		String fileName =
-			moduleDir + "/" + projectInfo.getProjectName() +
-				"/nbproject/project.xml";
+		Path fileNamePath =
+			Paths.get(
+				moduleDir.toString(), projectInfo.getProjectName(), "nbproject",
+				"project.xml");
 
-		streamResult = new StreamResult(new File(fileName));
+		streamResult = new StreamResult(fileNamePath.toFile());
 
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		transformer.setOutputProperty(
@@ -141,9 +141,11 @@ public class CreateModule {
 			Path projectPath)
 		throws Exception {
 
+		String projectName = projectInfo.getProjectName();
+
 		Path projectPropertiesPath =
 			Paths.get(
-				modulePath.toString(), projectInfo.getProjectName(),
+				modulePath.toString(), projectName,
 				"nbproject", "project.properties");
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, Charset.defaultCharset(),
@@ -160,11 +162,11 @@ public class CreateModule {
 			projectSB.append("\n");
 
 			projectSB.append("dist.jar=${dist.dir}/");
-			projectSB.append(projectInfo.getProjectName());
+			projectSB.append(projectName);
 			projectSB.append(".jar\n");
 
-			_appendSourcePath(projectInfo.getProjectName(),
-				projectInfo.getFullPath(), projectSB);
+			_appendSourcePath(
+				projectName, projectInfo.getFullPath(), projectSB);
 
 			projectSB.append("javac.classpath=\\\n");
 
@@ -177,8 +179,7 @@ public class CreateModule {
 
 			Path dependenciesDirPath = projectPath.resolve("dependencies");
 
-			Path dependenciesPath = dependenciesDirPath.resolve(
-				projectInfo.getProjectName());
+			Path dependenciesPath = dependenciesDirPath.resolve(projectName);
 
 			if (!Files.exists(dependenciesPath)) {
 				Files.write(
@@ -221,7 +222,7 @@ public class CreateModule {
 
 			Map<String, ModuleInfo> dependenciesModuleMap =
 				_parseModuleDependencies(
-					projectInfo, Paths.get(projectInfo.getFullPath()));
+					projectInfo, projectInfo.getFullPath());
 
 			for (ModuleInfo moduleInfo : dependenciesModuleMap.values()) {
 				String moduleName = moduleInfo.getModuleName();
@@ -262,30 +263,49 @@ public class CreateModule {
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 
+			Path developmentPath = Paths.get(
+				projectInfo.getPortalDir(),"lib", "development");
+
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/development"),
-				projectSB);
+				developmentPath.toFile(), projectSB);
+
+			Path globalPath = Paths.get(
+				projectInfo.getPortalDir(),"lib", "global");
+
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/global"),
-				projectSB);
+				globalPath.toFile(), projectSB);
+
+			Path portalPath = Paths.get(
+				projectInfo.getPortalDir(),"lib", "portal");
+
 			_appendJavacClasspath(
-				new File(projectInfo.getPortalDir() + "/lib/portal"),
-				projectSB);
+				portalPath.toFile(), projectSB);
+
 
 			projectSB.setLength(projectSB.length() - 3);
 
-			if (projectInfo.getProjectName().equals("portal-impl")) {
+			if (projectName.equals("portal-impl")) {
 				projectSB.append("\nfile.reference.portal-test-internal-src=");
 				projectSB.append(projectInfo.getPortalDir());
-				projectSB.append("/portal-test-internal/src\n");
+
+				Path portalTestInternalSrcPath = Paths.get(
+					"portal-test-internal", "src");
+
+				projectSB.append(portalTestInternalSrcPath.toString());
+				projectSB.append("\n");
 				projectSB.append(
 					"src.test.dir=${file.reference.portal-test-internal-src}");
 			}
 
-			if (projectInfo.getProjectName().equals("portal-service")) {
+			if (projectName.equals("portal-service")) {
 				projectSB.append("\nfile.reference.portal-test-src=");
 				projectSB.append(projectInfo.getPortalDir());
-				projectSB.append("/portal-test/src\n");
+
+				Path portalTestSrcPath = Paths.get(
+					"portal-test", "src");
+
+				projectSB.append(portalTestSrcPath.toString());
+				projectSB.append("\n");
 				projectSB.append(
 					"src.test.dir=${file.reference.portal-test-src}");
 			}
@@ -307,14 +327,18 @@ public class CreateModule {
 		StringBuilder sb = new StringBuilder("project.");
 
 		sb.append(module);
-		sb.append("=../");
+		sb.append("=..");
+		sb.append(File.pathSeparatorChar);
 		sb.append(module);
 		sb.append("\n");
 		sb.append("reference.");
 		sb.append(module);
 		sb.append(".jar=${project.");
 		sb.append(module);
-		sb.append("}/dist/");
+		sb.append("}");
+		sb.append(File.pathSeparatorChar);
+		sb.append("dist");
+		sb.append(File.pathSeparatorChar);
 		sb.append(module);
 		sb.append(".jar");
 
@@ -326,25 +350,37 @@ public class CreateModule {
 		javacSB.append(".jar}:\\\n");
 	}
 
-	private static void _appendSourcePath(String moduleName, String modulePath,
+	private static void _appendSourcePath(String moduleName, Path modulePath,
 		StringBuilder projectSB) {
 
-		if (new File(modulePath + "/docroot").exists()) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append("/docroot/WEB-INF/src\n");
-		}
-		else if (new File(modulePath + "/src").exists()) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append("/src");
+		Path moduleSrcPath = modulePath.resolve("src");
 
-			if(new File(modulePath + "/src/main").exists()) {
-				projectSB.append("/main/java\n");
+		if (Files.exists(modulePath.resolve("docroot"))) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-src=");
+			projectSB.append(modulePath);
+			projectSB.append(File.pathSeparatorChar);
+			projectSB.append("docroot");
+			projectSB.append(File.pathSeparatorChar);
+			projectSB.append("WEB-INF");
+			projectSB.append(File.pathSeparatorChar);
+			projectSB.append("src\n");
+		}
+		else if (Files.exists(moduleSrcPath)) {
+			projectSB.append("file.reference.");
+			projectSB.append(moduleName);
+			projectSB.append("-src=");
+			projectSB.append(modulePath);
+			projectSB.append(File.pathSeparatorChar);
+			projectSB.append("src");
+
+
+			if(Files.exists(moduleSrcPath.resolve("main"))) {
+				projectSB.append(File.pathSeparatorChar);
+				projectSB.append("main");
+				projectSB.append(File.pathSeparatorChar);
+				projectSB.append("java\n");
 			}
 			else {
 				projectSB.append("\n");
@@ -357,12 +393,15 @@ public class CreateModule {
 		projectSB.append(moduleName);
 		projectSB.append("-src}\n");
 
-		if (new File(modulePath + "/src/main/resources").exists()) {
+		Path mainResourcesPath = Paths.get(
+			moduleSrcPath.toString(), "main", "resources");
+
+		if (Files.exists(mainResourcesPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-resources=");
-			projectSB.append(modulePath);
-			projectSB.append("/src/main/resources\n");
+			projectSB.append(mainResourcesPath);
+			projectSB.append("\n");
 			projectSB.append("src.");
 			projectSB.append(moduleName);
 			projectSB.append(".resources.dir=${file.reference.");
@@ -370,24 +409,29 @@ public class CreateModule {
 			projectSB.append("-resources}\n");
 		}
 
-		if (new File(modulePath + "/test/unit").exists()) {
+		Path testPath = modulePath.resolve("test");
+		Path testUnitPath = testPath.resolve("unit");
+		Path srcTestPath = moduleSrcPath.resolve("test");
+		Path testJavaPath = srcTestPath.resolve("java");
+
+		if (Files.exists(testUnitPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit=");
-			projectSB.append(modulePath);
-			projectSB.append("/test/unit\n");
+			projectSB.append(testUnitPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.dir=${file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit}\n");
 		}
-		else if(new File(modulePath + "/src/test/java").exists()) {
+		else if(Files.exists(testJavaPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit=");
-			projectSB.append(modulePath);
-			projectSB.append("/src/test/java\n");
+			projectSB.append(testJavaPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.dir=${file.reference.");
@@ -395,12 +439,15 @@ public class CreateModule {
 			projectSB.append("-test-unit}\n");
 		}
 
-		if(new File(modulePath + "/src/test/resources").exists()) {
+		Path testResourcesPath = Paths.get(
+			moduleSrcPath.toString(), "test", "Resources");
+
+		if(Files.exists(testResourcesPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit-resources=");
-			projectSB.append(modulePath);
-			projectSB.append("/src/test/resources\n");
+			projectSB.append(testResourcesPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.resources.dir=${file.reference.");
@@ -408,24 +455,28 @@ public class CreateModule {
 			projectSB.append("-test-unit-resources}\n");
 		}
 
-		if (new File(modulePath + "/test/integration").exists()) {
+		Path testIntegrationPath = testPath.resolve("integration");
+		Path srcTestIntegrationPath = moduleSrcPath.resolve("testIntegration");
+		Path testIntegrationJavaPath = srcTestIntegrationPath.resolve("java");
+
+		if (Files.exists(testIntegrationPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration=");
-			projectSB.append(modulePath);
-			projectSB.append("/test/integration\n");
+			projectSB.append(testIntegrationPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.dir=${file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration}\n");
 		}
-		else if(new File(modulePath + "/src/testIntegration/java").exists()) {
+		else if(Files.exists(testIntegrationJavaPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration=");
-			projectSB.append(modulePath);
-			projectSB.append("/src/testIntegration/java\n");
+			projectSB.append(testIntegrationJavaPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.dir=${file.reference.");
@@ -433,12 +484,15 @@ public class CreateModule {
 			projectSB.append("-test-integration}\n");
 		}
 
-		if(new File(modulePath + "/src/testIntegration/resources").exists()) {
+		Path testIntegrationResourcesPath = srcTestIntegrationPath.resolve(
+			"resources");
+
+		if(Files.exists(testIntegrationResourcesPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration-resources=");
-			projectSB.append(modulePath);
-			projectSB.append("/src/testIntegration/resources\n");
+			projectSB.append(testIntegrationResourcesPath);
+			projectSB.append("\n");
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.resources.dir=${file.reference.");
@@ -472,8 +526,10 @@ public class CreateModule {
 
 		Element nameElement = _document.createElement("name");
 
+		Path projectPath = projectInfo.getFullPath();
+
 		nameElement.appendChild(
-			_document.createTextNode(projectInfo.getFullPath()));
+			_document.createTextNode(projectPath.toString()));
 
 		dataElement.appendChild(nameElement);
 
@@ -481,53 +537,81 @@ public class CreateModule {
 
 		dataElement.appendChild(sourceRootsElement);
 
-		String projectPath = projectInfo.getFullPath();
+		String projectName = projectInfo.getProjectName();
 
-		if (!(new File(projectPath + "/src/main").exists()) ||
-			new File(projectPath + "/src/main/java").exists()) {
+		Path srcPath = projectPath.resolve("src");
+		Path mainPath = srcPath.resolve("main");
+		Path mainJavaPath = mainPath.resolve("java");
 
-			_createRoots(sourceRootsElement, projectPath + "/java",
-				"src." + projectInfo.getProjectName() + ".dir");
+		if (!Files.exists(mainPath) || Files.exists(mainJavaPath)) {
+
+			_createRoots(
+				sourceRootsElement,
+				projectPath + File.pathSeparator + "java",
+				"src." + projectName + ".dir");
 		}
 
-		if (new File(projectPath + "/src/main/resources").exists()) {
-			_createRoots(sourceRootsElement, projectPath + "/resources",
-				"src." + projectInfo.getProjectName() + ".resources.dir");
+		Path mainResourcesPath = mainPath.resolve("resources");
+
+		if (Files.exists(mainResourcesPath)) {
+			_createRoots(
+				sourceRootsElement,
+				projectPath + File.pathSeparator + "resources",
+				"src." + projectName + ".resources.dir");
 		}
 
-		if (projectInfo.getProjectName().equals("portal-impl") ||
-			projectInfo.getProjectName().equals("portal-service")) {
+		if (projectName.equals("portal-impl") ||
+			projectName.equals("portal-service")) {
 
 			_createRoots(sourceRootsElement, "src.test.dir");
 		}
 
 		Element testRootsElement = _document.createElement("test-roots");
 
-		if (new File(projectPath + "/test/unit").exists() ||
-			new File(projectPath + "/src/test").exists()) {
+		Path testPath = projectPath.resolve("test");
+		Path testUnitPath = testPath.resolve("unit");
+		Path srcTestPath = srcPath.resolve("test");
+
+		if (Files.exists(testUnitPath) || Files.exists(srcTestPath)) {
 			_createRoots(
-				testRootsElement, projectPath + "/unit/test",
-				"test." + projectInfo.getProjectName() + ".unit.dir");
+				testRootsElement,
+				projectPath + File.pathSeparator + "unit" + File.pathSeparator +
+					"test",
+				"test." + projectName + ".unit.dir");
 		}
 
-		if (new File(projectPath + "/src/test/resources").exists()) {
-			_createRoots(sourceRootsElement, projectPath + "/unit/resources",
-				"test." + projectInfo.getProjectName() + ".unit.resources.dir");
+		Path testResourcesPath = testPath.resolve("resources");
+
+		if (Files.exists(testResourcesPath)) {
+			_createRoots(
+				sourceRootsElement,
+				projectPath + File.pathSeparator + "unit" + File.pathSeparator +
+					"resources",
+				"test." + projectName + ".unit.resources.dir");
 		}
 
-		if (new File(projectPath + "/test/integration").exists() ||
-			new File(projectPath + "/src/testIntegration").exists()) {
+		Path testIntegrationPath = testPath.resolve("integration");
+		Path srcTestIntegrationPath = srcPath.resolve("testIntegration");
+
+		if (Files.exists(testIntegrationPath) ||
+			Files.exists(srcTestIntegrationPath)) {
 
 			_createRoots(
-				testRootsElement, projectPath + "/integration/test",
-				"test." + projectInfo.getProjectName() + ".integration.dir");
+				testRootsElement,
+				projectPath + File.pathSeparator + "integration" +
+					File.pathSeparator + "test",
+				"test." + projectName + ".integration.dir");
 		}
 
-		if (new File(projectPath + "/src/testIntegration/resources").exists()) {
-			_createRoots(sourceRootsElement,
-				projectPath + "/integration/resources",
-				"test." + projectInfo.getProjectName() +
-					".integration.resources.dir");
+		Path testIntegrationResources = srcTestIntegrationPath.resolve(
+			"resources");
+
+		if (Files.exists(testIntegrationResources)) {
+			_createRoots(
+				sourceRootsElement,
+				projectPath + File.pathSeparator + "integration" +
+					File.pathSeparator + "resources",
+				"test." + projectName + ".integration.resources.dir");
 		}
 
 		dataElement.appendChild(testRootsElement);
@@ -650,14 +734,15 @@ public class CreateModule {
 		ProjectInfo projectInfo, Path moduleDir)
 		throws IOException {
 
-		Path projectpath = moduleDir.resolve(projectInfo.getProjectName());
+		String projectName = projectInfo.getProjectName();
+
+		Path projectpath = moduleDir.resolve(projectName);
 
 		Path buildXMLPath = projectpath.resolve("build.xml");
 
 		String content = new String(Files.readAllBytes(buildXMLPath));
 
-		content = StringUtil.replace(
-			content, "%placeholder%",projectInfo.getProjectName());
+		content = StringUtil.replace(content, "%placeholder%",projectName);
 
 		Files.write(
 			buildXMLPath, Arrays.asList(content), Charset.defaultCharset());
@@ -667,7 +752,7 @@ public class CreateModule {
 
 	private static class ProjectInfo {
 
-		public String getFullPath() {
+		public Path getFullPath() {
 			return _fullPath;
 		}
 
@@ -698,7 +783,7 @@ public class CreateModule {
 		}
 
 		private ProjectInfo(
-			String projectName, String portalDir, String fullPath,
+			String projectName, String portalDir, Path fullPath,
 			String[] projectLibs, String[] moduleList) {
 
 			_projectName = projectName;
@@ -720,7 +805,7 @@ public class CreateModule {
 			}
 		}
 
-		private final String _fullPath;
+		private final Path _fullPath;
 		private Map<String, ModuleInfo> _dependenciesModuleMap;
 		private final Map<String, Path> _moduleMap;
 		private final String _portalDir;
