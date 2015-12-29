@@ -22,6 +22,24 @@ import java.util.List;
  */
 public class StringUtil {
 
+	public static String extract(String s, char delimiter) {
+		s = s.trim();
+
+		if (s.isEmpty()) {
+			return "";
+		}
+
+		int index1 = s.indexOf(delimiter);
+
+		int index2 = s.indexOf(delimiter, index1 + 1);
+
+		if (index1 < 0 || index2 < 0) {
+			return s;
+		}
+
+		return s.substring(index1 + 1, index2);
+	}
+
 	public static String replace(String s, String oldSub, String newSub) {
 		if ((s == null) || (oldSub == null) || oldSub.isEmpty()) {
 			return s;

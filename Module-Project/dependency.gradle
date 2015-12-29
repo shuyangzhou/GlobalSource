@@ -1,0 +1,14 @@
+allprojects {
+	task printDependencies << {
+		["runtime", "testIntegrationRuntime"].each {
+			Configuration configuration = configurations.findByName it
+
+			if (configuration) {
+				println configuration
+				configuration.files.each {
+					println it
+				}
+			}
+		}
+	}
+}
