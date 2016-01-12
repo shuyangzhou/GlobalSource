@@ -1,7 +1,9 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.ArgumentsUtil;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +20,9 @@ public class ProcessGradle {
 
 		Path portalDirPath = Paths.get(arguments.get("portal.dir"));
 		Path projectDirPath = Paths.get(arguments.get("project.dir"));
+
+		Boolean displayGradleOutput = Boolean.valueOf(
+			arguments.get("display.gradle"));
 
 		Path gradlewPath = portalDirPath.resolve("gradlew");
 
@@ -42,12 +47,33 @@ public class ProcessGradle {
 
 		Process process = processBuilder.start();
 
-		int exitCode = process.waitFor();
+		if (displayGradleOutput) {
+			String line;
 
-		if (exitCode != 0) {
-			throw new IOException(
-				"Process " + processBuilder.command() + " failed with " +
-					exitCode);
+			try(BufferedReader br = new BufferedReader(new InputStreamReader(
+				process.getInputStream()))) {
+
+				while ((line = br.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
+
+			try(BufferedReader br = new BufferedReader(new InputStreamReader(
+				process.getErrorStream()))) {
+
+				while ((line = br.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
+		}
+		else {
+			int exitCode = process.waitFor();
+
+			if (exitCode != 0) {
+				throw new IOException(
+					"Process " + processBuilder.command() + " failed with " +
+						exitCode);
+			}
 		}
 	}
 }
