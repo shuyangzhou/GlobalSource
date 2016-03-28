@@ -265,21 +265,17 @@ public class CreateModule {
 			Path developmentPath = Paths.get(
 				projectInfo.getPortalDir(),"lib", "development");
 
-			_appendJavacClasspath(
-				developmentPath.toFile(), projectSB);
+			_appendJavacClasspath(developmentPath.toFile(), projectSB);
 
 			Path globalPath = Paths.get(
 				projectInfo.getPortalDir(),"lib", "global");
 
-			_appendJavacClasspath(
-				globalPath.toFile(), projectSB);
+			_appendJavacClasspath(globalPath.toFile(), projectSB);
 
 			Path portalPath = Paths.get(
 				projectInfo.getPortalDir(),"lib", "portal");
 
-			_appendJavacClasspath(
-				portalPath.toFile(), projectSB);
-
+			_appendJavacClasspath(portalPath.toFile(), projectSB);
 
 			projectSB.setLength(projectSB.length() - 3);
 

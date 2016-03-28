@@ -118,7 +118,7 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 			<java classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
 				<arg value="portal.dir=@{portal.dir}" />
 				<arg value="project.dir=@{project.dir}" />
-				<arg value="display.gradle=${display-gradle-process-output}" />
+				<arg value="display.gradle=${display.gradle.process.output}" />
 			</java>
 		</sequential>
 	</macrodef>
