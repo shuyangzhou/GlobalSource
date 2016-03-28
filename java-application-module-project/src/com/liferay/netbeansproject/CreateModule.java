@@ -176,6 +176,13 @@ public class CreateModule {
 				}
 			}
 
+			Path fullPath = projectInfo.getFullPath();
+			Path srcLibPath = fullPath.resolve("lib");
+
+			if (Files.isDirectory(srcLibPath)) {
+				_appendJavacClasspath(srcLibPath.toFile(), projectSB);
+			}
+
 			Path dependenciesDirPath = projectPath.resolve("dependencies");
 
 			Path dependenciesPath = dependenciesDirPath.resolve(projectName);
