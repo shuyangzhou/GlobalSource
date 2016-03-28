@@ -32,6 +32,11 @@ public class ProcessGradle {
 		gradleTask.add("--parallel");
 		gradleTask.add("--init-script=dependency.gradle");
 		gradleTask.add("printDependencies");
+
+		if (!Boolean.valueOf(arguments.get("prebuilt.portal"))) {
+			gradleTask.add("copyLibs");
+		}
+
 		gradleTask.add("-p");
 
 		Path moduleDirPath = portalDirPath.resolve("modules");
