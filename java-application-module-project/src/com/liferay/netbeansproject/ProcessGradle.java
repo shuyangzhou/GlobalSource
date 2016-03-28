@@ -21,9 +21,6 @@ public class ProcessGradle {
 		Path portalDirPath = Paths.get(arguments.get("portal.dir"));
 		Path projectDirPath = Paths.get(arguments.get("project.dir"));
 
-		Boolean displayGradleOutput = Boolean.valueOf(
-			arguments.get("display.gradle"));
-
 		Path gradlewPath = portalDirPath.resolve("gradlew");
 
 		List<String> gradleTask = new ArrayList<>();
@@ -52,7 +49,7 @@ public class ProcessGradle {
 
 		Process process = processBuilder.start();
 
-		if (displayGradleOutput) {
+		if (Boolean.valueOf(arguments.get("display.gradle"))) {
 			String line;
 
 			try(BufferedReader br = new BufferedReader(new InputStreamReader(
