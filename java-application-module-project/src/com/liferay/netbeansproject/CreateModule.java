@@ -284,11 +284,11 @@ public class CreateModule {
 			projectSB.setLength(projectSB.length() - 3);
 
 			if (projectName.equals("portal-impl")) {
-				projectSB.append("\nfile.reference.portal-test-internal-src=");
+				projectSB.append("\nfile.reference.portal-test-integration-src=");
 				projectSB.append(projectInfo.getPortalDir());
-				projectSB.append("/portal-test-internal/src\n");
+				projectSB.append("/portal-test-integration/src\n");
 				projectSB.append(
-					"src.test.dir=${file.reference.portal-test-internal-src}");
+					"src.test.dir=${file.reference.portal-test-integration-src}");
 			}
 
 			if (projectName.equals("portal-kernel")) {
@@ -558,7 +558,7 @@ public class CreateModule {
 
 		if (projectName.equals("portal-impl")) {
 			_createRoots(
-				sourceRootsElement,"portal-test-internal","src.test.dir");
+				sourceRootsElement,"portal-test-integration","src.test.dir");
 		}
 		else if (projectName.equals("portal-kernel")) {
 			_createRoots(sourceRootsElement,"portal-test", "src.test.dir");
