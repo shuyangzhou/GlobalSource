@@ -104,6 +104,7 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 								<contains string="${exclude.modules}" substring="${src.dir.name}" />
 							</not>
 							<or>
+								<available file="${src.dir}/build.gradle" />
 								<available file="${src.dir}/build.xml" />
 								<available file="${src.dir}/web.xml" />
 							</or>
