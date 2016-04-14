@@ -61,7 +61,7 @@ public class CreateModule {
 
 		_document = documentBuilder.newDocument();
 
-		_createProjectElement(projectInfo, properties);
+		_createProjectElement(projectInfo);
 
 		TransformerFactory transformerFactory =
 			TransformerFactory.newInstance();
@@ -493,22 +493,20 @@ public class CreateModule {
 	}
 
 	private static void _createConfiguration(
-			Element projectElement, ProjectInfo projectInfo,
-			Properties properties)
+			Element projectElement, ProjectInfo projectInfo)
 		throws IOException {
 
 		Element configurationElement = _document.createElement("configuration");
 
 		projectElement.appendChild(configurationElement);
 
-		_createData(configurationElement, projectInfo, properties);
+		_createData(configurationElement, projectInfo);
 
 		_createReferences(configurationElement, projectInfo);
 	}
 
 	private static void _createData(
-		Element configurationElement, ProjectInfo projectInfo,
-		Properties properties) {
+		Element configurationElement, ProjectInfo projectInfo) {
 
 		Element dataElement = _document.createElement("data");
 
@@ -521,7 +519,7 @@ public class CreateModule {
 
 		Path projectPath = projectInfo.getFullPath();
 
-		Path portalPath = Paths.get(properties.getProperty("portal.dir"));
+		Path portalPath = Paths.get(projectInfo.getPortalDir());
 
 		Path portalParentPath = portalPath.getParent();
 
@@ -608,8 +606,7 @@ public class CreateModule {
 		dataElement.appendChild(testRootsElement);
 	}
 
-	private static void _createProjectElement(
-			ProjectInfo projectInfo, Properties properties)
+	private static void _createProjectElement(ProjectInfo projectInfo)
 		throws IOException {
 
 		Element projectElement = _document.createElement("project");
@@ -626,7 +623,7 @@ public class CreateModule {
 
 		projectElement.appendChild(typeElement);
 
-		_createConfiguration(projectElement, projectInfo, properties);
+		_createConfiguration(projectElement, projectInfo);
 	}
 
 	private static void _createReference(
