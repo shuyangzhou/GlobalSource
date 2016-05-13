@@ -20,6 +20,7 @@ public class ProcessGradle {
 
 		Path portalDirPath = Paths.get(arguments.get("portal.dir"));
 		Path projectDirPath = Paths.get(arguments.get("project.dir"));
+		Path workingModulePath = Paths.get(arguments.get("process.module"));
 
 		Path gradlewPath = portalDirPath.resolve("gradlew");
 
@@ -31,7 +32,7 @@ public class ProcessGradle {
 		gradleTask.add("printDependencies");
 		gradleTask.add("-p");
 
-		Path moduleDirPath = portalDirPath.resolve("modules");
+		Path moduleDirPath = workingModulePath;
 
 		gradleTask.add(moduleDirPath.toString());
 
