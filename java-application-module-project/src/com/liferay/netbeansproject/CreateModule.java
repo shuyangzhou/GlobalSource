@@ -34,13 +34,34 @@ public class CreateModule {
 	public static void main(String[] args) throws Exception {
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
-		ProjectInfo projectInfo = new ProjectInfo(
-			arguments.get("src.dir.name"), arguments.get("portal.dir"),
+		createModule(
+			Paths.get(arguments.get("project.dir")),
 			Paths.get(arguments.get("src.dir")),
-			StringUtil.split(arguments.get("project.dependencies"), ','),
+			arguments.get("portal.dir"),
 			StringUtil.split(arguments.get("module.list"), ','));
+	}
 
-		Path projectPath = Paths.get(arguments.get("project.dir"));
+	public static void createModule(
+			Path projectPath, Path modulePath, String portalDir,
+			String[] moduleList)
+		throws Exception {
+
+		Properties projectDependencyProperties = PropertiesUtil.loadProperties(
+			Paths.get("project-dependency.properties"));
+
+		Path moduleName = modulePath.getFileName();
+
+		String projectDependencies = projectDependencyProperties.getProperty(
+			moduleName.toString());
+
+		if (projectDependencies == null) {
+			projectDependencies = projectDependencyProperties.getProperty(
+				"portal.module.dependencies");
+		}
+
+		ProjectInfo projectInfo = new ProjectInfo(
+			moduleName.toString(), portalDir, modulePath,
+			StringUtil.split(projectDependencies, ','), moduleList);
 
 		Path moduleDir = projectPath.resolve("modules");
 
