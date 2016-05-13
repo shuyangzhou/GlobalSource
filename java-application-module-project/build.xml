@@ -215,6 +215,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 	</macrodef>
 
 	<target name="clean">
-		<clean />
+		<clean
+			project.dir="${project.dir}" />
 	</target>
 </project>
