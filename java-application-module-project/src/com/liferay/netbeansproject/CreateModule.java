@@ -29,6 +29,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 public class CreateModule {
 
 	public static void main(String[] args) throws Exception {
@@ -60,7 +61,6 @@ public class CreateModule {
 			projectDependencies = projectDependencyProperties.getProperty(
 				"portal.module.dependencies");
 		}
-
 		ProjectInfo projectInfo = new ProjectInfo(
 			moduleName, portalDir, modulePath,
 			StringUtil.split(projectDependencies, ','), moduleList);
@@ -173,6 +173,7 @@ public class CreateModule {
 			Paths.get(
 				modulePath.toString(), projectName,
 				"nbproject", "project.properties");
+
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, Charset.defaultCharset(),
 				StandardOpenOption.APPEND)) {
@@ -204,6 +205,10 @@ public class CreateModule {
 			}
 
 			Path dependenciesDirPath = projectPath.resolve("dependencies");
+
+			if (!Files.exists(dependenciesDirPath)) {
+				Files.createDirectory(dependenciesDirPath);
+			}
 
 			Path dependenciesPath = dependenciesDirPath.resolve(projectName);
 
