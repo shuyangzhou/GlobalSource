@@ -29,6 +29,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 public class CreateModule {
 
 	public static void main(String[] args) throws Exception {
@@ -36,12 +37,13 @@ public class CreateModule {
 
 		createModule(
 			Paths.get(arguments.get("project.dir")),
-			Paths.get(arguments.get("src.dir")), arguments.get("portal.dir"),
+			Paths.get(arguments.get("src.dir")),
+			Paths.get(arguments.get("portal.dir")),
 			StringUtil.split(arguments.get("module.list"), ','));
 	}
 
 	public static void createModule(
-			Path projectPath, Path modulePath, String portalDir,
+			Path projectPath, Path modulePath, Path portalDir,
 			String[] moduleList)
 		throws Exception {
 
@@ -90,10 +92,9 @@ public class CreateModule {
 
 		Transformer transformer = transformerFactory.newTransformer();
 
-		Path fileNamePath =
-			Paths.get(
-				moduleDir.toString(), projectInfo.getProjectName(), "nbproject",
-				"project.xml");
+		Path fileNamePath = Paths.get(
+			moduleDir.toString(), projectInfo.getProjectName(), "nbproject",
+			"project.xml");
 
 		StreamResult streamResult = new StreamResult(fileNamePath.toFile());
 
@@ -168,10 +169,10 @@ public class CreateModule {
 
 		String projectName = projectInfo.getProjectName();
 
-		Path projectPropertiesPath =
-			Paths.get(
-				modulePath.toString(), projectName,
-				"nbproject", "project.properties");
+		Path projectPropertiesPath = Paths.get(
+			modulePath.toString(), projectName, "nbproject",
+			"project.properties");
+
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, Charset.defaultCharset(),
 				StandardOpenOption.APPEND)) {
@@ -204,6 +205,10 @@ public class CreateModule {
 
 			Path dependenciesDirPath = projectPath.resolve("dependencies");
 
+			if (!Files.exists(dependenciesDirPath)) {
+				Files.createDirectory(dependenciesDirPath);
+			}
+
 			Path dependenciesPath = dependenciesDirPath.resolve(projectName);
 
 			if (!Files.exists(dependenciesPath)) {
@@ -212,8 +217,8 @@ public class CreateModule {
 					Charset.defaultCharset());
 			}
 
-			Properties dependencyProperties =
-				PropertiesUtil.loadProperties(dependenciesPath);
+			Properties dependencyProperties = PropertiesUtil.loadProperties(
+				dependenciesPath);
 
 			StringBuilder testSB = new StringBuilder(
 				"javac.test.classpath=\\\n");
@@ -221,8 +226,8 @@ public class CreateModule {
 			testSB.append("\t${build.classes.dir}:\\\n");
 			testSB.append("\t${javac.classpath}:\\\n");
 
-			String compileDependencies =
-				dependencyProperties.getProperty("compile");
+			String compileDependencies = dependencyProperties.getProperty(
+				"compile");
 
 			Set<String> compileSet = new LinkedHashSet<>();
 
@@ -231,8 +236,8 @@ public class CreateModule {
 					StringUtil.split(
 						compileDependencies, File.pathSeparatorChar)));
 
-			String compileTestDependencies =
-				dependencyProperties.getProperty("compileTest");
+			String compileTestDependencies = dependencyProperties.getProperty(
+				"compileTest");
 
 			if (compileTestDependencies == null) {
 				compileTestDependencies = "";
@@ -252,7 +257,7 @@ public class CreateModule {
 			for (ModuleInfo moduleInfo : dependenciesModuleMap.values()) {
 				String moduleName = moduleInfo.getModuleName();
 
-				if(moduleInfo.isTest()) {
+				if (moduleInfo.isTest()) {
 					_appendReferenceProperties(
 						bufferedWriter, moduleName, testSB);
 				}
@@ -267,8 +272,8 @@ public class CreateModule {
 				Properties moduleDependencyProperties =
 					PropertiesUtil.loadProperties(inheritedDependenciesPath);
 
-				compileDependencies =
-					moduleDependencyProperties.getProperty("compile");
+				compileDependencies = moduleDependencyProperties.getProperty(
+					"compile");
 
 				compileSet.addAll(
 					Arrays.asList(
@@ -288,29 +293,30 @@ public class CreateModule {
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 
-			Path developmentPath = Paths.get(
-				projectInfo.getPortalDir(),"lib", "development");
+			Path portalDir = projectInfo.getPortalDir();
+
+			Path developmentPath = portalDir.resolve("lib/development");
 
 			_appendJavacClasspath(developmentPath.toFile(), projectSB);
 
-			Path globalPath = Paths.get(
-				projectInfo.getPortalDir(),"lib", "global");
+			Path globalPath = portalDir.resolve("lib/global");
 
 			_appendJavacClasspath(globalPath.toFile(), projectSB);
 
-			Path portalPath = Paths.get(
-				projectInfo.getPortalDir(),"lib", "portal");
+			Path portalPath = portalDir.resolve("lib/portal");
 
 			_appendJavacClasspath(portalPath.toFile(), projectSB);
 
 			projectSB.setLength(projectSB.length() - 3);
 
 			if (projectName.equals("portal-impl")) {
-				projectSB.append("\nfile.reference.portal-test-integration-src=");
+				projectSB.append(
+					"\nfile.reference.portal-test-integration-src=");
 				projectSB.append(projectInfo.getPortalDir());
 				projectSB.append("/portal-test-integration/src\n");
 				projectSB.append(
-					"src.test.dir=${file.reference.portal-test-integration-src}");
+					"src.test.dir=${file.reference.portal-test-integration-" +
+						"src}");
 			}
 
 			if (projectName.equals("portal-kernel")) {
@@ -379,7 +385,7 @@ public class CreateModule {
 			projectSB.append("src\n");
 		}
 		else if (Files.exists(moduleSrcPath.resolve("com")) ||
-				Files.exists(moduleSrcPath.resolve("main"))) {
+				 Files.exists(moduleSrcPath.resolve("main"))) {
 
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
@@ -388,8 +394,7 @@ public class CreateModule {
 			projectSB.append(File.separatorChar);
 			projectSB.append("src");
 
-
-			if(Files.exists(moduleSrcPath.resolve("main"))) {
+			if (Files.exists(moduleSrcPath.resolve("main"))) {
 				projectSB.append(File.separatorChar);
 				projectSB.append("main");
 				projectSB.append(File.separatorChar);
@@ -455,7 +460,7 @@ public class CreateModule {
 		Path testResourcesPath = Paths.get(
 			moduleSrcPath.toString(), "test", "Resources");
 
-		if(Files.exists(testResourcesPath)) {
+		if (Files.exists(testResourcesPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit-resources=");
@@ -500,7 +505,7 @@ public class CreateModule {
 		Path testIntegrationResourcesPath = srcTestIntegrationPath.resolve(
 			"resources");
 
-		if(Files.exists(testIntegrationResourcesPath)) {
+		if (Files.exists(testIntegrationResourcesPath)) {
 			projectSB.append("file.reference.");
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration-resources=");
@@ -541,7 +546,7 @@ public class CreateModule {
 
 		Path projectPath = projectInfo.getFullPath();
 
-		Path portalPath = Paths.get(projectInfo.getPortalDir());
+		Path portalPath = projectInfo.getPortalDir();
 
 		Path portalParentPath = portalPath.getParent();
 
@@ -578,10 +583,10 @@ public class CreateModule {
 
 		if (projectName.equals("portal-impl")) {
 			_createRoots(
-				sourceRootsElement,"portal-test-integration","src.test.dir");
+				sourceRootsElement, "portal-test-integration", "src.test.dir");
 		}
 		else if (projectName.equals("portal-kernel")) {
-			_createRoots(sourceRootsElement,"portal-test", "src.test.dir");
+			_createRoots(sourceRootsElement, "portal-test", "src.test.dir");
 		}
 
 		Element testRootsElement = _document.createElement("test-roots");
@@ -742,7 +747,7 @@ public class CreateModule {
 	}
 
 	private static void _replaceProjectName(
-		ProjectInfo projectInfo, Path moduleDir)
+			ProjectInfo projectInfo, Path moduleDir)
 		throws IOException {
 
 		String projectName = projectInfo.getProjectName();
@@ -753,7 +758,7 @@ public class CreateModule {
 
 		String content = new String(Files.readAllBytes(buildXMLPath));
 
-		content = StringUtil.replace(content, "%placeholder%",projectName);
+		content = StringUtil.replace(content, "%placeholder%", projectName);
 
 		Files.write(
 			buildXMLPath, Arrays.asList(content), Charset.defaultCharset());
@@ -763,19 +768,19 @@ public class CreateModule {
 
 	private static class ProjectInfo {
 
-		public Path getFullPath() {
-			return _fullPath;
-		}
-
 		public Map<String, ModuleInfo> getDependenciesModuleMap() {
 			return _dependenciesModuleMap;
+		}
+
+		public Path getFullPath() {
+			return _fullPath;
 		}
 
 		public Map<String, Path> getModuleMap() {
 			return _moduleMap;
 		}
 
-		public String getPortalDir() {
+		public Path getPortalDir() {
 			return _portalDir;
 		}
 
@@ -794,7 +799,7 @@ public class CreateModule {
 		}
 
 		private ProjectInfo(
-			String projectName, String portalDir, Path fullPath,
+			String projectName, Path portalDir, Path fullPath,
 			String[] projectLibs, String[] moduleList) {
 
 			_projectName = projectName;
@@ -816,10 +821,10 @@ public class CreateModule {
 			}
 		}
 
-		private final Path _fullPath;
 		private Map<String, ModuleInfo> _dependenciesModuleMap;
+		private final Path _fullPath;
 		private final Map<String, Path> _moduleMap;
-		private final String _portalDir;
+		private final Path _portalDir;
 		private final String[] _projectLib;
 		private final String _projectName;
 
