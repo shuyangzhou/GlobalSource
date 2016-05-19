@@ -1,12 +1,22 @@
 allprojects {
+	configurations.whenObjectAdded {
+		Configuration configuration ->
+
+		if (configuration.name == "provided") {
+			configuration.dependencies.all {
+				transitive = false
+			}
+		}
+	}
+
 	task printDependencies << {
 		StringBuilder sb = new StringBuilder();
 
-		["runtime", "testIntegrationRuntime"].each {
+		["compile", "testIntegrationRuntime"].each {
 			Configuration configuration = configurations.findByName it
 
 			if (configuration) {
-				if (configuration.name == "runtime") {
+				if (configuration.name == "compile") {
 					sb.append("compile=")
 				}
 				else {

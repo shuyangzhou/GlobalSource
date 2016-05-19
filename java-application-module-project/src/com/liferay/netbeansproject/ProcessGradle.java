@@ -1,6 +1,7 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.ArgumentsUtil;
+import com.liferay.netbeansproject.util.ProjectUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 
 import java.io.BufferedReader;
@@ -33,6 +34,8 @@ public class ProcessGradle {
 	public static void processGradle(
 			Path portalDirPath, Path projectDirPath, Path workDirPath)
 		throws Exception {
+
+		_setupSDK(portalDirPath);
 
 		Path gradlewPath = portalDirPath.resolve("gradlew");
 
@@ -100,6 +103,39 @@ public class ProcessGradle {
 						exitCode);
 			}
 		}
+	}
+
+	private static void _setupSDK(Path portalDirPath) throws Exception {
+		Path sdkPath = portalDirPath.resolve("tools/sdk");
+
+		Path buildCommonsPath = sdkPath.resolve("build-common.xml");
+
+		if (!Files.exists(buildCommonsPath)) {
+			if (Files.exists(sdkPath)) {
+				ProjectUtil.clean(sdkPath);
+			}
+
+			List<String> task = new ArrayList<>();
+
+			task.add("ant");
+			task.add("setup-sdk");
+
+			ProcessBuilder processBuilder = new ProcessBuilder(task);
+
+			processBuilder.directory(portalDirPath.toFile());
+
+			Process process = processBuilder.start();
+
+			int exitCode = process.waitFor();
+
+			if (exitCode != 0) {
+				throw new IOException(
+					"Process " + processBuilder.command() + " failed with " +
+						exitCode);
+			}
+		}
+
+
 	}
 
 }
