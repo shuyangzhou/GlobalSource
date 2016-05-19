@@ -20,7 +20,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 	</macrodef>
 
 	<target name="build">
-		<for list="${portal.dir}" param="portal.dir">
+		<for list="${portal.dirs}" param="portal.dir">
 			<sequential>
 				<local name="portal.name" />
 				<basename property="portal.name" file="@{portal.dir}" />
@@ -103,7 +103,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 	</macrodef>
 
 	<target name="clean">
-		<for list="${portal.dir}" param="portal.dir">
+		<for list="${portal.dirs}" param="portal.dir">
 			<sequential>
 				<local name="portal.name" />
 				<basename property="portal.name" file="@{portal.dir}" />
