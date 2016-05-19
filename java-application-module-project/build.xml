@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Liferay-Source-Netbeans-Project" default="build" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="Liferay-Source-Netbeans-Project" default="add" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<import file="../common/shared-macrodefs.xml" />
 
@@ -18,6 +18,43 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 			/>
 		</sequential>
 	</macrodef>
+
+	<target name="add">
+		<for list="${portal.dirs}" param="portal.dir">
+			<sequential>
+				<local name="portal.name" />
+				<basename property="portal.name" file="@{portal.dir}" />
+
+				<if>
+					<available file="${project.dir}/${portal.name}" type="dir" />
+					<then>
+						<mkdir dir="classes" />
+
+						<javac
+							debug="true"
+							destdir="classes"
+							includeantruntime="false" >
+
+							<src path="../common/src" />
+							<src path="src" />
+						</javac>
+
+						<java classname="com.liferay.netbeansproject.AddModule" classpath="classes">
+							<arg value="portal.dir=@{portal.dir}" />
+						</java>
+
+						<delete dir="${project.dir}/${portal.name}/dependencies" />
+					</then>
+					<else>
+						<build-modules
+							portal.dir="@{portal.dir}"
+							project.dir="${project.dir}/${portal.name}"
+						/>
+					</else>
+				</if>
+			</sequential>
+		</for>
+	</target>
 
 	<target name="build">
 		<for list="${portal.dirs}" param="portal.dir">
