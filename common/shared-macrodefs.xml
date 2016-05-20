@@ -28,29 +28,96 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="set-module-source-directory">
-		<attribute name="module" />
+	<macrodef name="append-module">
+		<attribute name="src.dir" />
+		<attribute name="src.dir.name" />
+		<attribute name="project.dir" />
 
 		<sequential>
-			<dirname property="src.dir" file="@{module}" />
+			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=@{project.dir}/modules/@{src.dir.name}
+reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
+</concat>
+			<append-list
+				list="module.list"
+				src.dir.name="${src.dir}"
+			/>
+		</sequential>
+	</macrodef>
 
-			<basename property="src.dir.name" file="${src.dir}" />
+	<macrodef name="build-modules">
+		<attribute name="portal.dir" />
+		<attribute name="project.dir" />
 
-			<if>
-				<equals arg1="${src.dir.name}" arg2="WEB-INF" />
-				<then>
-					<dirname property="temp" file="${src.dir}" />
+		<sequential>
+			<clean project.dir="@{project.dir}" />
 
+			<common-build
+				portal.dir="@{portal.dir}"
+				project.dir="@{project.dir}"
+			>
+				<build.diff>
+					<append-module
+						src.dir="${src.dir}"
+						src.dir.name="${src.dir.name}"
+						project.dir="@{project.dir}"
+					/>
+
+					<unzip src="CleanModule.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
+				</build.diff>
+			</common-build>
+
+			<for param="module">
+				<path>
+					<dirset dir="@{portal.dir}">
+						<include name="**/src" />
+						<exclude name="**/build/**" />
+					</dirset>
+				</path>
+
+				<sequential>
 					<var name="src.dir" unset="true" />
-
-					<dirname property="src.dir" file="${temp}" />
-
-					<var name="temp" unset="true" />
 					<var name="src.dir.name" unset="true" />
 
-					<basename property="src.dir.name" file="${src.dir}" />
-				</then>
-			</if>
+					<set-module-source-directory module="@{module}" />
+
+					<if>
+						<and>
+							<not>
+								<contains string="${exclude.modules}" substring="${src.dir.name}" />
+							</not>
+							<or>
+								<available file="${src.dir}/build.gradle" />
+								<available file="${src.dir}/build.xml" />
+								<available file="${src.dir}/web.xml" />
+							</or>
+						</and>
+						<then>
+							<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes">
+								<arg value="src.dir=${src.dir}" />
+								<arg value="module.list=${module.list}" />
+								<arg value="portal.dir=@{portal.dir}" />
+								<arg value="project.dir=@{project.dir}" />
+							</java>
+						</then>
+					</if>
+				</sequential>
+			</for>
+
+			<delete dir="@{project.dir}/dependencies" />
+
+			<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
+				<arg value="module.list=${module.list}" />
+				<arg value="project.dir=@{project.dir}" />
+				<arg value="umbrella.source.list=${umbrella.source.list}" />
+			</java>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="clean">
+		<attribute name="project.dir" />
+		<sequential>
+			<delete dir="classes" />
+			<delete dir="@{project.dir}" />
 		</sequential>
 	</macrodef>
 
@@ -124,11 +191,29 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 		</sequential>
 	</macrodef>
 
-	<macrodef name="clean">
-		<attribute name="project.dir" />
+	<macrodef name="set-module-source-directory">
+		<attribute name="module" />
+
 		<sequential>
-			<delete dir="classes" />
-			<delete dir="@{project.dir}" />
+			<dirname property="src.dir" file="@{module}" />
+
+			<basename property="src.dir.name" file="${src.dir}" />
+
+			<if>
+				<equals arg1="${src.dir.name}" arg2="WEB-INF" />
+				<then>
+					<dirname property="temp" file="${src.dir}" />
+
+					<var name="src.dir" unset="true" />
+
+					<dirname property="src.dir" file="${temp}" />
+
+					<var name="temp" unset="true" />
+					<var name="src.dir.name" unset="true" />
+
+					<basename property="src.dir.name" file="${src.dir}" />
+				</then>
+			</if>
 		</sequential>
 	</macrodef>
 </project>

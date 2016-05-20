@@ -3,22 +3,6 @@
 
 	<import file="../common/shared-macrodefs.xml" />
 
-	<macrodef name="append-module">
-		<attribute name="src.dir" />
-		<attribute name="src.dir.name" />
-		<attribute name="project.dir" />
-
-		<sequential>
-			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">project.@{src.dir.name}=@{project.dir}/modules/@{src.dir.name}
-reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.jar
-</concat>
-			<append-list
-				list="module.list"
-				src.dir.name="${src.dir}"
-			/>
-		</sequential>
-	</macrodef>
-
 	<target name="build">
 		<for list="${portal.dirs}" param="portal.dir">
 			<sequential>
@@ -32,75 +16,6 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 			</sequential>
 		</for>
 	</target>
-
-	<macrodef name="build-modules">
-		<attribute name="portal.dir" />
-		<attribute name="project.dir" />
-
-		<sequential>
-			<clean project.dir="@{project.dir}" />
-
-			<common-build
-				portal.dir="@{portal.dir}"
-				project.dir="@{project.dir}"
-			>
-				<build.diff>
-					<append-module
-						src.dir="${src.dir}"
-						src.dir.name="${src.dir.name}"
-						project.dir="@{project.dir}"
-					/>
-
-					<unzip src="CleanModule.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
-				</build.diff>
-			</common-build>
-
-			<for param="module">
-				<path>
-					<dirset dir="@{portal.dir}">
-						<include name="**/src" />
-						<exclude name="**/build/**" />
-					</dirset>
-				</path>
-
-				<sequential>
-					<var name="src.dir" unset="true" />
-					<var name="src.dir.name" unset="true" />
-
-					<set-module-source-directory module="@{module}" />
-
-					<if>
-						<and>
-							<not>
-								<contains string="${exclude.modules}" substring="${src.dir.name}" />
-							</not>
-							<or>
-								<available file="${src.dir}/build.gradle" />
-								<available file="${src.dir}/build.xml" />
-								<available file="${src.dir}/web.xml" />
-							</or>
-						</and>
-						<then>
-							<java classname="com.liferay.netbeansproject.CreateModule" classpath="classes">
-								<arg value="src.dir=${src.dir}" />
-								<arg value="module.list=${module.list}" />
-								<arg value="portal.dir=@{portal.dir}" />
-								<arg value="project.dir=@{project.dir}" />
-							</java>
-						</then>
-					</if>
-				</sequential>
-			</for>
-
-			<delete dir="@{project.dir}/dependencies" />
-
-			<java classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
-				<arg value="module.list=${module.list}" />
-				<arg value="project.dir=@{project.dir}" />
-				<arg value="umbrella.source.list=${umbrella.source.list}" />
-			</java>
-		</sequential>
-	</macrodef>
 
 	<target name="clean">
 		<for list="${portal.dirs}" param="portal.dir">
