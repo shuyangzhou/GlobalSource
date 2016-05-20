@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
@@ -39,12 +40,12 @@ public class CreateModule {
 			Paths.get(arguments.get("project.dir")),
 			Paths.get(arguments.get("src.dir")),
 			Paths.get(arguments.get("portal.dir")),
-			StringUtil.split(arguments.get("module.list"), ','));
+			Arrays.asList(StringUtil.split(arguments.get("module.list"), ',')));
 	}
 
 	public static void createModule(
 			Path projectPath, Path modulePath, Path portalPath,
-			String[] moduleList)
+			List<String> moduleList)
 		throws Exception {
 
 		Properties projectDependencyProperties = PropertiesUtil.loadProperties(
@@ -265,27 +266,6 @@ public class CreateModule {
 					_appendReferenceProperties(
 						bufferedWriter, moduleName, projectSB);
 				}
-
-				Path inheritedDependenciesPath = dependenciesDirPath.resolve(
-					moduleName);
-
-				Properties moduleDependencyProperties =
-					PropertiesUtil.loadProperties(inheritedDependenciesPath);
-
-				compileDependencies = moduleDependencyProperties.getProperty(
-					"compile");
-
-				compileSet.addAll(
-					Arrays.asList(
-						StringUtil.split(
-							compileDependencies, File.pathSeparatorChar)));
-
-				compileTestDependencies =
-					moduleDependencyProperties.getProperty("compileTest");
-
-				compileTestSet.addAll(Arrays.asList(
-					StringUtil.split(
-						compileTestDependencies, File.pathSeparatorChar)));
 			}
 
 			_appendLibJars(compileSet, projectSB);
@@ -800,7 +780,7 @@ public class CreateModule {
 
 		private ProjectInfo(
 			String projectName, Path portalPath, Path fullPath,
-			String[] projectLibs, String[] moduleList) {
+			String[] projectLibs, List<String> moduleList) {
 
 			_projectName = projectName;
 

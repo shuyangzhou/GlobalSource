@@ -2,6 +2,7 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
+import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,10 +42,23 @@ public class ProcessGradle {
 		gradleTask.add(gradlewPath.toString());
 		gradleTask.add("--parallel");
 		gradleTask.add("--init-script=dependency.gradle");
-		gradleTask.add("printDependencies");
 		gradleTask.add("-p");
 
-		gradleTask.add(workDirPath.toString());
+		Path modulesPath = portalDirPath.resolve("modules");
+
+		gradleTask.add(modulesPath.toString());
+
+		Path relativeWorkPath = modulesPath.relativize(workDirPath);
+
+		String relativeWorkString = relativeWorkPath.toString();
+
+		if (!relativeWorkString.isEmpty()) {
+			relativeWorkString = relativeWorkString.replace('/', ':');
+
+			relativeWorkString += ":";
+		}
+
+		gradleTask.add(relativeWorkString + "printDependencies");
 
 		Path dependenciesDirPath = projectDirPath.resolve("dependencies");
 
