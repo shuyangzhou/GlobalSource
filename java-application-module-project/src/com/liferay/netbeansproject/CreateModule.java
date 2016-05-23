@@ -8,12 +8,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -106,37 +110,6 @@ public class CreateModule {
 		transformer.transform(new DOMSource(_document), streamResult);
 	}
 
-	private static Map<String, ModuleInfo> _parseModuleDependencies(
-			ProjectInfo projectInfo, Path modulePath)
-		throws Exception {
-
-		Map<String, ModuleInfo> dependenciesModuleMap = new HashMap<>();
-
-		Map<String, Path> moduleMap = projectInfo.getModuleMap();
-
-		Queue<ModuleInfo> moduleInfoQueue = new LinkedList<>();
-
-		moduleInfoQueue.addAll(ModuleBuildParser.parseBuildFile(modulePath));
-
-		ModuleInfo moduleInfo = null;
-
-		while ((moduleInfo = moduleInfoQueue.poll()) != null) {
-			String moduleName = moduleInfo.getModuleName();
-
-			if (!moduleMap.containsKey(moduleName)) {
-				continue;
-			}
-
-			if (dependenciesModuleMap.put(moduleName, moduleInfo) == null) {
-				moduleInfoQueue.addAll(
-					ModuleBuildParser.parseBuildFile(
-						moduleMap.get(moduleName)));
-			}
-		}
-
-		return dependenciesModuleMap;
-	}
-
 	private static Set<Path> _addDependenciesToSet(String[] dependencies) {
 		Set<Path> set = new LinkedHashSet<>();
 
@@ -147,27 +120,21 @@ public class CreateModule {
 		return set;
 	}
 
-	private static void _appendJavacClasspath(File directory, StringBuilder sb)
-		throws IOException {
-
-		File[] files = directory.listFiles();
-
-		Arrays.sort(files);
-
-		for (File file : files) {
-			sb.append('\t');
-			sb.append(file.getCanonicalPath());
-			sb.append(":\\\n");
-		}
-	}
-
 	private static void _appendLibJars(
-		Set<Path> dependencies, StringBuilder sb) {
+		Set<Path> dependencies, StringBuilder classpathSB,
+		StringBuilder projectSB) {
 
 		for (Path jar : dependencies) {
-			sb.append('\t');
-			sb.append(jar);
-			sb.append(":\\\n");
+			projectSB.append("file.reference.");
+			projectSB.append(jar.getFileName());
+			projectSB.append('=');
+			projectSB.append(jar);
+			projectSB.append('\n');
+
+			classpathSB.append('\t');
+			classpathSB.append("${file.reference.");
+			classpathSB.append(jar.getFileName());
+			classpathSB.append("}:\\\n");
 		}
 	}
 
@@ -276,8 +243,8 @@ public class CreateModule {
 				}
 			}
 
-			_appendLibJars(compileSet, javacSB);
-			_appendLibJars(compileTestSet, testSB);
+			_appendLibJars(compileSet, javacSB, projectSB);
+			_appendLibJars(compileTestSet, testSB, projectSB);
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 
@@ -285,15 +252,18 @@ public class CreateModule {
 
 			Path libDevelopmentPath = portalPath.resolve("lib/development");
 
-			_appendJavacClasspath(libDevelopmentPath.toFile(), javacSB);
+			_appendLibJars(
+				_getDependencySet(libDevelopmentPath), javacSB, projectSB);
 
 			Path libGlobalPath = portalPath.resolve("lib/global");
 
-			_appendJavacClasspath(libGlobalPath.toFile(), javacSB);
+			_appendLibJars(
+				_getDependencySet(libGlobalPath), javacSB, projectSB);
 
 			Path libPortalPath = portalPath.resolve("lib/portal");
 
-			_appendJavacClasspath(libPortalPath.toFile(), javacSB);
+			_appendLibJars(
+				_getDependencySet(libPortalPath), javacSB, projectSB);
 
 			if (projectName.equals("portal-impl")) {
 				projectSB.append(
@@ -716,16 +686,6 @@ public class CreateModule {
 	}
 
 	private static void _createRoots(
-		Element sourceRootsElement, String rootId) {
-
-		Element rootElement = _document.createElement("root");
-
-		rootElement.setAttribute("id", rootId);
-
-		sourceRootsElement.appendChild(rootElement);
-	}
-
-	private static void _createRoots(
 		Element sourceRootsElement, String label, String rootId) {
 
 		Element rootElement = _document.createElement("root");
@@ -735,6 +695,56 @@ public class CreateModule {
 		rootElement.setAttribute("name", label);
 
 		sourceRootsElement.appendChild(rootElement);
+	}
+
+	private static Set<Path> _getDependencySet(Path directory)
+		throws IOException {
+
+		DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
+			directory);
+
+		List<Path> jarList = new ArrayList<>();
+
+		for (Path jarPath : directoryStream) {
+			jarList.add(jarPath);
+		}
+
+		Collections.sort(jarList);
+
+		directoryStream.close();
+
+		return new HashSet<Path>(jarList);
+	}
+
+	private static Map<String, ModuleInfo> _parseModuleDependencies(
+			ProjectInfo projectInfo, Path modulePath)
+		throws Exception {
+
+		Map<String, ModuleInfo> dependenciesModuleMap = new HashMap<>();
+
+		Map<String, Path> moduleMap = projectInfo.getModuleMap();
+
+		Queue<ModuleInfo> moduleInfoQueue = new LinkedList<>();
+
+		moduleInfoQueue.addAll(ModuleBuildParser.parseBuildFile(modulePath));
+
+		ModuleInfo moduleInfo = null;
+
+		while ((moduleInfo = moduleInfoQueue.poll()) != null) {
+			String moduleName = moduleInfo.getModuleName();
+
+			if (!moduleMap.containsKey(moduleName)) {
+				continue;
+			}
+
+			if (dependenciesModuleMap.put(moduleName, moduleInfo) == null) {
+				moduleInfoQueue.addAll(
+					ModuleBuildParser.parseBuildFile(
+						moduleMap.get(moduleName)));
+			}
+		}
+
+		return dependenciesModuleMap;
 	}
 
 	private static void _replaceProjectName(
