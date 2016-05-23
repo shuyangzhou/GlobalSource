@@ -137,6 +137,16 @@ public class CreateModule {
 		return dependenciesModuleMap;
 	}
 
+	private static Set<Path> _addDependenciesToSet(String[] dependencies) {
+		Set<Path> set = new LinkedHashSet<>();
+
+		for (String dependency : dependencies) {
+			set.add(Paths.get(dependency));
+		}
+
+		return set;
+	}
+
 	private static void _appendJavacClasspath(File directory, StringBuilder sb)
 		throws IOException {
 
@@ -145,21 +155,19 @@ public class CreateModule {
 		Arrays.sort(files);
 
 		for (File file : files) {
-			sb.append("\t");
+			sb.append('\t');
 			sb.append(file.getCanonicalPath());
 			sb.append(":\\\n");
 		}
 	}
 
 	private static void _appendLibJars(
-		Set<String> dependencies, StringBuilder sb) {
+		Set<Path> dependencies, StringBuilder sb) {
 
-		for (String jar : dependencies) {
-			if (!jar.isEmpty()) {
-				sb.append("\t");
-				sb.append(jar);
-				sb.append(":\\\n");
-			}
+		for (Path jar : dependencies) {
+			sb.append('\t');
+			sb.append(jar);
+			sb.append(":\\\n");
 		}
 	}
 
@@ -182,11 +190,11 @@ public class CreateModule {
 
 			projectSB.append("excludes=");
 			projectSB.append(excludeTypes);
-			projectSB.append("\n");
+			projectSB.append('\n');
 
 			projectSB.append("application.title=");
 			projectSB.append(projectInfo.getFullPath());
-			projectSB.append("\n");
+			projectSB.append('\n');
 
 			projectSB.append("dist.jar=${dist.dir}/");
 			projectSB.append(projectName);
@@ -195,12 +203,12 @@ public class CreateModule {
 			_appendSourcePath(
 				projectName, projectInfo.getFullPath(), projectSB);
 
-			projectSB.append("javac.classpath=\\\n");
+			StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 
 			for (String module : projectInfo.getProjectLibs()) {
 				if (!module.isEmpty()) {
 					_appendReferenceProperties(
-						bufferedWriter, module, projectSB);
+						bufferedWriter, module, javacSB);
 				}
 			}
 
@@ -230,10 +238,10 @@ public class CreateModule {
 			String compileDependencies = dependencyProperties.getProperty(
 				"compile");
 
-			Set<String> compileSet = new LinkedHashSet<>();
+			Set<Path> compileSet = new LinkedHashSet<>();
 
 			compileSet.addAll(
-				Arrays.asList(
+				_addDependenciesToSet(
 					StringUtil.split(
 						compileDependencies, File.pathSeparatorChar)));
 
@@ -244,10 +252,10 @@ public class CreateModule {
 				compileTestDependencies = "";
 			}
 
-			Set<String> compileTestSet = new LinkedHashSet<>();
+			Set<Path> compileTestSet = new LinkedHashSet<>();
 
 			compileTestSet.addAll(
-				Arrays.asList(
+				_addDependenciesToSet(
 					StringUtil.split(
 						compileTestDependencies, File.pathSeparatorChar)));
 
@@ -264,11 +272,11 @@ public class CreateModule {
 				}
 				else {
 					_appendReferenceProperties(
-						bufferedWriter, moduleName, projectSB);
+						bufferedWriter, moduleName, javacSB);
 				}
 			}
 
-			_appendLibJars(compileSet, projectSB);
+			_appendLibJars(compileSet, javacSB);
 			_appendLibJars(compileTestSet, testSB);
 
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
@@ -277,17 +285,15 @@ public class CreateModule {
 
 			Path libDevelopmentPath = portalPath.resolve("lib/development");
 
-			_appendJavacClasspath(libDevelopmentPath.toFile(), projectSB);
+			_appendJavacClasspath(libDevelopmentPath.toFile(), javacSB);
 
 			Path libGlobalPath = portalPath.resolve("lib/global");
 
-			_appendJavacClasspath(libGlobalPath.toFile(), projectSB);
+			_appendJavacClasspath(libGlobalPath.toFile(), javacSB);
 
 			Path libPortalPath = portalPath.resolve("lib/portal");
 
-			_appendJavacClasspath(libPortalPath.toFile(), projectSB);
-
-			projectSB.setLength(projectSB.length() - 3);
+			_appendJavacClasspath(libPortalPath.toFile(), javacSB);
 
 			if (projectName.equals("portal-impl")) {
 				projectSB.append(
@@ -310,6 +316,11 @@ public class CreateModule {
 			bufferedWriter.append(projectSB);
 			bufferedWriter.newLine();
 
+			javacSB.setLength(javacSB.length() - 3);
+
+			bufferedWriter.append(javacSB);
+			bufferedWriter.newLine();
+
 			testSB.setLength(testSB.length() - 3);
 
 			bufferedWriter.append(testSB);
@@ -327,12 +338,12 @@ public class CreateModule {
 		sb.append("=..");
 		sb.append(File.separatorChar);
 		sb.append(module);
-		sb.append("\n");
+		sb.append('\n');
 		sb.append("reference.");
 		sb.append(module);
 		sb.append(".jar=${project.");
 		sb.append(module);
-		sb.append("}");
+		sb.append('}');
 		sb.append(File.separatorChar);
 		sb.append("dist");
 		sb.append(File.separatorChar);
@@ -381,7 +392,7 @@ public class CreateModule {
 				projectSB.append("java\n");
 			}
 			else {
-				projectSB.append("\n");
+				projectSB.append('\n');
 			}
 
 			projectSB.append("src.");
@@ -399,7 +410,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-resources=");
 			projectSB.append(mainResourcesPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("src.");
 			projectSB.append(moduleName);
 			projectSB.append(".resources.dir=${file.reference.");
@@ -417,7 +428,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit=");
 			projectSB.append(testUnitPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.dir=${file.reference.");
@@ -429,7 +440,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit=");
 			projectSB.append(testJavaPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.dir=${file.reference.");
@@ -445,7 +456,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-unit-resources=");
 			projectSB.append(testResourcesPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".unit.resources.dir=${file.reference.");
@@ -462,7 +473,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration=");
 			projectSB.append(testIntegrationPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.dir=${file.reference.");
@@ -474,7 +485,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration=");
 			projectSB.append(testIntegrationJavaPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.dir=${file.reference.");
@@ -490,7 +501,7 @@ public class CreateModule {
 			projectSB.append(moduleName);
 			projectSB.append("-test-integration-resources=");
 			projectSB.append(testIntegrationResourcesPath);
-			projectSB.append("\n");
+			projectSB.append('\n');
 			projectSB.append("test.");
 			projectSB.append(moduleName);
 			projectSB.append(".integration.resources.dir=${file.reference.");
