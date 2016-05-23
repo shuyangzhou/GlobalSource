@@ -121,20 +121,24 @@ public class CreateModule {
 	}
 
 	private static void _appendLibJars(
-		Set<Path> dependencies, StringBuilder classpathSB,
+		Path portalPath, Set<Path> dependencies, StringBuilder classpathSB,
 		StringBuilder projectSB) {
 
-		for (Path jar : dependencies) {
-			projectSB.append("file.reference.");
-			projectSB.append(jar.getFileName());
-			projectSB.append('=');
-			projectSB.append(jar);
-			projectSB.append('\n');
+		Path sdkPath = portalPath.resolve("tools/sdk");
 
-			classpathSB.append('\t');
-			classpathSB.append("${file.reference.");
-			classpathSB.append(jar.getFileName());
-			classpathSB.append("}:\\\n");
+		for (Path jar : dependencies) {
+			if (!jar.startsWith(sdkPath)) {
+				projectSB.append("file.reference.");
+				projectSB.append(jar.getFileName());
+				projectSB.append('=');
+				projectSB.append(jar);
+				projectSB.append('\n');
+
+				classpathSB.append('\t');
+				classpathSB.append("${file.reference.");
+				classpathSB.append(jar.getFileName());
+				classpathSB.append("}:\\\n");
+			}
 		}
 	}
 
@@ -243,27 +247,30 @@ public class CreateModule {
 				}
 			}
 
-			_appendLibJars(compileSet, javacSB, projectSB);
-			_appendLibJars(compileTestSet, testSB, projectSB);
-
 			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
 
 			Path portalPath = projectInfo.getPortalPath();
 
+			_appendLibJars(portalPath, compileSet, javacSB, projectSB);
+			_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
+
 			Path libDevelopmentPath = portalPath.resolve("lib/development");
 
 			_appendLibJars(
-				_getDependencySet(libDevelopmentPath), javacSB, projectSB);
+				portalPath, _getDependencySet(libDevelopmentPath), javacSB,
+				projectSB);
 
 			Path libGlobalPath = portalPath.resolve("lib/global");
 
 			_appendLibJars(
-				_getDependencySet(libGlobalPath), javacSB, projectSB);
+				portalPath, _getDependencySet(libGlobalPath), javacSB,
+				projectSB);
 
 			Path libPortalPath = portalPath.resolve("lib/portal");
 
 			_appendLibJars(
-				_getDependencySet(libPortalPath), javacSB, projectSB);
+				portalPath, _getDependencySet(libPortalPath), javacSB,
+				projectSB);
 
 			if (projectName.equals("portal-impl")) {
 				projectSB.append(
