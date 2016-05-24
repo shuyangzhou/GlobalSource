@@ -1,5 +1,6 @@
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.Module.JarDependency;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
@@ -7,12 +8,16 @@ import com.liferay.netbeansproject.util.StringUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.FileVisitResult;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -31,7 +36,7 @@ public class ProcessGradle {
 			Paths.get(arguments.get("work.dir")));
 	}
 
-	public static void processGradle(
+	public static Map<String, List<JarDependency>> processGradle(
 			Path portalDirPath, Path projectDirPath, Path workDirPath)
 		throws Exception {
 
@@ -114,6 +119,47 @@ public class ProcessGradle {
 						exitCode);
 			}
 		}
+
+		final Map<String, List<JarDependency>> dependenciesMap =
+			new HashMap<>();
+
+		Files.walkFileTree(dependenciesDirPath, new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult visitFile(
+						Path path, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					List<JarDependency> jarDependencies = new ArrayList<>();
+
+					Properties dependencies = PropertiesUtil.loadProperties(
+						path);
+
+					String[] compileProperties = StringUtil.split(
+						dependencies.getProperty("compile"), ':');
+
+					for (String jar : compileProperties) {
+						jarDependencies.add(
+							new JarDependency(Paths.get(jar), false));
+					}
+
+					String[] compileTestProperties = StringUtil.split(
+						dependencies.getProperty("compileTest"), ':');
+
+					for (String jar : compileTestProperties) {
+						jarDependencies.add(
+							new JarDependency(Paths.get(jar), true));
+					}
+
+					Path moduleName = path.getFileName();
+
+					dependenciesMap.put(moduleName.toString(), jarDependencies);
+
+					return FileVisitResult.CONTINUE;
+				}
+			});
+
+		return dependenciesMap;
 	}
 
 }
