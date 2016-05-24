@@ -1,7 +1,6 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.Module.JarDependency;
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
@@ -26,15 +25,6 @@ import java.util.Properties;
  * @author tom
  */
 public class ProcessGradle {
-
-	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		processGradle(
-			Paths.get(arguments.get("portal.dir")),
-			Paths.get(arguments.get("project.dir")),
-			Paths.get(arguments.get("work.dir")));
-	}
 
 	public static Map<String, List<JarDependency>> processGradle(
 			Path portalDirPath, Path projectDirPath, Path workDirPath)
