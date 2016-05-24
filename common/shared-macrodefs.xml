@@ -60,7 +60,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 						project.dir="@{project.dir}"
 					/>
 
-					<unzip src="CleanModule.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
+					<unzip src="CleanProject.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
 				</build.diff>
 			</common-build>
 
@@ -126,8 +126,6 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 
 		<sequential>
 			<unzip src="CleanProject.zip" dest="@{project.dir}/" />
-
-			<copy file="@{project.dir}/nbproject/default.properties" tofile="@{project.dir}/nbproject/project.properties" />
 
 			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
 	</concat>
