@@ -36,7 +36,7 @@ public class ZipUtil {
 		Files.createDirectories(destinationPath);
 
 		FileSystem fileSystem = FileSystems.newFileSystem(
-			Paths.get("CleanModule.zip"), null);
+			Paths.get("CleanProject.zip"), null);
 
 		for (final Path path : fileSystem.getRootDirectories()) {
 			Files.walkFileTree(
