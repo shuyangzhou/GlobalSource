@@ -125,16 +125,9 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		<element name="build.diff" />
 
 		<sequential>
-			<unzip src="CleanProject.zip" dest="@{project.dir}/" />
-
-			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
-	</concat>
-
-			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=@{portal.dir}/portal-web/docroot
-src.portal-web.dir=$${file.reference.portal-web.src}
-file.reference.portal-web-functional.src=@{portal.dir}/portal-web/test/functional
-src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
-	</concat>
+			<java classname="com.liferay.netbeansproject.CreateUmbrella" classpath="classes">
+				<arg value="portal.dir=@{portal.dir}" />
+			</java>
 
 			<for param="module">
 				<path>
@@ -167,12 +160,6 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 					</if>
 				</sequential>
 			</for>
-
-			<java classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
-				<arg value="portal.dir=@{portal.dir}" />
-				<arg value="project.dir=@{project.dir}" />
-				<arg value="work.dir=@{portal.dir}/modules" />
-			</java>
 		</sequential>
 	</macrodef>
 
