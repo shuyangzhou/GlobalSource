@@ -15,6 +15,7 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.ArgumentsUtil;
+import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
 
@@ -85,7 +86,7 @@ public class AddModule {
 						return FileVisitResult.CONTINUE;
 					}
 
-					String moduleName = _getModuleName(path);
+					String moduleName = ModuleUtil.getModuleName(path);
 
 					if (!moduleNames.contains(moduleName)) {
 						try {
@@ -127,18 +128,6 @@ public class AddModule {
 		}
 
 		return moduleNames;
-	}
-
-	private String _getModuleName(Path modulePath) {
-		Path moduleName = modulePath.getFileName();
-
-		if ("WEB-INF".equals(moduleName.toString())) {
-			moduleName = modulePath.getParent();
-			moduleName = moduleName.getParent();
-			moduleName = moduleName.getFileName();
-		}
-
-		return moduleName.toString();
 	}
 
 }
