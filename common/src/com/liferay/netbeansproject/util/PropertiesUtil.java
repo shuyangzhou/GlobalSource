@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class PropertiesUtil {
@@ -39,6 +42,26 @@ public class PropertiesUtil {
 		}
 
 		return properties;
+	}
+
+	public static Map<String, String> getSubProperties(
+		Properties properties, String propertyName) {
+
+		Map<String, String> map = new HashMap<>();
+
+		Enumeration e = properties.propertyNames();
+
+		while (e.hasMoreElements()) {
+			String property = (String) e.nextElement();
+
+			if (property.contains(propertyName)) {
+				map.put(
+					StringUtil.extract(property, '[', ']'),
+					properties.getProperty(property));
+			}
+		}
+
+		return map;
 	}
 
 }

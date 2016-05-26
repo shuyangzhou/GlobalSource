@@ -22,6 +22,14 @@ import java.util.List;
  */
 public class StringUtil {
 
+	public static String extract(String s, char first, char second) {
+		int x = s.indexOf(first);
+
+		int y = s.indexOf(second);
+
+		return s.substring(x + 1, y);
+	}
+
 	public static String replace(String s, String oldSub, String newSub) {
 		if ((s == null) || (oldSub == null) || oldSub.isEmpty()) {
 			return s;

@@ -66,7 +66,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 						project.dir="@{project.dir}"
 					/>
 
-					<unzip src="CleanModule.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
+					<unzip src="CleanProject.zip" dest="@{project.dir}/modules/${src.dir.name}/" />
 				</build.diff>
 			</common-build>
 
@@ -133,18 +133,10 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		<element name="build.diff" />
 
 		<sequential>
-			<unzip src="CleanProject.zip" dest="@{project.dir}/" />
-
-			<copy file="@{project.dir}/nbproject/default.properties" tofile="@{project.dir}/nbproject/project.properties" />
-
-			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">excludes=${exclude.types}
-	</concat>
-
-			<concat destfile="@{project.dir}/nbproject/project.properties" append="true">file.reference.portal-web.src=@{portal.dir}/portal-web/docroot
-src.portal-web.dir=$${file.reference.portal-web.src}
-file.reference.portal-web-functional.src=@{portal.dir}/portal-web/test/functional
-src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
-	</concat>
+			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.CreateUmbrella" classpath="classes">
+				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+				<arg value="portal.dir=@{portal.dir}" />
+			</java>
 
 			<for param="module">
 				<path>
@@ -177,13 +169,6 @@ src.portal-web-functional.dir=$${file.reference.portal-web-functional.src}
 					</if>
 				</sequential>
 			</for>
-
-			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.ProcessGradle" classpath="classes">
-				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-				<arg value="portal.dir=@{portal.dir}" />
-				<arg value="project.dir=@{project.dir}" />
-				<arg value="work.dir=@{portal.dir}/modules" />
-			</java>
 		</sequential>
 	</macrodef>
 
