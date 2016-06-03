@@ -13,7 +13,6 @@
  */
 package com.liferay.netbeansproject;
 
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
 import java.io.BufferedWriter;
@@ -31,13 +30,6 @@ import java.util.Properties;
  * @author Tom Wang
  */
 public class CreateUmbrella {
-	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		CreateUmbrella createUmbrella = new CreateUmbrella();
-
-		createUmbrella.createUmbrella(Paths.get(arguments.get("portal.dir")));
-	}
 
 	public void createUmbrella(Path portalPath) throws Exception {
 		Properties buildProperties = PropertiesUtil.loadProperties(
@@ -55,10 +47,6 @@ public class CreateUmbrella {
 		_appendProjectProperties(
 			portalPath, projectPath.resolve("nbproject/project.properties"),
 			buildProperties);
-
-		ProcessGradle.processGradle(
-			portalPath, projectPath, portalPath.resolve("modules"));
-
 	}
 
 	private void _appendProjectProperties(
