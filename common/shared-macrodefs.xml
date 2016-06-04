@@ -75,6 +75,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 					<dirset dir="@{portal.dir}">
 						<include name="**/src" />
 						<exclude name="**/build/**" />
+						<exclude name="**/standalone/**" />
+						<exclude name="**/samples/**" />
 					</dirset>
 				</path>
 
@@ -133,7 +135,7 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 		<element name="build.diff" />
 
 		<sequential>
-			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.CreateUmbrella" classpath="classes">
+			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.PortalScanner" classpath="classes">
 				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 				<arg value="portal.dir=@{portal.dir}" />
 			</java>
@@ -143,6 +145,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 					<dirset dir="@{portal.dir}">
 						<include name="**/src"/>
 						<exclude name="**/build/**" />
+						<exclude name="**/standalone/**" />
+						<exclude name="**/samples/**" />
 					</dirset>
 				</path>
 
