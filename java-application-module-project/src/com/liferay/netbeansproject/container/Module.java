@@ -16,11 +16,14 @@ package com.liferay.netbeansproject.container;
 
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
+
 import java.io.IOException;
+
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +55,7 @@ public class Module {
 
 		_jarDependencies = jarDependencies;
 
-		_sourcePath =  _resolveSourcePath(modulePath);
+		_sourcePath = _resolveSourcePath(modulePath);
 		_sourceResourcePath = _resolveResourcePath(modulePath, "main");
 
 		_testUnitPath = _resolveTestPath(modulePath, true);
@@ -133,7 +136,7 @@ public class Module {
 		sourcePath = modulePath.resolve("src");
 
 		if (Files.exists(sourcePath.resolve("test")) ||
-				Files.exists(sourcePath.resolve("testIntegration"))) {
+			Files.exists(sourcePath.resolve("testIntegration"))) {
 
 			return null;
 		}
@@ -142,7 +145,7 @@ public class Module {
 	}
 
 	private static Path _resolveTestPath(Path modulePath, boolean unit) {
-		Path testPath;
+		Path testPath = null;
 
 		if (unit) {
 			testPath = modulePath.resolve(Paths.get("src", "test", "java"));
@@ -170,8 +173,8 @@ public class Module {
 		return null;
 	}
 
-	private final List<ModuleDependency> _moduleDependencies;
 	private final List<JarDependency> _jarDependencies;
+	private final List<ModuleDependency> _moduleDependencies;
 	private final Path _modulePath;
 	private final Path _sourcePath;
 	private final Path _sourceResourcePath;

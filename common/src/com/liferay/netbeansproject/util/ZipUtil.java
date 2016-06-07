@@ -15,6 +15,7 @@
 package com.liferay.netbeansproject.util;
 
 import java.io.IOException;
+
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -30,9 +31,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class ZipUtil {
 
-	public static void unZip(final Path destinationPath)
-		throws IOException {
-
+	public static void unZip(final Path destinationPath) throws IOException {
 		Files.createDirectories(destinationPath);
 
 		FileSystem fileSystem = FileSystems.newFileSystem(
