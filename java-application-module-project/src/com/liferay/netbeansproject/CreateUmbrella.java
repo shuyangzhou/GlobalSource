@@ -55,10 +55,6 @@ public class CreateUmbrella {
 		_appendProjectProperties(
 			portalPath, projectPath.resolve("nbproject/project.properties"),
 			buildProperties);
-
-		ProcessGradle.processGradle(
-			portalPath, projectPath, portalPath.resolve("modules"));
-
 	}
 
 	private void _appendProjectProperties(
