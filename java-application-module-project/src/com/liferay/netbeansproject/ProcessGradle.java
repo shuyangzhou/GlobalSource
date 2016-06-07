@@ -98,7 +98,8 @@ public class ProcessGradle {
 
 			String line = null;
 
-			try(BufferedReader br = new BufferedReader(
+			try(
+				BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getInputStream()))) {
 
 				while ((line = br.readLine()) != null) {
@@ -106,7 +107,8 @@ public class ProcessGradle {
 				}
 			}
 
-			try(BufferedReader br = new BufferedReader(
+			try(
+				BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getErrorStream()))) {
 
 				while ((line = br.readLine()) != null) {

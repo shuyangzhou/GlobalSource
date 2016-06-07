@@ -11,6 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.PropertiesUtil;
@@ -81,8 +82,8 @@ public class CreateUmbrella {
 		}
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-			propertiesFilePath, Charset.defaultCharset(),
-			StandardOpenOption.APPEND)) {
+				propertiesFilePath, Charset.defaultCharset(),
+				StandardOpenOption.APPEND)) {
 
 			bufferedWriter.append(sb);
 			bufferedWriter.newLine();

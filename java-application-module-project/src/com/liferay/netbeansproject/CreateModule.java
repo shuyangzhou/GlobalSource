@@ -1,3 +1,17 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.ModuleBuildParser.ModuleInfo;
@@ -39,6 +53,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+/**
+ * @author Tom Wang
+ */
 public class CreateModule {
 
 	public static void createModule(
@@ -282,9 +300,9 @@ public class CreateModule {
 					"\nfile.reference.portal-test-integration-src=");
 				projectSB.append(projectInfo.getPortalPath());
 				projectSB.append("/portal-test-integration/src\n");
+				projectSB.append("src.test.dir=");
 				projectSB.append(
-					"src.test.dir=${file.reference.portal-test-integration-" +
-						"src}");
+					"${file.reference.portal-test-integration-src}");
 			}
 
 			if (projectName.equals("portal-kernel")) {
@@ -340,8 +358,8 @@ public class CreateModule {
 		javacSB.append(".jar}:\\\n");
 	}
 
-	private static void _appendSourcePath(String moduleName, Path modulePath,
-		StringBuilder projectSB) {
+	private static void _appendSourcePath(
+		String moduleName, Path modulePath, StringBuilder projectSB) {
 
 		Path moduleSrcPath = modulePath.resolve("src");
 

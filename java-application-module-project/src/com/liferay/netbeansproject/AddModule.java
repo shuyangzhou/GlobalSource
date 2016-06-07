@@ -105,7 +105,7 @@ public class AddModule {
 					return FileVisitResult.SKIP_SUBTREE;
 				}
 
-		});
+			});
 	}
 
 	private List<String> _getExistingModules(Path projectRootPath)

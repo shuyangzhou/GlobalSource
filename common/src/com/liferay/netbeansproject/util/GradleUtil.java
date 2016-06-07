@@ -71,8 +71,9 @@ public class GradleUtil {
 				}
 
 				moduleDependencies.add(
-					new ModuleDependency(line.substring(index1 + 1, index2),
-					line.startsWith("test")));
+					new ModuleDependency(
+						line.substring(index1 + 1, index2),
+						line.startsWith("test")));
 			}
 		}
 
