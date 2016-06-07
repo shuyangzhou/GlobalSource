@@ -15,9 +15,10 @@
 package com.liferay.netbeansproject.util;
 
 import com.liferay.netbeansproject.container.ModuleDependency;
-import java.io.BufferedReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

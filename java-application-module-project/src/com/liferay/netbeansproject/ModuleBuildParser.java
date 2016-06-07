@@ -1,15 +1,16 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.StringUtil;
+
 import java.io.BufferedReader;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 public class ModuleBuildParser {
 
 	public static List<ModuleInfo> parseBuildFile(Path modulePath)

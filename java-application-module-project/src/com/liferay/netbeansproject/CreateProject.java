@@ -3,16 +3,20 @@ package com.liferay.netbeansproject;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+
 import java.util.Map;
 import java.util.Properties;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -20,6 +24,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 public class CreateProject {
@@ -241,8 +246,7 @@ public class CreateProject {
 		}
 
 		private ProjectInfo(
-			String projectName, String[] modules,
-			String[] sources) {
+			String projectName, String[] modules, String[] sources) {
 
 			_projectName = projectName;
 

@@ -48,9 +48,7 @@ public class AddModule {
 		addModule.addModule(Paths.get(arguments.get("portal.dir")));
 	}
 
-	public void addModule(final Path portalPath)
-		throws IOException {
-
+	public void addModule(final Path portalPath) throws IOException {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
@@ -59,16 +57,12 @@ public class AddModule {
 		final Path projectRootPath = Paths.get(
 			properties.getProperty("project.dir"), portalName.toString());
 
-		final List<String> moduleNames = _getExistingModules(
-			projectRootPath);
+		final List<String> moduleNames = _getExistingModules(projectRootPath);
 
-		final String ignoredDirs = properties.getProperty(
-			"ignored.dirs");
+		final String ignoredDirs = properties.getProperty("ignored.dirs");
 
 		Files.walkFileTree(
-			portalPath,
-			EnumSet.allOf(FileVisitOption.class),
-			Integer.MAX_VALUE,
+			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
 			new SimpleFileVisitor<Path>() {
 
 				@Override

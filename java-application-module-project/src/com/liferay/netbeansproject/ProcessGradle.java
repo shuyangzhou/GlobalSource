@@ -96,7 +96,7 @@ public class ProcessGradle {
 		if (Boolean.valueOf(
 				properties.getProperty("display.gradle.process.output"))) {
 
-			String line;
+			String line = null;
 
 			try(BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getInputStream()))) {

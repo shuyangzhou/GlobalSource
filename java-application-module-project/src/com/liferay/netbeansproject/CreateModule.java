@@ -4,15 +4,18 @@ import com.liferay.netbeansproject.ModuleBuildParser.ModuleInfo;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +28,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -32,20 +36,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 public class CreateModule {
-
-	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		createModule(
-			Paths.get(arguments.get("project.dir")),
-			Paths.get(arguments.get("src.dir")),
-			Paths.get(arguments.get("portal.dir")),
-			Arrays.asList(StringUtil.split(arguments.get("module.list"), ',')));
-	}
 
 	public static void createModule(
 			Path projectPath, Path modulePath, Path portalPath,
@@ -108,6 +102,16 @@ public class CreateModule {
 			"{http://xml.apache.org/xslt}indent-amount", "4");
 
 		transformer.transform(new DOMSource(_document), streamResult);
+	}
+
+	public static void main(String[] args) throws Exception {
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+
+		createModule(
+			Paths.get(arguments.get("project.dir")),
+			Paths.get(arguments.get("src.dir")),
+			Paths.get(arguments.get("portal.dir")),
+			Arrays.asList(StringUtil.split(arguments.get("module.list"), ',')));
 	}
 
 	private static Set<Path> _addDependenciesToSet(String[] dependencies) {
@@ -180,8 +184,7 @@ public class CreateModule {
 
 			for (String module : projectInfo.getProjectLibs()) {
 				if (!module.isEmpty()) {
-					_appendReferenceProperties(
-						bufferedWriter, module, javacSB);
+					_appendReferenceProperties(bufferedWriter, module, javacSB);
 				}
 			}
 
@@ -398,8 +401,10 @@ public class CreateModule {
 		}
 
 		Path testPath = modulePath.resolve("test");
+
 		Path testUnitPath = testPath.resolve("unit");
 		Path srcTestPath = moduleSrcPath.resolve("test");
+
 		Path testJavaPath = srcTestPath.resolve("java");
 
 		if (Files.exists(testUnitPath)) {
@@ -445,6 +450,7 @@ public class CreateModule {
 
 		Path testIntegrationPath = testPath.resolve("integration");
 		Path srcTestIntegrationPath = moduleSrcPath.resolve("testIntegration");
+
 		Path testIntegrationJavaPath = srcTestIntegrationPath.resolve("java");
 
 		if (Files.exists(testIntegrationPath)) {
@@ -534,11 +540,12 @@ public class CreateModule {
 		String projectName = projectInfo.getProjectName();
 
 		Path srcPath = projectPath.resolve("src");
+
 		Path mainPath = srcPath.resolve("main");
+
 		Path mainJavaPath = mainPath.resolve("java");
 
 		if (!Files.exists(mainPath) || Files.exists(mainJavaPath)) {
-
 			_createRoots(
 				sourceRootsElement, "src", "src." + projectName + ".dir");
 		}
@@ -562,6 +569,7 @@ public class CreateModule {
 		Element testRootsElement = _document.createElement("test-roots");
 
 		Path testPath = projectPath.resolve("test");
+
 		Path testUnitPath = testPath.resolve("unit");
 		Path srcTestPath = srcPath.resolve("test");
 
@@ -722,7 +730,7 @@ public class CreateModule {
 
 		directoryStream.close();
 
-		return new HashSet<Path>(jarList);
+		return new HashSet<>(jarList);
 	}
 
 	private static Map<String, ModuleInfo> _parseModuleDependencies(

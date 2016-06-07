@@ -15,6 +15,7 @@
 package com.liferay.netbeansproject.util;
 
 import java.io.IOException;
+
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +37,16 @@ public class PathUtil {
 			new SimpleFileVisitor<Path>() {
 
 				@Override
+				public FileVisitResult postVisitDirectory(
+						Path path, IOException ioe)
+					throws IOException {
+
+					Files.delete(path);
+
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
 				public FileVisitResult visitFile(
 						Path path, BasicFileAttributes basicFileAttributes)
 					throws IOException {
@@ -45,15 +56,6 @@ public class PathUtil {
 					return FileVisitResult.CONTINUE;
 				}
 
-				@Override
-				public FileVisitResult postVisitDirectory(
-						Path path, IOException ioe)
-					throws IOException {
-
-					Files.delete(path);
-
-					return FileVisitResult.CONTINUE;
-				}
 			});
 	}
 
