@@ -11,17 +11,21 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
+
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
+
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -36,10 +40,9 @@ public class CreateUmbrella {
 
 		Path portalNamePath = portalPath.getFileName();
 
-		Path projectPath =
-			Paths.get(
-				buildProperties.getProperty("project.dir"),
-				portalNamePath.toString());
+		Path projectPath = Paths.get(
+			buildProperties.getProperty("project.dir"),
+			portalNamePath.toString());
 
 		ZipUtil.unZip(projectPath);
 
@@ -79,11 +82,12 @@ public class CreateUmbrella {
 		}
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-			propertiesFilePath, Charset.defaultCharset(),
-			StandardOpenOption.APPEND)) {
+				propertiesFilePath, Charset.defaultCharset(),
+				StandardOpenOption.APPEND)) {
 
 			bufferedWriter.append(sb);
 			bufferedWriter.newLine();
 		}
 	}
+
 }

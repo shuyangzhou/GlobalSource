@@ -4,10 +4,17 @@
 	default="add"
 	name="Liferay-Source-Netbeans-Project"
 	xmlns:if="ant:if"
+	xmlns:ivy="antlib:org.apache.ivy.ant"
 	xmlns:unless="ant:unless"
 >
 
 	<import file="../common/shared-macrodefs.xml" />
+
+	<path id="ivy.lib.path">
+		<fileset dir="lib" includes="ivy-2.4.0.jar" />
+	</path>
+
+	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
 
 	<target name="add">
 		<compile />
@@ -50,5 +57,23 @@
 
 	<target name="clean">
 		<clean project.dir="${project.dir}" />
+	</target>
+
+	<!-- Use portal's source formatter to format source. -->
+
+	<target name="format-source">
+		<ivy:cachepath
+			file="dependencies/com.liferay.source.formatter/ivy.xml"
+			pathid="source.formatter.classpath"
+			log="download-only"
+		/>
+
+		<taskdef classpathref="source.formatter.classpath" resource="com/liferay/source/formatter/ant/taskdefs.properties" />
+
+		<ivy:settings file="ivy-settings.xml" />
+
+		<format-source baseDir="src" />
+
+		<format-source baseDir="../common/src" />
 	</target>
 </project>
