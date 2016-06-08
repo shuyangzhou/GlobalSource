@@ -14,9 +14,11 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
+import com.liferay.netbeansproject.util.PathUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
 
@@ -33,6 +35,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -84,31 +87,63 @@ public class AddModule {
 
 					String moduleName = ModuleUtil.getModuleName(path);
 
-					if (!currentProjectMap.containsKey(moduleName)) {
-						try {
-							ProcessGradle.processGradle(
+					try {
+						if (currentProjectMap.containsKey(moduleName)) {
+							if (_isProjectUpToDate(
+									currentProjectMap.get(moduleName), path)) {
+
+								return FileVisitResult.SKIP_SUBTREE;
+							}
+
+							Path moduleProjectPath = projectRootPath.resolve(
+								Paths.get("modules", moduleName));
+
+							PathUtil.delete(moduleProjectPath);
+						}
+
+						Map<String, List<JarDependency>> jarDependenciesMap =
+							new HashMap<>();
+
+						if (Files.exists(path.resolve("build.gradle"))) {
+							jarDependenciesMap = ProcessGradle.processGradle(
 								portalPath, projectRootPath, path);
+						}
 
-							ZipUtil.unZip(
-								projectRootPath.resolve(
-									Paths.get("modules", moduleName)));
+						ZipUtil.unZip(
+							projectRootPath.resolve(
+								Paths.get("modules", moduleName)));
 
-							CreateModule.createModule(
-								projectRootPath, path, portalPath,
-								new ArrayList<>(currentProjectMap.keySet()));
-						}
-						catch (IOException ioe) {
-							throw ioe;
-						}
-						catch (Exception e) {
-							throw new IOException(e);
-						}
+						Module module = new Module(
+							path, jarDependenciesMap.get(moduleName));
+
+						ModuleUtil.createModuleInfo(
+							module,
+							projectRootPath.resolve(
+								Paths.get("modules", module.getModuleName())));
+
+						CreateModule.createModule(
+							projectRootPath, path, portalPath,
+							new ArrayList<>(currentProjectMap.keySet()));
+					}
+					catch (IOException ioe) {
+						throw ioe;
+					}
+					catch (Exception e) {
+						throw new IOException(e);
 					}
 
 					return FileVisitResult.SKIP_SUBTREE;
 				}
 
 			});
+	}
+
+	private Path _checkIfNullPath(Path path) {
+		if (path == null) {
+			return Paths.get("");
+		}
+
+		return path;
 	}
 
 	private Map<String, Module> _getExistingProjects(Path projectRootPath)
@@ -139,6 +174,42 @@ public class AddModule {
 		}
 
 		return map;
+	}
+
+	private boolean _isProjectUpToDate(Module currentInfo, Path scannedPath)
+		throws IOException {
+
+		Module module = new Module(scannedPath, null);
+
+		Path modulePath = _checkIfNullPath(module.getModulePath());
+		Path sourcePath = _checkIfNullPath(module.getSourcePath());
+		Path sourceResourcePath = _checkIfNullPath(
+			module.getSourceResourcePath());
+		Path testUnitPath = _checkIfNullPath(module.getTestUnitPath());
+		Path testUnitResourcePath = _checkIfNullPath(
+			module.getTestUnitResourcePath());
+		Path testIntegrationPath = _checkIfNullPath(
+			module.getTestIntegrationPath());
+		Path testIntegrationResourcePath = _checkIfNullPath(
+			module.getTestIntegrationResourcePath());
+
+		String checksum = module.getChecksum();
+
+		if (!modulePath.equals(currentInfo.getModulePath()) ||
+			!sourcePath.equals(currentInfo.getSourcePath()) ||
+			!sourceResourcePath.equals(currentInfo.getSourceResourcePath()) ||
+			!testUnitPath.equals(currentInfo.getTestUnitPath()) ||
+			!testUnitResourcePath.equals(
+				currentInfo.getTestUnitResourcePath()) ||
+			!testIntegrationPath.equals(currentInfo.getTestIntegrationPath()) ||
+			!testIntegrationResourcePath.equals(
+				currentInfo.getTestIntegrationResourcePath()) ||
+			!checksum.equals(currentInfo.getChecksum())) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 }
