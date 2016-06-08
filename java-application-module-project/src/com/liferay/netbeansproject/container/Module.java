@@ -90,6 +90,24 @@ public class Module {
 		}
 	}
 
+	public Module(
+		String checksum, Path modulePath, Path sourcePath,
+		Path sourceResourcePath, Path testIntegrationPath,
+		Path testIntegrationResourcePath, Path testUnitPath,
+		Path testUnitResourcePath) {
+
+		_checksum = checksum;
+		_jarDependencies = null;
+		_moduleDependencies = null;
+		_modulePath = modulePath;
+		_sourcePath = sourcePath;
+		_sourceResourcePath = sourceResourcePath;
+		_testIntegrationPath = testIntegrationPath;
+		_testIntegrationResourcePath = testIntegrationResourcePath;
+		_testUnitPath = testUnitPath;
+		_testUnitResourcePath = testUnitResourcePath;
+	}
+
 	public String getChecksum() {
 		return _checksum;
 	}

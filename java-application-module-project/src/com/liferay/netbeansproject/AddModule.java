@@ -14,6 +14,7 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
@@ -31,7 +32,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -57,7 +58,8 @@ public class AddModule {
 		final Path projectRootPath = Paths.get(
 			properties.getProperty("project.dir"), portalName.toString());
 
-		final List<String> moduleNames = _getExistingModules(projectRootPath);
+		final Map<String, Module> currentProjectMap = _getExistingProjects(
+			projectRootPath);
 
 		final String ignoredDirs = properties.getProperty("ignored.dirs");
 
@@ -82,7 +84,7 @@ public class AddModule {
 
 					String moduleName = ModuleUtil.getModuleName(path);
 
-					if (!moduleNames.contains(moduleName)) {
+					if (!currentProjectMap.containsKey(moduleName)) {
 						try {
 							ProcessGradle.processGradle(
 								portalPath, projectRootPath, path);
@@ -92,7 +94,8 @@ public class AddModule {
 									Paths.get("modules", moduleName)));
 
 							CreateModule.createModule(
-								projectRootPath, path, portalPath, moduleNames);
+								projectRootPath, path, portalPath,
+								new ArrayList<>(currentProjectMap.keySet()));
 						}
 						catch (IOException ioe) {
 							throw ioe;
@@ -108,20 +111,34 @@ public class AddModule {
 			});
 	}
 
-	private List<String> _getExistingModules(Path projectRootPath)
+	private Map<String, Module> _getExistingProjects(Path projectRootPath)
 		throws IOException {
 
-		List<String> moduleNames = new ArrayList<>();
+		Map<String, Module> map = new HashMap<>();
 
 		for (Path path :
 				Files.newDirectoryStream(projectRootPath.resolve("modules"))) {
 
-			Path fileName = path.getFileName();
+			Properties properties = PropertiesUtil.loadProperties(
+				path.resolve("ModuleInfo.properties"));
 
-			moduleNames.add(fileName.toString());
+			String moduleName = properties.getProperty("ModuleName");
+
+			map.put(
+				moduleName,
+				new Module(
+					properties.getProperty("checksum"),
+					Paths.get(properties.getProperty("ModulePath")),
+					Paths.get(properties.getProperty("SourcePath")),
+					Paths.get(properties.getProperty("SourceResourcePath")),
+					Paths.get(properties.getProperty("TestIntegrationPath")),
+					Paths.get(
+						properties.getProperty("TestIntegrationResourcePath")),
+					Paths.get(properties.getProperty("TestUnitPath")),
+					Paths.get(properties.getProperty("TestUnitResourcePath"))));
 		}
 
-		return moduleNames;
+		return map;
 	}
 
 }
