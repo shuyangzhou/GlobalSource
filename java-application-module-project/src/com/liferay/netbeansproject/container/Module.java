@@ -16,6 +16,7 @@ package com.liferay.netbeansproject.container;
 
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
+import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.IOException;
 
@@ -23,6 +24,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.security.MessageDigest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +69,47 @@ public class Module {
 			modulePath, "testIntegration");
 
 		_moduleDependencies = GradleUtil.getModuleDependencies(modulePath);
+
+		Path gradleFilePath = modulePath.resolve("build.gradle");
+
+		try {
+			if (Files.exists(gradleFilePath)) {
+				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+
+				byte[] hash = messageDigest.digest(
+					Files.readAllBytes(gradleFilePath));
+
+				_checksum = StringUtil.bytesToHexString(hash);
+			}
+			else {
+				_checksum = "";
+			}
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	public Module(
+		String checksum, Path modulePath, Path sourcePath,
+		Path sourceResourcePath, Path testIntegrationPath,
+		Path testIntegrationResourcePath, Path testUnitPath,
+		Path testUnitResourcePath) {
+
+		_checksum = checksum;
+		_jarDependencies = null;
+		_moduleDependencies = null;
+		_modulePath = modulePath;
+		_sourcePath = sourcePath;
+		_sourceResourcePath = sourceResourcePath;
+		_testIntegrationPath = testIntegrationPath;
+		_testIntegrationResourcePath = testIntegrationResourcePath;
+		_testUnitPath = testUnitPath;
+		_testUnitResourcePath = testUnitResourcePath;
+	}
+
+	public String getChecksum() {
+		return _checksum;
 	}
 
 	public List<JarDependency> getJarDependencies() {
@@ -173,6 +217,7 @@ public class Module {
 		return null;
 	}
 
+	private final String _checksum;
 	private final List<JarDependency> _jarDependencies;
 	private final List<ModuleDependency> _moduleDependencies;
 	private final Path _modulePath;

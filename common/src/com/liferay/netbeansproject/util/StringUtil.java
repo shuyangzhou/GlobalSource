@@ -22,6 +22,17 @@ import java.util.List;
  */
 public class StringUtil {
 
+	public static String bytesToHexString(byte[] bytes) {
+		char[] chars = new char[bytes.length * 2];
+
+		for (int i = 0; i < bytes.length; i++) {
+			chars[i * 2] = HEX_DIGITS[(bytes[i] & 0xFF) >> 4];
+			chars[i * 2 + 1] = HEX_DIGITS[bytes[i] & 0x0F];
+		}
+
+		return new String(chars);
+	}
+
 	public static String replace(String s, String oldSub, String newSub) {
 		if ((s == null) || (oldSub == null) || oldSub.isEmpty()) {
 			return s;
@@ -80,6 +91,11 @@ public class StringUtil {
 
 		return values.toArray(new String[values.size()]);
 	}
+
+	protected static final char[] HEX_DIGITS = {
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+		'e', 'f'
+	};
 
 	private static final String[] _emptyStringArray = new String[0];
 
