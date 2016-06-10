@@ -178,6 +178,8 @@ reference.@{src.dir.name}.jar=$${project.@{src.dir.name}}/dist/@{src.dir.name}.j
 
 	<macrodef name="compile">
 		<sequential>
+			<delete dir="classes" />
+
 			<mkdir dir="classes" />
 
 			<javac
