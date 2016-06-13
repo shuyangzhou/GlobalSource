@@ -43,12 +43,12 @@ import java.util.Properties;
 /**
  * @author Tom Wang
  */
-public class PortalScanner {
+public class ProjectBuilder {
 
 	public static void main(String[] args) throws Exception {
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 
-		PortalScanner portalScanner = new PortalScanner();
+		ProjectBuilder portalScanner = new ProjectBuilder();
 
 		portalScanner.scanPortal(Paths.get(arguments.get("portal.dir")));
 	}
