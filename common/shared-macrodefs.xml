@@ -21,7 +21,7 @@
 		<attribute name="project.dir" />
 
 		<sequential>
-			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.PortalScanner" classpath="classes">
+			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes">
 				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 				<arg value="portal.dir=@{portal.dir}" />
 			</java>

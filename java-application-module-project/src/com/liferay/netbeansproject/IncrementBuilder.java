@@ -41,10 +41,10 @@ import java.util.Properties;
 /**
  * @author Tom Wang
  */
-public class AddModule {
+public class IncrementBuilder {
 
 	public static void main(String[] args) throws IOException {
-		AddModule addModule = new AddModule();
+		IncrementBuilder addModule = new IncrementBuilder();
 
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
 

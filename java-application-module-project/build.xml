@@ -24,7 +24,7 @@
 				<if>
 					<available file="${project.dir}/${portal.name}" type="dir" />
 					<then>
-						<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.AddModule" classpath="classes">
+						<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.IncrementBuilder" classpath="classes">
 							<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 							<arg value="portal.dir=@{portal.dir}" />
 						</java>
