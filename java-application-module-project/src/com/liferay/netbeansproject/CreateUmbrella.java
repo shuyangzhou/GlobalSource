@@ -14,13 +14,14 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +36,9 @@ import java.util.Properties;
  */
 public class CreateUmbrella {
 
-	public void createUmbrella(Path portalPath, Properties buildProperties)
+	public static void createUmbrella(
+			Map<Path, Map<String, Module>> projectMap, Path portalPath,
+			Properties buildProperties)
 		throws IOException {
 
 		Path portalNamePath = portalPath.getFileName();
@@ -47,13 +50,12 @@ public class CreateUmbrella {
 		ZipUtil.unZip(projectPath);
 
 		_appendProjectProperties(
-			portalPath, projectPath.resolve("nbproject/project.properties"),
-			buildProperties);
+			projectMap, portalPath, projectPath, buildProperties);
 	}
 
-	private void _appendProjectProperties(
-			Path portalPath, Path propertiesFilePath,
-			Properties buildProperties)
+	private static void _appendProjectProperties(
+			Map<Path, Map<String, Module>> projectMap, Path portalPath,
+			Path projectPath, Properties buildProperties)
 		throws IOException {
 
 		StringBuilder sb = new StringBuilder();
@@ -81,9 +83,28 @@ public class CreateUmbrella {
 			sb.append('\n');
 		}
 
+		Path projectModulesPath = projectPath.resolve("modules");
+
+		for (Map<String, Module> map : projectMap.values()) {
+			for (String name : map.keySet()) {
+				sb.append("project.");
+				sb.append(name);
+				sb.append('=');
+				sb.append(projectModulesPath.resolve(name));
+				sb.append('\n');
+				sb.append("reference.");
+				sb.append(name);
+				sb.append(".jar=${project.");
+				sb.append(name);
+				sb.append("}/dist/");
+				sb.append(name);
+				sb.append(".jar\n");
+			}
+		}
+
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-				propertiesFilePath, Charset.defaultCharset(),
-				StandardOpenOption.APPEND)) {
+				projectPath.resolve("nbproject/project.properties"),
+				StandardCharsets.UTF_8, StandardOpenOption.APPEND)) {
 
 			bufferedWriter.append(sb);
 			bufferedWriter.newLine();

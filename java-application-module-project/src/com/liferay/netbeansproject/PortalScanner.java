@@ -20,16 +20,20 @@ import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -114,9 +118,32 @@ public class PortalScanner {
 
 			});
 
-		CreateUmbrella createUmbrella = new CreateUmbrella();
+		_generateModuleList(
+			projectMap.values(), projectPath.resolve("moduleList"));
 
-		createUmbrella.createUmbrella(portalPath, buildProperties);
+		CreateModule.createModules(projectMap, portalPath, projectPath);
+
+		CreateUmbrella.createUmbrella(projectMap, portalPath, buildProperties);
+	}
+
+	private void _generateModuleList(
+			Collection<Map<String, Module>> moduleCollection, Path filePath)
+		throws IOException {
+
+		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+				filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+
+			StringBuilder sb = new StringBuilder();
+
+			for (Map<String, Module> map : moduleCollection) {
+				for (String name : map.keySet()) {
+					sb.append(name);
+					sb.append(',');
+				}
+			}
+
+			bufferedWriter.append(sb);
+		}
 	}
 
 }

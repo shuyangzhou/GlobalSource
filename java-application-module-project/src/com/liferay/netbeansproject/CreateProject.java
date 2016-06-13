@@ -53,9 +53,14 @@ public class CreateProject {
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
+		Path projectPath = Paths.get(arguments.get("project.dir"));
+
 		ProjectInfo projectInfo = new ProjectInfo(
 			properties.getProperty("project.name"),
-			StringUtil.split(arguments.get("module.list"), ','),
+			StringUtil.split(
+				new String(
+					Files.readAllBytes(projectPath.resolve("moduleList"))),
+				','),
 			StringUtil.split(arguments.get("umbrella.source.list"), ','));
 
 		String projectDir = arguments.get("project.dir");

@@ -32,7 +32,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -121,8 +120,7 @@ public class AddModule {
 							path, jarDependenciesMap.get(moduleName));
 
 						CreateModule.createModule(
-							projectRootPath, path, portalPath,
-							new ArrayList<>(existProjectMap.keySet()));
+							projectRootPath, path, portalPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;
