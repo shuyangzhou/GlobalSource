@@ -19,7 +19,7 @@
 
 	<property environment="env" />
 
-	<taskdef classpath="../common/lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
+	<taskdef classpath="lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
 
 	<macrodef name="build-modules">
@@ -55,7 +55,6 @@
 				destdir="classes"
 				includeantruntime="false" >
 
-				<src path="../common/src" />
 				<src path="src" />
 			</javac>
 		</sequential>
@@ -132,7 +131,5 @@
 		<ivy:settings file="ivy-settings.xml" />
 
 		<format-source baseDir="src" />
-
-		<format-source baseDir="../common/src" />
 	</target>
 </project>
