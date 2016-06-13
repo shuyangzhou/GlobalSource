@@ -47,13 +47,11 @@ import org.w3c.dom.Element;
  */
 public class CreateProject {
 
-	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+	public static void createProject(Path projectPath, String[] umbrellaSources)
+		throws Exception {
 
 		Properties properties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
-
-		Path projectPath = Paths.get(arguments.get("project.dir"));
 
 		ProjectInfo projectInfo = new ProjectInfo(
 			properties.getProperty("project.name"),
@@ -61,9 +59,9 @@ public class CreateProject {
 				new String(
 					Files.readAllBytes(projectPath.resolve("moduleList"))),
 				','),
-			StringUtil.split(arguments.get("umbrella.source.list"), ','));
+			umbrellaSources);
 
-		String projectDir = arguments.get("project.dir");
+		String projectDir = projectPath.toString();
 
 		_appendList(projectInfo, projectDir);
 
@@ -90,6 +88,14 @@ public class CreateProject {
 			"{http://xml.apache.org/xslt}indent-amount", "4");
 
 		transformer.transform(new DOMSource(_document), streamResult);
+	}
+
+	public static void main(String[] args) throws Exception {
+		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+
+		createProject(
+			Paths.get(arguments.get("project.dir")),
+			StringUtil.split(arguments.get("umbrella.source.list"), ','));
 	}
 
 	private static void _appendList(ProjectInfo projectInfo, String projectDir)
