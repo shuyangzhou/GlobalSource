@@ -27,13 +27,6 @@
 			</java>
 
 			<delete dir="@{project.dir}/dependencies" />
-
-			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.CreateProject" classpath="classes">
-				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-				<arg value="module.list=${module.list}" />
-				<arg value="project.dir=@{project.dir}" />
-				<arg value="umbrella.source.list=${umbrella.source.list}" />
-			</java>
 		</sequential>
 	</macrodef>
 

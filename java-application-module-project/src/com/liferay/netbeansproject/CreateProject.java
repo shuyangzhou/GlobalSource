@@ -14,7 +14,6 @@
 
 package com.liferay.netbeansproject;
 
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
@@ -28,8 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,7 +46,8 @@ import org.w3c.dom.Element;
  */
 public class CreateProject {
 
-	public static void createProject(Path projectPath, String[] umbrellaSources)
+	public static void createProject(
+			Path projectPath, Set<String> umbrellaSources)
 		throws Exception {
 
 		Properties properties = PropertiesUtil.loadProperties(
@@ -88,14 +88,6 @@ public class CreateProject {
 			"{http://xml.apache.org/xslt}indent-amount", "4");
 
 		transformer.transform(new DOMSource(_document), streamResult);
-	}
-
-	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		createProject(
-			Paths.get(arguments.get("project.dir")),
-			StringUtil.split(arguments.get("umbrella.source.list"), ','));
 	}
 
 	private static void _appendList(ProjectInfo projectInfo, String projectDir)
@@ -270,12 +262,12 @@ public class CreateProject {
 			return _projectName;
 		}
 
-		public String[] getSources() {
+		public Set<String> getSources() {
 			return _sources;
 		}
 
 		private ProjectInfo(
-			String projectName, String[] modules, String[] sources) {
+			String projectName, String[] modules, Set<String> sources) {
 
 			_projectName = projectName;
 
@@ -286,7 +278,7 @@ public class CreateProject {
 
 		private final String[] _modules;
 		private final String _projectName;
-		private final String[] _sources;
+		private final Set<String> _sources;
 
 	}
 
