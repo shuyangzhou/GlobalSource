@@ -8,13 +8,72 @@
 	xmlns:unless="ant:unless"
 >
 
-	<import file="../common/shared-macrodefs.xml" />
-
 	<path id="ivy.lib.path">
 		<fileset dir="lib" includes="ivy-2.4.0.jar" />
 	</path>
 
+	<property file="build-ext.properties" />
+	<property file="build.properties" />
+
+	<property name="test.list" value="" />
+
+	<property environment="env" />
+
+	<taskdef classpath="../common/lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
+
+	<macrodef name="build-modules">
+		<attribute name="portal.dir" />
+		<attribute name="project.dir" />
+
+		<sequential>
+			<java fork="${jvm.debug}" classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes">
+				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+				<arg value="portal.dir=@{portal.dir}" />
+			</java>
+
+			<delete dir="@{project.dir}/dependencies" />
+		</sequential>
+	</macrodef>
+
+	<macrodef name="clean">
+		<attribute name="project.dir" />
+		<sequential>
+			<delete dir="classes" />
+			<delete dir="@{project.dir}" />
+		</sequential>
+	</macrodef>
+
+	<macrodef name="compile">
+		<sequential>
+			<delete dir="classes" />
+
+			<mkdir dir="classes" />
+
+			<javac
+				debug="true"
+				destdir="classes"
+				includeantruntime="false" >
+
+				<src path="../common/src" />
+				<src path="src" />
+			</javac>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="for-each-portal">
+		<element name="steps" />
+		<sequential>
+			<for list="${portal.dirs}" param="portal.dir">
+				<sequential>
+					<local name="portal.name" />
+					<basename property="portal.name" file="@{portal.dir}" />
+
+					<steps />
+				</sequential>
+			</for>
+		</sequential>
+	</macrodef>
 
 	<target name="add">
 		<compile />
