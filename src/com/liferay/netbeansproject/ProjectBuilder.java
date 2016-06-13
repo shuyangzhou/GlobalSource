@@ -18,6 +18,7 @@ import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
+import com.liferay.netbeansproject.util.PathUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 
 import java.io.BufferedWriter;
@@ -62,6 +63,8 @@ public class ProjectBuilder {
 		final Path projectPath = Paths.get(
 			buildProperties.getProperty("project.dir"),
 			portalNamePath.toString());
+
+		PathUtil.delete(projectPath);
 
 		final String ignoredDirs = buildProperties.getProperty("ignored.dirs");
 

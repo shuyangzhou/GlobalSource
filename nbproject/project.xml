@@ -6,7 +6,6 @@
             <name>Java-application-module-project</name>
             <source-roots>
                 <root id="src.dir"/>
-                <root id="src.src.dir" name="Common/src"/>
             </source-roots>
             <test-roots>
                 <root id="test.test.dir" name="Test Packages"/>

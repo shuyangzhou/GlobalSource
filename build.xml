@@ -100,7 +100,7 @@
 		</for-each-portal>
 	</target>
 
-	<target name="build" depends="clean">
+	<target name="build">
 		<compile />
 
 		<for-each-portal>
