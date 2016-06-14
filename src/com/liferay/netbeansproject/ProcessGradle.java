@@ -41,7 +41,8 @@ import java.util.Properties;
 public class ProcessGradle {
 
 	public static Map<String, List<JarDependency>> processGradle(
-			Path portalDirPath, Path projectDirPath, Path workDirPath)
+			Boolean displayGradle, Path portalDirPath, Path projectDirPath,
+			Path workDirPath)
 		throws Exception {
 
 		Path gradlewPath = portalDirPath.resolve("gradlew");

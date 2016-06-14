@@ -132,15 +132,12 @@ public class CreateModule {
 	}
 
 	public static void createModules(
-			Map<Path, Map<String, Module>> projectMap, Path portalPath,
-			Path projectPath)
+			Map<Path, Module> projectMap, Path portalPath, Path projectPath)
 		throws Exception {
 
-		for (Map<String, Module> map : projectMap.values()) {
-			for (Module module : map.values()) {
-				CreateModule.createModule(
-					projectPath, module.getModulePath(), portalPath);
-			}
+		for (Module module : projectMap.values()) {
+			CreateModule.createModule(
+				projectPath, module.getModulePath(), portalPath);
 		}
 	}
 

@@ -33,7 +33,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -69,9 +68,12 @@ public class ProjectBuilder {
 
 		final Map<String, List<JarDependency>> jarDependenciesMap =
 			ProcessGradle.processGradle(
+				Boolean.valueOf(
+					buildProperties.getProperty(
+						"display.gradle.process.output")),
 				portalPath, projectPath, portalPath.resolve("modules"));
 
-		final Map<Path, Map<String, Module>> projectMap = new HashMap<>();
+		final Map<Path, Module> projectMap = new HashMap<>();
 
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
@@ -102,44 +104,29 @@ public class ProjectBuilder {
 
 					Path modulePath = module.getModulePath();
 
-					Path modulesGroupPath = modulePath.getParent();
-
-					Map<String, Module> modulesMap = projectMap.get(
-						modulesGroupPath);
-
-					if (modulesMap == null) {
-						modulesMap = new HashMap<>();
-
-						projectMap.put(modulesGroupPath, modulesMap);
-					}
-
-					modulesMap.put(module.getModuleName(), module);
+					projectMap.put(modulePath, module);
 
 					return FileVisitResult.SKIP_SUBTREE;
 				}
 
 			});
 
-		_generateModuleList(
-			projectMap.values(), projectPath.resolve("moduleList"));
+		_generateModuleList(projectMap, projectPath.resolve("moduleList"));
 
 		CreateModule.createModules(projectMap, portalPath, projectPath);
 
 		CreateUmbrella.createUmbrella(projectMap, portalPath, buildProperties);
 	}
 
-	private void _generateModuleList(
-			Collection<Map<String, Module>> moduleCollection, Path filePath)
+	private void _generateModuleList(Map<Path, Module> moduleMap, Path filePath)
 		throws IOException {
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				filePath, StandardOpenOption.CREATE)) {
 
-			for (Map<String, Module> map : moduleCollection) {
-				for (String name : map.keySet()) {
-					bufferedWriter.append(name);
-					bufferedWriter.append(',');
-				}
+			for (Path path : moduleMap.keySet()) {
+				bufferedWriter.append(ModuleUtil.getModuleName(path));
+				bufferedWriter.append(',');
 			}
 		}
 	}

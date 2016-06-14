@@ -52,18 +52,18 @@ public class IncrementBuilder {
 	}
 
 	public void addModule(final Path portalPath) throws IOException {
-		Properties properties = PropertiesUtil.loadProperties(
+		Properties buildProperties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
 		Path portalName = portalPath.getFileName();
 
 		final Path projectRootPath = Paths.get(
-			properties.getProperty("project.dir"), portalName.toString());
+			buildProperties.getProperty("project.dir"), portalName.toString());
 
 		final Map<String, Module> existProjectMap = _getExistingProjects(
 			projectRootPath);
 
-		final String ignoredDirs = properties.getProperty("ignored.dirs");
+		final String ignoredDirs = buildProperties.getProperty("ignored.dirs");
 
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
@@ -106,6 +106,9 @@ public class IncrementBuilder {
 
 						if (Files.exists(path.resolve("build.gradle"))) {
 							jarDependenciesMap = ProcessGradle.processGradle(
+								Boolean.valueOf(
+									buildProperties.getProperty(
+										"display.gradle.process.output")),
 								portalPath, projectRootPath, path);
 						}
 
