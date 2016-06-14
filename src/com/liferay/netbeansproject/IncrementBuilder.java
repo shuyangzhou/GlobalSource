@@ -68,6 +68,9 @@ public class IncrementBuilder {
 		final boolean displayGradleProcessOutput = Boolean.valueOf(
 			buildProperties.getProperty("display.gradle.process.output"));
 
+		final String excludedTypes = buildProperties.getProperty(
+			"exclude.types");
+
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
 			new SimpleFileVisitor<Path>() {
@@ -117,14 +120,14 @@ public class IncrementBuilder {
 							projectRootPath.resolve(
 								Paths.get("modules", moduleName)));
 
-						Module.createModule(
+						Module module = Module.createModule(
 							projectRootPath.resolve(
 								Paths.get(
 									"modules", ModuleUtil.getModuleName(path))),
 							path, jarDependenciesMap.get(moduleName));
 
 						CreateModule.createModule(
-							projectRootPath, path, portalPath);
+							module, portalPath, excludedTypes, projectRootPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;

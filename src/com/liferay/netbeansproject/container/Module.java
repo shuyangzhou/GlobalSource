@@ -32,9 +32,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Queue;
 
 /**
  * @author Tom Wang
@@ -88,6 +91,8 @@ public class Module {
 			_resolveTestPath(modulePath, false),
 			_resolveResourcePath(modulePath, "testIntegration"),
 			GradleUtil.getModuleDependencies(modulePath), jarDependencies,
+			_resolvePortalLevelDependencies(
+				ModuleUtil.getModuleName(modulePath)),
 			checksum);
 
 		if (projectPath != null) {
@@ -114,7 +119,7 @@ public class Module {
 			_getPath(properties, "test.unit.resource.path"),
 			_getPath(properties, "test.integration.path"),
 			_getPath(properties, "test.integration.resource.path"), null, null,
-			properties.getProperty("checksum"));
+			null, properties.getProperty("checksum"));
 	}
 
 	@Override
@@ -165,6 +170,10 @@ public class Module {
 
 	public Path getModulePath() {
 		return _modulePath;
+	}
+
+	public List<String> getPortalLevelModuleDependencies() {
+		return _portalLevelModuleDependencies;
 	}
 
 	public Path getSourcePath() {
@@ -255,6 +264,47 @@ public class Module {
 		}
 	}
 
+	private static List<String> _resolvePortalLevelDependencies(
+			String moduleName)
+		throws IOException {
+
+		Properties properties = PropertiesUtil.loadProperties(
+			Paths.get("project-dependency.properties"));
+
+		String dependencies = properties.getProperty(moduleName);
+
+		if (dependencies == null) {
+			dependencies = PropertiesUtil.getRequiredProperty(
+				properties, "portal.module.dependencies");
+		}
+
+		Queue<String> dependencyQueue = new LinkedList<>();
+
+		dependencyQueue.addAll(
+			Arrays.asList(StringUtil.split(dependencies, ',')));
+
+		String dependency = null;
+
+		List<String> portalLevelDependencies = new ArrayList<>();
+
+		while ((dependency = dependencyQueue.poll()) != null) {
+			if (dependency.startsWith("${")) {
+				dependencyQueue.addAll(
+					Arrays.asList(
+						StringUtil.split(
+							properties.getProperty(
+								dependency.substring(
+									2, dependency.length() - 1)),
+							',')));
+			}
+			else {
+				portalLevelDependencies.add(dependency);
+			}
+		}
+
+		return portalLevelDependencies;
+	}
+
 	private static Path _resolveResourcePath(Path modulePath, String type) {
 		Path resolvedResourcePath = modulePath.resolve(
 			Paths.get("src", type, "resources"));
@@ -282,7 +332,8 @@ public class Module {
 
 		sourcePath = modulePath.resolve("src");
 
-		if (Files.exists(sourcePath.resolve("test")) ||
+		if (Files.exists(sourcePath.resolve("main")) ||
+			Files.exists(sourcePath.resolve("test")) ||
 			Files.exists(sourcePath.resolve("testIntegration"))) {
 
 			return null;
@@ -325,7 +376,8 @@ public class Module {
 		Path sourceResourcePath, Path testUnitPath, Path testUnitResourcePath,
 		Path testIntegrationPath, Path testIntegrationResourcePath,
 		List<ModuleDependency> moduleDependencies,
-		List<JarDependency> jarDependencies, String checksum) {
+		List<JarDependency> jarDependencies,
+		List<String> portalLevelModuleDependencies, String checksum) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -337,6 +389,7 @@ public class Module {
 		_testIntegrationResourcePath = testIntegrationResourcePath;
 		_moduleDependencies = moduleDependencies;
 		_jarDependencies = jarDependencies;
+		_portalLevelModuleDependencies = portalLevelModuleDependencies;
 		_checksum = checksum;
 	}
 
@@ -383,6 +436,7 @@ public class Module {
 	private final List<JarDependency> _jarDependencies;
 	private final List<ModuleDependency> _moduleDependencies;
 	private final Path _modulePath;
+	private final List<String> _portalLevelModuleDependencies;
 	private final Path _projectPath;
 	private final Path _sourcePath;
 	private final Path _sourceResourcePath;
