@@ -131,10 +131,12 @@ public class ProjectBuilder {
 		ProjectDependencyResolver projectDependencyResolver =
 			new ProjectDependencyResolver(moduleMap, portalPath);
 
+		String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
+
 		for (Module module : moduleMap.values()) {
 			CreateModule.createModule(
 				module, portalPath, excludedTypes, projectDependencyResolver,
-				projectPath);
+				portalLibJars, projectPath);
 		}
 
 		CreateUmbrella.createUmbrella(
