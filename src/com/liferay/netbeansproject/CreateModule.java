@@ -73,7 +73,9 @@ public class CreateModule {
 			projectModulePath.resolve("nbproject/project.properties"),
 			projectDependencyResolver, portalPath);
 
-		_createProjectXML(module, portalPath.getParent(), projectModulePath);
+		_createProjectXML(
+			module, portalPath.getParent(), projectDependencyResolver,
+			projectModulePath);
 	}
 
 	private static void _appendDependencyJar(Path jarPath, StringBuilder sb) {
@@ -362,7 +364,8 @@ public class CreateModule {
 	}
 
 	private static void _createProjectElement(
-			Document document, Module module, Path portalPath)
+			Document document, Module module, Path portalPath,
+			ProjectDependencyResolver projectDependencyResolver)
 		throws IOException {
 
 		Element projectElement = document.createElement("project");
@@ -385,11 +388,14 @@ public class CreateModule {
 
 		_createData(document, configurationElement, module, portalPath);
 
-		_createReferences(document, configurationElement, module);
+		_createReferences(
+			document, configurationElement, module, projectDependencyResolver);
 	}
 
 	private static void _createProjectXML(
-			Module module, Path portalPath, Path projectModulePath)
+			Module module, Path portalPath,
+			ProjectDependencyResolver projectDependencyResolver,
+			Path projectModulePath)
 		throws Exception {
 
 		DocumentBuilderFactory documentBuilderFactory =
@@ -400,7 +406,8 @@ public class CreateModule {
 
 		Document document = documentBuilder.newDocument();
 
-		_createProjectElement(document, module, portalPath);
+		_createProjectElement(
+			document, module, portalPath, projectDependencyResolver);
 
 		TransformerFactory transformerFactory =
 			TransformerFactory.newInstance();
@@ -466,7 +473,8 @@ public class CreateModule {
 	}
 
 	private static void _createReferences(
-			Document document, Element configurationElement, Module module)
+			Document document, Element configurationElement, Module module,
+			ProjectDependencyResolver projectDependencyResolver)
 		throws IOException {
 
 		Element referencesElement = document.createElement("references");
@@ -479,14 +487,11 @@ public class CreateModule {
 		for (ModuleDependency moduleDependency :
 				module.getModuleDependencies()) {
 
-			String moduleLocation = moduleDependency.getModuleLocation();
-
-			String[] moduleLocationSplit = StringUtil.split(
-				moduleLocation, ':');
+			Module dependencyModule = projectDependencyResolver.resolve(
+				moduleDependency.getModuleLocation());
 
 			_createReference(
-				document, referencesElement,
-				moduleLocationSplit[moduleLocationSplit.length - 1]);
+				document, referencesElement, dependencyModule.getModuleName());
 		}
 
 		for (String dependency : module.getPortalLevelModuleDependencies()) {
