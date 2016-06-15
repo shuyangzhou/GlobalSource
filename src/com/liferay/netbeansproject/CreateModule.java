@@ -14,9 +14,9 @@
 
 package com.liferay.netbeansproject;
 
-import com.liferay.netbeansproject.ModuleBuildParser.ModuleInfo;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.container.ModuleDependency;
+import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 import com.liferay.netbeansproject.util.ZipUtil;
@@ -35,14 +35,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -63,31 +59,20 @@ public class CreateModule {
 
 	public static void createModule(
 			Module module, Path portalPath, String excludedTypes,
+			ProjectDependencyResolver projectDependencyResolver,
 			Path projectPath)
 		throws Exception {
 
-		String moduleName = module.getModuleName();
-
 		Path projectModulePath = projectPath.resolve(
-			Paths.get("modules", moduleName));
+			Paths.get("modules", module.getModuleName()));
 
 		ZipUtil.unZip(projectModulePath);
-
-		List<String> moduleList = new ArrayList<>(
-			Arrays.asList(
-				StringUtil.split(
-					new String(
-						Files.readAllBytes(projectPath.resolve("moduleList"))),
-					',')));
-
-		ProjectInfo projectInfo = new ProjectInfo(
-			moduleName, portalPath, module.getModulePath(),
-			module.getPortalLevelModuleDependencies(), moduleList);
 
 		_replaceProjectName(module, projectModulePath);
 
 		_appendProperties(
-			projectInfo, excludedTypes, projectModulePath, projectPath);
+			module, excludedTypes, projectModulePath, projectDependencyResolver,
+			portalPath, projectPath);
 
 		_createProjectXML(module, portalPath.getParent(), projectModulePath);
 	}
@@ -127,11 +112,12 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-			ProjectInfo projectInfo, String excludeTypes, Path modulePath,
-			Path projectPath)
+			Module module, String excludeTypes, Path modulePath,
+			ProjectDependencyResolver projectDependencyResolver,
+			Path portalPath, Path projectPath)
 		throws Exception {
 
-		String projectName = projectInfo.getProjectName();
+		String projectName = module.getModuleName();
 
 		Path projectPropertiesPath = modulePath.resolve(
 			"nbproject/project.properties");
@@ -146,21 +132,23 @@ public class CreateModule {
 			projectSB.append('\n');
 
 			projectSB.append("application.title=");
-			projectSB.append(projectInfo.getFullPath());
+			projectSB.append(module.getModulePath());
 			projectSB.append('\n');
 
 			projectSB.append("dist.jar=${dist.dir}/");
 			projectSB.append(projectName);
 			projectSB.append(".jar\n");
 
-			_appendSourcePath(
-				projectName, projectInfo.getFullPath(), projectSB);
+			_appendSourcePath(projectName, module.getModulePath(), projectSB);
 
 			StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 
-			for (String module : projectInfo.getProjectLibs()) {
-				if (!module.isEmpty()) {
-					_appendReferenceProperties(bufferedWriter, module, javacSB);
+			for (String projectLibs :
+					module.getPortalLevelModuleDependencies()) {
+
+				if (!projectLibs.isEmpty()) {
+					_appendReferenceProperties(
+						bufferedWriter, projectLibs, javacSB);
 				}
 			}
 
@@ -210,26 +198,23 @@ public class CreateModule {
 					StringUtil.split(
 						compileTestDependencies, File.pathSeparatorChar)));
 
-			Map<String, ModuleInfo> dependenciesModuleMap =
-				_parseModuleDependencies(
-					projectInfo, projectInfo.getFullPath());
+			for (ModuleDependency moduleDependency :
+					module.getModuleDependencies()) {
 
-			for (ModuleInfo moduleInfo : dependenciesModuleMap.values()) {
-				String moduleName = moduleInfo.getModuleName();
+				Module dependencyModule = projectDependencyResolver.resolve(
+					moduleDependency.getModuleLocation());
 
-				if (moduleInfo.isTest()) {
+				if (moduleDependency.isTest()) {
 					_appendReferenceProperties(
-						bufferedWriter, moduleName, testSB);
+						bufferedWriter, dependencyModule.getModuleName(),
+						testSB);
 				}
 				else {
 					_appendReferenceProperties(
-						bufferedWriter, moduleName, javacSB);
+						bufferedWriter, dependencyModule.getModuleName(),
+						javacSB);
 				}
 			}
-
-			projectInfo.setDependenciesModuleMap(dependenciesModuleMap);
-
-			Path portalPath = projectInfo.getPortalPath();
 
 			_appendLibJars(portalPath, compileSet, javacSB, projectSB);
 			_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
@@ -255,7 +240,7 @@ public class CreateModule {
 			if (projectName.equals("portal-impl")) {
 				projectSB.append(
 					"\nfile.reference.portal-test-integration-src=");
-				projectSB.append(projectInfo.getPortalPath());
+				projectSB.append(portalPath);
 				projectSB.append("/portal-test-integration/src\n");
 				projectSB.append("src.test.dir=");
 				projectSB.append(
@@ -264,7 +249,7 @@ public class CreateModule {
 
 			if (projectName.equals("portal-kernel")) {
 				projectSB.append("\nfile.reference.portal-test-src=");
-				projectSB.append(projectInfo.getPortalPath());
+				projectSB.append(portalPath);
 				projectSB.append("/portal-test/src\n");
 				projectSB.append(
 					"src.test.dir=${file.reference.portal-test-src}");
@@ -714,37 +699,6 @@ public class CreateModule {
 		return new HashSet<>(jarList);
 	}
 
-	private static Map<String, ModuleInfo> _parseModuleDependencies(
-			ProjectInfo projectInfo, Path modulePath)
-		throws Exception {
-
-		Map<String, ModuleInfo> dependenciesModuleMap = new HashMap<>();
-
-		Map<String, Path> moduleMap = projectInfo.getModuleMap();
-
-		Queue<ModuleInfo> moduleInfoQueue = new LinkedList<>();
-
-		moduleInfoQueue.addAll(ModuleBuildParser.parseBuildFile(modulePath));
-
-		ModuleInfo moduleInfo = null;
-
-		while ((moduleInfo = moduleInfoQueue.poll()) != null) {
-			String moduleName = moduleInfo.getModuleName();
-
-			if (!moduleMap.containsKey(moduleName)) {
-				continue;
-			}
-
-			if (dependenciesModuleMap.put(moduleName, moduleInfo) == null) {
-				moduleInfoQueue.addAll(
-					ModuleBuildParser.parseBuildFile(
-						moduleMap.get(moduleName)));
-			}
-		}
-
-		return dependenciesModuleMap;
-	}
-
 	private static void _replaceProjectName(
 			Module module, Path projectModulePath)
 		throws IOException {
@@ -756,70 +710,6 @@ public class CreateModule {
 			module.getModuleName());
 
 		Files.write(buildXMLPath, Arrays.asList(content));
-	}
-
-	private static class ProjectInfo {
-
-		public Map<String, ModuleInfo> getDependenciesModuleMap() {
-			return _dependenciesModuleMap;
-		}
-
-		public Path getFullPath() {
-			return _fullPath;
-		}
-
-		public Map<String, Path> getModuleMap() {
-			return _moduleMap;
-		}
-
-		public Path getPortalPath() {
-			return _portalPath;
-		}
-
-		public List<String> getProjectLibs() {
-			return _projectLib;
-		}
-
-		public String getProjectName() {
-			return _projectName;
-		}
-
-		public void setDependenciesModuleMap(
-			Map<String, ModuleInfo> dependenciesModuleMap) {
-
-			_dependenciesModuleMap = dependenciesModuleMap;
-		}
-
-		private ProjectInfo(
-			String projectName, Path portalPath, Path fullPath,
-			List<String> projectLibs, List<String> moduleList) {
-
-			_projectName = projectName;
-
-			_portalPath = portalPath;
-
-			_fullPath = fullPath;
-
-			_projectLib = projectLibs;
-
-			_moduleMap = new HashMap<>();
-
-			for (String module : moduleList) {
-				Path modulePath = Paths.get(module);
-
-				Path namePath = modulePath.getFileName();
-
-				_moduleMap.put(namePath.toString(), modulePath);
-			}
-		}
-
-		private Map<String, ModuleInfo> _dependenciesModuleMap;
-		private final Path _fullPath;
-		private final Map<String, Path> _moduleMap;
-		private final Path _portalPath;
-		private final List<String> _projectLib;
-		private final String _projectName;
-
 	}
 
 }

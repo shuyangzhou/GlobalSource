@@ -16,6 +16,8 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
+import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
+import com.liferay.netbeansproject.resolvers.ProjectDependencyResolverImpl;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PathUtil;
@@ -60,13 +62,16 @@ public class IncrementBuilder {
 		final Path projectRootPath = Paths.get(
 			buildProperties.getProperty("project.dir"), portalName.toString());
 
-		final Map<String, Module> existProjectMap = _getExistingProjects(
+		final Map<Path, Module> existProjectMap = _getExistingProjects(
 			projectRootPath);
 
 		final String ignoredDirs = buildProperties.getProperty("ignored.dirs");
 
 		final boolean displayGradleProcessOutput = Boolean.valueOf(
 			buildProperties.getProperty("display.gradle.process.output"));
+
+		final ProjectDependencyResolver projectDependencyResolver =
+			new ProjectDependencyResolverImpl(existProjectMap, portalPath);
 
 		final Properties projectDependencyProperties =
 			PropertiesUtil.loadProperties(
@@ -94,10 +99,8 @@ public class IncrementBuilder {
 						return FileVisitResult.CONTINUE;
 					}
 
-					String moduleName = ModuleUtil.getModuleName(path);
-
 					try {
-						Module existModule = existProjectMap.get(moduleName);
+						Module existModule = existProjectMap.get(path);
 
 						if ((existModule != null) &&
 							existModule.equals(
@@ -107,6 +110,8 @@ public class IncrementBuilder {
 
 							return FileVisitResult.SKIP_SUBTREE;
 						}
+
+						String moduleName = ModuleUtil.getModuleName(path);
 
 						Path moduleProjectPath = projectRootPath.resolve(
 							Paths.get("modules", moduleName));
@@ -134,7 +139,8 @@ public class IncrementBuilder {
 							projectDependencyProperties);
 
 						CreateModule.createModule(
-							module, portalPath, excludedTypes, projectRootPath);
+							module, portalPath, excludedTypes,
+							projectDependencyResolver, projectRootPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;
@@ -149,10 +155,10 @@ public class IncrementBuilder {
 			});
 	}
 
-	private Map<String, Module> _getExistingProjects(Path projectRootPath)
+	private Map<Path, Module> _getExistingProjects(Path projectRootPath)
 		throws IOException {
 
-		Map<String, Module> map = new HashMap<>();
+		Map<Path, Module> map = new HashMap<>();
 
 		for (Path path :
 				Files.newDirectoryStream(projectRootPath.resolve("modules"))) {
@@ -160,7 +166,7 @@ public class IncrementBuilder {
 			Module module = Module.load(path);
 
 			if (module != null) {
-				map.put(module.getModuleName(), module);
+				map.put(module.getModulePath(), module);
 			}
 		}
 
