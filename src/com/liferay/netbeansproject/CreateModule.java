@@ -134,7 +134,7 @@ public class CreateModule {
 		projectSB.append(projectName);
 		projectSB.append(".jar\n");
 
-		_appendSourcePath(projectName, module.getModulePath(), projectSB);
+		_appendSourcePaths(module, projectSB);
 
 		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 
@@ -282,160 +282,51 @@ public class CreateModule {
 		javacSB.append(".jar}:\\\n");
 	}
 
-	private static void _appendSourcePath(
-		String moduleName, Path modulePath, StringBuilder projectSB) {
+	private static void _appendSourcePathIndividual(
+		Path path, String prefix, String name, String subfix,
+		StringBuilder sb) {
 
-		Path moduleSrcPath = modulePath.resolve("src");
+		sb.append("file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append('=');
+		sb.append(path);
+		sb.append('\n');
+		sb.append(prefix);
+		sb.append('.');
+		sb.append(name);
+		sb.append('.');
+		sb.append(subfix);
+		sb.append(".dir=${file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append("}\n");
+	}
 
-		if (Files.exists(modulePath.resolve("docroot"))) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append(File.separatorChar);
-			projectSB.append("docroot");
-			projectSB.append(File.separatorChar);
-			projectSB.append("WEB-INF");
-			projectSB.append(File.separatorChar);
-			projectSB.append("src\n");
-		}
-		else if (Files.exists(moduleSrcPath.resolve("com")) ||
-				 Files.exists(moduleSrcPath.resolve("main"))) {
+	private static void _appendSourcePaths(
+		Module module, StringBuilder projectSB) {
 
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append(File.separatorChar);
-			projectSB.append("src");
+		String moduleName = module.getModuleName();
 
-			if (Files.exists(moduleSrcPath.resolve("main"))) {
-				projectSB.append(File.separatorChar);
-				projectSB.append("main");
-				projectSB.append(File.separatorChar);
-				projectSB.append("java\n");
-			}
-			else {
-				projectSB.append('\n');
-			}
-
-			projectSB.append("src.");
-			projectSB.append(moduleName);
-			projectSB.append(".src.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src}\n");
-		}
-
-		Path mainResourcesPath = Paths.get(
-			moduleSrcPath.toString(), "main", "resources");
-
-		if (Files.exists(mainResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-resources=");
-			projectSB.append(mainResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("src.");
-			projectSB.append(moduleName);
-			projectSB.append(".resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-resources}\n");
-		}
-
-		Path testPath = modulePath.resolve("test");
-
-		Path testUnitPath = testPath.resolve("unit");
-		Path srcTestPath = moduleSrcPath.resolve("test");
-
-		Path testJavaPath = srcTestPath.resolve("java");
-
-		if (Files.exists(testUnitPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit=");
-			projectSB.append(testUnitPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit}\n");
-		}
-		else if(Files.exists(testJavaPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit=");
-			projectSB.append(testJavaPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit}\n");
-		}
-
-		Path testResourcesPath = Paths.get(
-			moduleSrcPath.toString(), "test", "Resources");
-
-		if (Files.exists(testResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit-resources=");
-			projectSB.append(testResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit-resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit-resources}\n");
-		}
-
-		Path testIntegrationPath = testPath.resolve("integration");
-		Path srcTestIntegrationPath = moduleSrcPath.resolve("testIntegration");
-
-		Path testIntegrationJavaPath = srcTestIntegrationPath.resolve("java");
-
-		if (Files.exists(testIntegrationPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration=");
-			projectSB.append(testIntegrationPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-integration.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration}\n");
-		}
-		else if(Files.exists(testIntegrationJavaPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration=");
-			projectSB.append(testIntegrationJavaPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-integration.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration}\n");
-		}
-
-		Path testIntegrationResourcesPath = srcTestIntegrationPath.resolve(
-			"resources");
-
-		if (Files.exists(testIntegrationResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration-resources=");
-			projectSB.append(testIntegrationResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(
-				".test-integration-resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration-resources}\n");
-		}
+		_appendSourcePathIndividual(
+			module.getSourcePath(), "src", moduleName, "src", projectSB);
+		_appendSourcePathIndividual(
+			module.getSourceResourcePath(), "src", moduleName, "resources",
+			projectSB);
+		_appendSourcePathIndividual(
+			module.getTestUnitPath(), "test", moduleName, "test-unit",
+			projectSB);
+		_appendSourcePathIndividual(
+			module.getTestUnitResourcePath(), "test", moduleName,
+			"test-unit-resources", projectSB);
+		_appendSourcePathIndividual(
+			module.getTestIntegrationPath(), "test", moduleName,
+			"test-integration", projectSB);
+		_appendSourcePathIndividual(
+			module.getTestIntegrationPath(), "test", moduleName,
+			"test-integration-resources", projectSB);
 	}
 
 	private static void _createData(
