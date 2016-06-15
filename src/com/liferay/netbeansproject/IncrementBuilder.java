@@ -139,9 +139,9 @@ public class IncrementBuilder {
 							projectDependencyProperties);
 
 						CreateModule.createModule(
-							module, portalPath, excludedTypes,
+							module, projectRootPath, excludedTypes,
 							projectDependencyResolver, portalLibJars,
-							projectRootPath);
+							portalPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;

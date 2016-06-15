@@ -49,9 +49,9 @@ import org.w3c.dom.Element;
 public class CreateModule {
 
 	public static void createModule(
-			Module module, Path portalPath, String excludedTypes,
+			Module module, Path projectPath, String excludedTypes,
 			ProjectDependencyResolver projectDependencyResolver,
-			String portalLibJars, Path projectPath)
+			String portalLibJars, Path portalPath)
 		throws Exception {
 
 		Path projectModulePath = projectPath.resolve(
@@ -62,9 +62,9 @@ public class CreateModule {
 		_replaceProjectName(module, projectModulePath);
 
 		_appendProperties(
-			module, excludedTypes,
-			projectModulePath.resolve("nbproject/project.properties"),
-			projectDependencyResolver, portalLibJars, portalPath);
+			module, excludedTypes, projectDependencyResolver, portalLibJars,
+			portalPath,
+			projectModulePath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(
 			module, portalPath.getParent(), projectDependencyResolver,
@@ -104,9 +104,9 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-			Module module, String excludeTypes, Path projectPropertiesPath,
+			Module module, String excludeTypes,
 			ProjectDependencyResolver projectDependencyResolver,
-			String portalLibJars, Path portalPath)
+			String portalLibJars, Path portalPath, Path projectPropertiesPath)
 		throws Exception {
 
 		String projectName = module.getModuleName();

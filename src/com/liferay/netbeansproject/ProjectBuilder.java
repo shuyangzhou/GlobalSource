@@ -135,8 +135,8 @@ public class ProjectBuilder {
 
 		for (Module module : moduleMap.values()) {
 			CreateModule.createModule(
-				module, portalPath, excludedTypes, projectDependencyResolver,
-				portalLibJars, projectPath);
+				module, projectPath, excludedTypes, projectDependencyResolver,
+				portalLibJars, portalPath);
 		}
 
 		CreateUmbrella.createUmbrella(
