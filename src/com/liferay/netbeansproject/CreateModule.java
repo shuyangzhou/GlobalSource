@@ -22,7 +22,6 @@ import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -148,18 +147,20 @@ public class CreateModule {
 				moduleDependency.getModuleLocation());
 
 			if (moduleDependency.isTest()) {
-				_appendReferenceProperties(
-					dependencyModule.getModuleName(), projectSB, testSB);
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB,
+					testSB);
 			}
 			else {
-				_appendReferenceProperties(
-					dependencyModule.getModuleName(), projectSB, javacSB);
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB,
+					javacSB);
 			}
 		}
 
 		for (String moduleName : module.getPortalLevelModuleDependencies()) {
 			if (!moduleName.isEmpty()) {
-				_appendReferenceProperties(moduleName, projectSB, javacSB);
+				_appendProjectDependencies(moduleName, projectSB, javacSB);
 			}
 		}
 
@@ -212,26 +213,26 @@ public class CreateModule {
 		}
 	}
 
-	private static void _appendReferenceProperties(
-			String moduleName, StringBuilder projectSB, StringBuilder javacSB)
-		throws IOException {
+	private static void _appendProjectDependencies(
+		String moduleName, StringBuilder projectSB, StringBuilder javacSB) {
 
 		projectSB.append("project.");
 		projectSB.append(moduleName);
-		projectSB.append("=..");
-		projectSB.append(File.separatorChar);
-		projectSB.append(moduleName);
+		projectSB.append('=');
+
+		Path path = Paths.get("..", moduleName);
+
+		projectSB.append(path);
 		projectSB.append('\n');
 		projectSB.append("reference.");
 		projectSB.append(moduleName);
 		projectSB.append(".jar=${project.");
 		projectSB.append(moduleName);
-		projectSB.append('}');
-		projectSB.append(File.separatorChar);
-		projectSB.append("dist");
-		projectSB.append(File.separatorChar);
-		projectSB.append(moduleName);
-		projectSB.append(".jar\n");
+
+		path = Paths.get("}", "dist", moduleName + ".jar");
+
+		projectSB.append(path);
+		projectSB.append('\n');
 
 		javacSB.append("\t${reference.");
 		javacSB.append(moduleName);
