@@ -138,11 +138,10 @@ public class CreateModule {
 
 		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 
-		for (String moduleName : module.getPortalLevelModuleDependencies()) {
-			if (!moduleName.isEmpty()) {
-				_appendReferenceProperties(moduleName, projectSB, javacSB);
-			}
-		}
+		StringBuilder testSB = new StringBuilder("javac.test.classpath=\\\n");
+
+		testSB.append("\t${build.classes.dir}:\\\n");
+		testSB.append("\t${javac.classpath}:\\\n");
 
 		Path dependenciesDirPath = projectPath.resolve("dependencies");
 
@@ -159,11 +158,6 @@ public class CreateModule {
 
 		Properties dependencyProperties = PropertiesUtil.loadProperties(
 			dependenciesPath);
-
-		StringBuilder testSB = new StringBuilder("javac.test.classpath=\\\n");
-
-		testSB.append("\t${build.classes.dir}:\\\n");
-		testSB.append("\t${javac.classpath}:\\\n");
 
 		String compileDependencies = dependencyProperties.getProperty(
 			"compile");
@@ -188,6 +182,9 @@ public class CreateModule {
 				StringUtil.split(
 					compileTestDependencies, File.pathSeparatorChar)));
 
+		_appendLibJars(portalPath, compileSet, javacSB, projectSB);
+		_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
+
 		for (ModuleDependency moduleDependency :
 				module.getModuleDependencies()) {
 
@@ -204,8 +201,11 @@ public class CreateModule {
 			}
 		}
 
-		_appendLibJars(portalPath, compileSet, javacSB, projectSB);
-		_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
+		for (String moduleName : module.getPortalLevelModuleDependencies()) {
+			if (!moduleName.isEmpty()) {
+				_appendReferenceProperties(moduleName, projectSB, javacSB);
+			}
+		}
 
 		Path libDevelopmentPath = portalPath.resolve("lib/development");
 
