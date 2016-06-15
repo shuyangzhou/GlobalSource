@@ -71,8 +71,9 @@ public class CreateModule {
 		_replaceProjectName(module, projectModulePath);
 
 		_appendProperties(
-			module, excludedTypes, projectModulePath, projectDependencyResolver,
-			portalPath, projectPath);
+			module, excludedTypes,
+			projectModulePath.resolve("nbproject/project.properties"),
+			projectDependencyResolver, portalPath, projectPath);
 
 		_createProjectXML(module, portalPath.getParent(), projectModulePath);
 	}
@@ -112,15 +113,12 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-			Module module, String excludeTypes, Path modulePath,
+			Module module, String excludeTypes, Path projectPropertiesPath,
 			ProjectDependencyResolver projectDependencyResolver,
 			Path portalPath, Path projectPath)
 		throws Exception {
 
 		String projectName = module.getModuleName();
-
-		Path projectPropertiesPath = modulePath.resolve(
-			"nbproject/project.properties");
 
 		StringBuilder projectSB = new StringBuilder();
 
