@@ -68,6 +68,10 @@ public class IncrementBuilder {
 		final boolean displayGradleProcessOutput = Boolean.valueOf(
 			buildProperties.getProperty("display.gradle.process.output"));
 
+		final Properties projectDependencyProperties =
+			PropertiesUtil.loadProperties(
+				Paths.get("project-dependency.properties"));
+
 		final String excludedTypes = buildProperties.getProperty(
 			"exclude.types");
 
@@ -97,7 +101,9 @@ public class IncrementBuilder {
 
 						if ((existModule != null) &&
 							existModule.equals(
-								Module.createModule(null, path, null))) {
+								Module.createModule(
+									null, path, null,
+									projectDependencyProperties))) {
 
 							return FileVisitResult.SKIP_SUBTREE;
 						}
@@ -124,7 +130,8 @@ public class IncrementBuilder {
 							projectRootPath.resolve(
 								Paths.get(
 									"modules", ModuleUtil.getModuleName(path))),
-							path, jarDependenciesMap.get(moduleName));
+							path, jarDependenciesMap.get(moduleName),
+							projectDependencyProperties);
 
 						CreateModule.createModule(
 							module, portalPath, excludedTypes, projectRootPath);

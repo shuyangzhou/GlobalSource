@@ -86,6 +86,10 @@ public class ProjectBuilder {
 					buildProperties.getProperty(
 						"display.gradle.process.output")));
 
+		final Properties projectDependencyProperties =
+			PropertiesUtil.loadProperties(
+				Paths.get("project-dependency.properties"));
+
 		final Map<Path, Module> projectMap = new HashMap<>();
 
 		Files.walkFileTree(
@@ -113,7 +117,8 @@ public class ProjectBuilder {
 						projectPath.resolve(
 							Paths.get(
 								"modules", ModuleUtil.getModuleName(path))),
-						path, jarDependenciesMap.get(fileName));
+						path, jarDependenciesMap.get(fileName),
+						projectDependencyProperties);
 
 					projectMap.put(module.getModulePath(), module);
 

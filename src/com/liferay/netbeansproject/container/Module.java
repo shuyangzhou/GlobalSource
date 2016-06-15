@@ -44,7 +44,8 @@ public class Module {
 
 	public static Module createModule(
 			Path projectPath, Path modulePath,
-			List<JarDependency> jarDependencies)
+			List<JarDependency> jarDependencies,
+			Properties projectDependencyProperties)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -90,6 +91,7 @@ public class Module {
 			_resolveResourcePath(modulePath, "testIntegration"),
 			GradleUtil.getModuleDependencies(modulePath), jarDependencies,
 			_resolvePortalLevelDependencies(
+				projectDependencyProperties,
 				ModuleUtil.getModuleName(modulePath)),
 			checksum);
 
@@ -263,11 +265,8 @@ public class Module {
 	}
 
 	private static List<String> _resolvePortalLevelDependencies(
-			String moduleName)
+			Properties properties, String moduleName)
 		throws IOException {
-
-		Properties properties = PropertiesUtil.loadProperties(
-			Paths.get("project-dependency.properties"));
 
 		String dependencies = properties.getProperty(moduleName);
 

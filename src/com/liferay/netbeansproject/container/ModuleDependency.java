@@ -24,7 +24,7 @@ public class ModuleDependency {
 		_test = test;
 	}
 
-	public String getModulePath() {
+	public String getModuleLocation() {
 		return _moduleLocation;
 	}
 
