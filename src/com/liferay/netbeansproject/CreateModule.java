@@ -136,27 +136,8 @@ public class CreateModule {
 
 		_resolveDependencyJarSet(module, javacSB, testSB);
 
-		for (ModuleDependency moduleDependency :
-				module.getModuleDependencies()) {
-
-			Module dependencyModule = projectDependencyResolver.resolve(
-				moduleDependency.getModuleLocation());
-
-			if (moduleDependency.isTest()) {
-				_appendProjectDependencies(
-					dependencyModule.getModuleName(), projectSB, testSB);
-			}
-			else {
-				_appendProjectDependencies(
-					dependencyModule.getModuleName(), projectSB, javacSB);
-			}
-		}
-
-		for (String moduleName : module.getPortalLevelModuleDependencies()) {
-			if (!moduleName.isEmpty()) {
-				_appendProjectDependencies(moduleName, projectSB, javacSB);
-			}
-		}
+		_resolveProjectDependencySet(
+			module, projectDependencyResolver, projectSB, javacSB, testSB);
 
 		javacSB.append(portalLibJars);
 
@@ -491,6 +472,33 @@ public class CreateModule {
 			}
 			else {
 				_appendDependencyJar(jarPath, projectSB);
+			}
+		}
+	}
+
+	private static void _resolveProjectDependencySet(
+		Module module, ProjectDependencyResolver projectDependencyResolver,
+		StringBuilder projectSB, StringBuilder javacSB, StringBuilder testSB) {
+
+		for (ModuleDependency moduleDependency :
+				module.getModuleDependencies()) {
+
+			Module dependencyModule = projectDependencyResolver.resolve(
+				moduleDependency.getModuleLocation());
+
+			if (moduleDependency.isTest()) {
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB, testSB);
+			}
+			else {
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB, javacSB);
+			}
+		}
+
+		for (String moduleName : module.getPortalLevelModuleDependencies()) {
+			if (!moduleName.isEmpty()) {
+				_appendProjectDependencies(moduleName, projectSB, javacSB);
 			}
 		}
 	}
