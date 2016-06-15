@@ -14,11 +14,11 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.container.ModuleDependency;
 import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
 import com.liferay.netbeansproject.util.FileUtil;
-import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.BufferedWriter;
@@ -36,9 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -73,19 +71,15 @@ public class CreateModule {
 		_appendProperties(
 			module, excludedTypes,
 			projectModulePath.resolve("nbproject/project.properties"),
-			projectDependencyResolver, portalPath, projectPath);
+			projectDependencyResolver, portalPath);
 
 		_createProjectXML(module, portalPath.getParent(), projectModulePath);
 	}
 
-	private static Set<Path> _addDependenciesToSet(String[] dependencies) {
-		Set<Path> set = new LinkedHashSet<>();
-
-		for (String dependency : dependencies) {
-			set.add(Paths.get(dependency));
-		}
-
-		return set;
+	private static void _appendDependencyJar(Path jarPath, StringBuilder sb) {
+		sb.append('\t');
+		sb.append(jarPath);
+		sb.append(":\\\n");
 	}
 
 	private static void _appendLibJars(
@@ -115,7 +109,7 @@ public class CreateModule {
 	private static void _appendProperties(
 			Module module, String excludeTypes, Path projectPropertiesPath,
 			ProjectDependencyResolver projectDependencyResolver,
-			Path portalPath, Path projectPath)
+			Path portalPath)
 		throws Exception {
 
 		String projectName = module.getModuleName();
@@ -143,47 +137,7 @@ public class CreateModule {
 		testSB.append("\t${build.classes.dir}:\\\n");
 		testSB.append("\t${javac.classpath}:\\\n");
 
-		Path dependenciesDirPath = projectPath.resolve("dependencies");
-
-		if (!Files.exists(dependenciesDirPath)) {
-			Files.createDirectory(dependenciesDirPath);
-		}
-
-		Path dependenciesPath = dependenciesDirPath.resolve(projectName);
-
-		if (!Files.exists(dependenciesPath)) {
-			Files.write(
-				dependenciesPath, Arrays.asList("compile:\ncompileTest:"));
-		}
-
-		Properties dependencyProperties = PropertiesUtil.loadProperties(
-			dependenciesPath);
-
-		String compileDependencies = dependencyProperties.getProperty(
-			"compile");
-
-		Set<Path> compileSet = new LinkedHashSet<>();
-
-		compileSet.addAll(
-			_addDependenciesToSet(
-				StringUtil.split(compileDependencies, File.pathSeparatorChar)));
-
-		String compileTestDependencies = dependencyProperties.getProperty(
-			"compileTest");
-
-		if (compileTestDependencies == null) {
-			compileTestDependencies = "";
-		}
-
-		Set<Path> compileTestSet = new LinkedHashSet<>();
-
-		compileTestSet.addAll(
-			_addDependenciesToSet(
-				StringUtil.split(
-					compileTestDependencies, File.pathSeparatorChar)));
-
-		_appendLibJars(portalPath, compileSet, javacSB, projectSB);
-		_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
+		_resolveDependencyJarSet(module, javacSB, testSB);
 
 		for (ModuleDependency moduleDependency :
 				module.getModuleDependencies()) {
@@ -583,6 +537,21 @@ public class CreateModule {
 			module.getModuleName());
 
 		Files.write(buildXMLPath, Arrays.asList(content));
+	}
+
+	private static void _resolveDependencyJarSet(
+		Module module, StringBuilder projectSB, StringBuilder testSB) {
+
+		for (JarDependency jarDependency : module.getJarDependencies()) {
+			Path jarPath = jarDependency.getJarPath();
+
+			if (jarDependency.isTest()) {
+				_appendDependencyJar(jarPath, testSB);
+			}
+			else {
+				_appendDependencyJar(jarPath, projectSB);
+			}
+		}
 	}
 
 }
