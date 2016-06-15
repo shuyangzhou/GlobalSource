@@ -14,32 +14,23 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.container.ModuleDependency;
 import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
 import com.liferay.netbeansproject.util.FileUtil;
-import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -58,9 +49,9 @@ import org.w3c.dom.Element;
 public class CreateModule {
 
 	public static void createModule(
-			Module module, Path portalPath, String excludedTypes,
+			Module module, Path projectPath, String excludedTypes,
 			ProjectDependencyResolver projectDependencyResolver,
-			Path projectPath)
+			String portalLibJars, Path portalPath)
 		throws Exception {
 
 		Path projectModulePath = projectPath.resolve(
@@ -71,189 +62,100 @@ public class CreateModule {
 		_replaceProjectName(module, projectModulePath);
 
 		_appendProperties(
-			module, excludedTypes, projectModulePath, projectDependencyResolver,
-			portalPath, projectPath);
+			module, excludedTypes, projectDependencyResolver, portalLibJars,
+			portalPath,
+			projectModulePath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(module, portalPath.getParent(), projectModulePath);
 	}
 
-	private static Set<Path> _addDependenciesToSet(String[] dependencies) {
-		Set<Path> set = new LinkedHashSet<>();
-
-		for (String dependency : dependencies) {
-			set.add(Paths.get(dependency));
-		}
-
-		return set;
+	private static void _appendDependencyJar(Path jarPath, StringBuilder sb) {
+		sb.append('\t');
+		sb.append(jarPath);
+		sb.append(":\\\n");
 	}
 
-	private static void _appendLibJars(
-		Path portalPath, Set<Path> dependencies, StringBuilder classpathSB,
-		StringBuilder projectSB) {
+	private static void _appendProjectDependencies(
+		String moduleName, StringBuilder projectSB, StringBuilder javacSB) {
 
-		Path sdkPath = portalPath.resolve("tools/sdk");
+		projectSB.append("project.");
+		projectSB.append(moduleName);
+		projectSB.append('=');
 
-		for (Path jar : dependencies) {
-			if (jar.startsWith(sdkPath)) {
-				continue;
-			}
+		Path path = Paths.get("..", moduleName);
 
-			projectSB.append("file.reference.");
-			projectSB.append(jar.getFileName());
-			projectSB.append('=');
-			projectSB.append(jar);
-			projectSB.append('\n');
+		projectSB.append(path);
+		projectSB.append('\n');
+		projectSB.append("reference.");
+		projectSB.append(moduleName);
+		projectSB.append(".jar=${project.");
+		projectSB.append(moduleName);
 
-			classpathSB.append('\t');
-			classpathSB.append("${file.reference.");
-			classpathSB.append(jar.getFileName());
-			classpathSB.append("}:\\\n");
-		}
+		path = Paths.get("}", "dist", moduleName + ".jar");
+
+		projectSB.append(path);
+		projectSB.append('\n');
+
+		javacSB.append("\t${reference.");
+		javacSB.append(moduleName);
+		javacSB.append(".jar}:\\\n");
 	}
 
 	private static void _appendProperties(
-			Module module, String excludeTypes, Path modulePath,
+			Module module, String excludeTypes,
 			ProjectDependencyResolver projectDependencyResolver,
-			Path portalPath, Path projectPath)
+			String portalLibJars, Path portalPath, Path projectPropertiesPath)
 		throws Exception {
 
 		String projectName = module.getModuleName();
 
-		Path projectPropertiesPath = modulePath.resolve(
-			"nbproject/project.properties");
+		StringBuilder projectSB = new StringBuilder();
+
+		projectSB.append("excludes=");
+		projectSB.append(excludeTypes);
+		projectSB.append('\n');
+
+		projectSB.append("application.title=");
+		projectSB.append(module.getModulePath());
+		projectSB.append('\n');
+
+		projectSB.append("dist.jar=${dist.dir}/");
+		projectSB.append(projectName);
+		projectSB.append(".jar\n");
+
+		_appendSourcePaths(module, projectSB);
+
+		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
+
+		StringBuilder testSB = new StringBuilder("javac.test.classpath=\\\n");
+
+		testSB.append("\t${build.classes.dir}:\\\n");
+		testSB.append("\t${javac.classpath}:\\\n");
+
+		_resolveDependencyJarSet(module, javacSB, testSB);
+
+		_resolveProjectDependencySet(
+			module, projectDependencyResolver, projectSB, javacSB, testSB);
+
+		javacSB.append(portalLibJars);
+
+		if (projectName.equals("portal-impl")) {
+			projectSB.append("\nfile.reference.portal-test-integration-src=");
+			projectSB.append(portalPath);
+			projectSB.append("/portal-test-integration/src\n");
+			projectSB.append("src.test.dir=");
+			projectSB.append("${file.reference.portal-test-integration-src}");
+		}
+
+		if (projectName.equals("portal-kernel")) {
+			projectSB.append("\nfile.reference.portal-test-src=");
+			projectSB.append(portalPath);
+			projectSB.append("/portal-test/src\n");
+			projectSB.append("src.test.dir=${file.reference.portal-test-src}");
+		}
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, StandardOpenOption.APPEND)) {
-
-			StringBuilder projectSB = new StringBuilder();
-
-			projectSB.append("excludes=");
-			projectSB.append(excludeTypes);
-			projectSB.append('\n');
-
-			projectSB.append("application.title=");
-			projectSB.append(module.getModulePath());
-			projectSB.append('\n');
-
-			projectSB.append("dist.jar=${dist.dir}/");
-			projectSB.append(projectName);
-			projectSB.append(".jar\n");
-
-			_appendSourcePath(projectName, module.getModulePath(), projectSB);
-
-			StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
-
-			for (String projectLibs :
-					module.getPortalLevelModuleDependencies()) {
-
-				if (!projectLibs.isEmpty()) {
-					_appendReferenceProperties(
-						bufferedWriter, projectLibs, javacSB);
-				}
-			}
-
-			Path dependenciesDirPath = projectPath.resolve("dependencies");
-
-			if (!Files.exists(dependenciesDirPath)) {
-				Files.createDirectory(dependenciesDirPath);
-			}
-
-			Path dependenciesPath = dependenciesDirPath.resolve(projectName);
-
-			if (!Files.exists(dependenciesPath)) {
-				Files.write(
-					dependenciesPath, Arrays.asList("compile:\ncompileTest:"));
-			}
-
-			Properties dependencyProperties = PropertiesUtil.loadProperties(
-				dependenciesPath);
-
-			StringBuilder testSB = new StringBuilder(
-				"javac.test.classpath=\\\n");
-
-			testSB.append("\t${build.classes.dir}:\\\n");
-			testSB.append("\t${javac.classpath}:\\\n");
-
-			String compileDependencies = dependencyProperties.getProperty(
-				"compile");
-
-			Set<Path> compileSet = new LinkedHashSet<>();
-
-			compileSet.addAll(
-				_addDependenciesToSet(
-					StringUtil.split(
-						compileDependencies, File.pathSeparatorChar)));
-
-			String compileTestDependencies = dependencyProperties.getProperty(
-				"compileTest");
-
-			if (compileTestDependencies == null) {
-				compileTestDependencies = "";
-			}
-
-			Set<Path> compileTestSet = new LinkedHashSet<>();
-
-			compileTestSet.addAll(
-				_addDependenciesToSet(
-					StringUtil.split(
-						compileTestDependencies, File.pathSeparatorChar)));
-
-			for (ModuleDependency moduleDependency :
-					module.getModuleDependencies()) {
-
-				Module dependencyModule = projectDependencyResolver.resolve(
-					moduleDependency.getModuleRelativePath());
-
-				if (moduleDependency.isTest()) {
-					_appendReferenceProperties(
-						bufferedWriter, dependencyModule.getModuleName(),
-						testSB);
-				}
-				else {
-					_appendReferenceProperties(
-						bufferedWriter, dependencyModule.getModuleName(),
-						javacSB);
-				}
-			}
-
-			_appendLibJars(portalPath, compileSet, javacSB, projectSB);
-			_appendLibJars(portalPath, compileTestSet, testSB, projectSB);
-
-			Path libDevelopmentPath = portalPath.resolve("lib/development");
-
-			_appendLibJars(
-				portalPath, _getDependencySet(libDevelopmentPath), javacSB,
-				projectSB);
-
-			Path libGlobalPath = portalPath.resolve("lib/global");
-
-			_appendLibJars(
-				portalPath, _getDependencySet(libGlobalPath), javacSB,
-				projectSB);
-
-			Path libPortalPath = portalPath.resolve("lib/portal");
-
-			_appendLibJars(
-				portalPath, _getDependencySet(libPortalPath), javacSB,
-				projectSB);
-
-			if (projectName.equals("portal-impl")) {
-				projectSB.append(
-					"\nfile.reference.portal-test-integration-src=");
-				projectSB.append(portalPath);
-				projectSB.append("/portal-test-integration/src\n");
-				projectSB.append("src.test.dir=");
-				projectSB.append(
-					"${file.reference.portal-test-integration-src}");
-			}
-
-			if (projectName.equals("portal-kernel")) {
-				projectSB.append("\nfile.reference.portal-test-src=");
-				projectSB.append(portalPath);
-				projectSB.append("/portal-test/src\n");
-				projectSB.append(
-					"src.test.dir=${file.reference.portal-test-src}");
-			}
 
 			bufferedWriter.append(projectSB);
 			bufferedWriter.newLine();
@@ -270,190 +172,51 @@ public class CreateModule {
 		}
 	}
 
-	private static void _appendReferenceProperties(
-			BufferedWriter bufferedWriter, String module, StringBuilder javacSB)
-		throws IOException {
+	private static void _appendSourcePathIndividual(
+		Path path, String prefix, String name, String subfix,
+		StringBuilder sb) {
 
-		StringBuilder sb = new StringBuilder("project.");
-
-		sb.append(module);
-		sb.append("=..");
-		sb.append(File.separatorChar);
-		sb.append(module);
+		sb.append("file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append('=');
+		sb.append(path);
 		sb.append('\n');
-		sb.append("reference.");
-		sb.append(module);
-		sb.append(".jar=${project.");
-		sb.append(module);
-		sb.append('}');
-		sb.append(File.separatorChar);
-		sb.append("dist");
-		sb.append(File.separatorChar);
-		sb.append(module);
-		sb.append(".jar");
-
-		bufferedWriter.append(sb);
-		bufferedWriter.newLine();
-
-		javacSB.append("\t${reference.");
-		javacSB.append(module);
-		javacSB.append(".jar}:\\\n");
+		sb.append(prefix);
+		sb.append('.');
+		sb.append(name);
+		sb.append('.');
+		sb.append(subfix);
+		sb.append(".dir=${file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append("}\n");
 	}
 
-	private static void _appendSourcePath(
-		String moduleName, Path modulePath, StringBuilder projectSB) {
+	private static void _appendSourcePaths(
+		Module module, StringBuilder projectSB) {
 
-		Path moduleSrcPath = modulePath.resolve("src");
+		String moduleName = module.getModuleName();
 
-		if (Files.exists(modulePath.resolve("docroot"))) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append(File.separatorChar);
-			projectSB.append("docroot");
-			projectSB.append(File.separatorChar);
-			projectSB.append("WEB-INF");
-			projectSB.append(File.separatorChar);
-			projectSB.append("src\n");
-		}
-		else if (Files.exists(moduleSrcPath.resolve("com")) ||
-				 Files.exists(moduleSrcPath.resolve("main"))) {
-
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src=");
-			projectSB.append(modulePath);
-			projectSB.append(File.separatorChar);
-			projectSB.append("src");
-
-			if (Files.exists(moduleSrcPath.resolve("main"))) {
-				projectSB.append(File.separatorChar);
-				projectSB.append("main");
-				projectSB.append(File.separatorChar);
-				projectSB.append("java\n");
-			}
-			else {
-				projectSB.append('\n');
-			}
-
-			projectSB.append("src.");
-			projectSB.append(moduleName);
-			projectSB.append(".src.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-src}\n");
-		}
-
-		Path mainResourcesPath = Paths.get(
-			moduleSrcPath.toString(), "main", "resources");
-
-		if (Files.exists(mainResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-resources=");
-			projectSB.append(mainResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("src.");
-			projectSB.append(moduleName);
-			projectSB.append(".resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-resources}\n");
-		}
-
-		Path testPath = modulePath.resolve("test");
-
-		Path testUnitPath = testPath.resolve("unit");
-		Path srcTestPath = moduleSrcPath.resolve("test");
-
-		Path testJavaPath = srcTestPath.resolve("java");
-
-		if (Files.exists(testUnitPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit=");
-			projectSB.append(testUnitPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit}\n");
-		}
-		else if(Files.exists(testJavaPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit=");
-			projectSB.append(testJavaPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit}\n");
-		}
-
-		Path testResourcesPath = Paths.get(
-			moduleSrcPath.toString(), "test", "Resources");
-
-		if (Files.exists(testResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit-resources=");
-			projectSB.append(testResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-unit-resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-unit-resources}\n");
-		}
-
-		Path testIntegrationPath = testPath.resolve("integration");
-		Path srcTestIntegrationPath = moduleSrcPath.resolve("testIntegration");
-
-		Path testIntegrationJavaPath = srcTestIntegrationPath.resolve("java");
-
-		if (Files.exists(testIntegrationPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration=");
-			projectSB.append(testIntegrationPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-integration.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration}\n");
-		}
-		else if(Files.exists(testIntegrationJavaPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration=");
-			projectSB.append(testIntegrationJavaPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(".test-integration.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration}\n");
-		}
-
-		Path testIntegrationResourcesPath = srcTestIntegrationPath.resolve(
-			"resources");
-
-		if (Files.exists(testIntegrationResourcesPath)) {
-			projectSB.append("file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration-resources=");
-			projectSB.append(testIntegrationResourcesPath);
-			projectSB.append('\n');
-			projectSB.append("test.");
-			projectSB.append(moduleName);
-			projectSB.append(
-				".test-integration-resources.dir=${file.reference.");
-			projectSB.append(moduleName);
-			projectSB.append("-test-integration-resources}\n");
-		}
+		_appendSourcePathIndividual(
+			module.getSourcePath(), "src", moduleName, "src", projectSB);
+		_appendSourcePathIndividual(
+			module.getSourceResourcePath(), "src", moduleName, "resources",
+			projectSB);
+		_appendSourcePathIndividual(
+			module.getTestUnitPath(), "test", moduleName, "test-unit",
+			projectSB);
+		_appendSourcePathIndividual(
+			module.getTestUnitResourcePath(), "test", moduleName,
+			"test-unit-resources", projectSB);
+		_appendSourcePathIndividual(
+			module.getTestIntegrationPath(), "test", moduleName,
+			"test-integration", projectSB);
+		_appendSourcePathIndividual(
+			module.getTestIntegrationPath(), "test", moduleName,
+			"test-integration-resources", projectSB);
 	}
 
 	private static void _createData(
@@ -677,25 +440,6 @@ public class CreateModule {
 		rootElement.setAttribute("name", label);
 	}
 
-	private static Set<Path> _getDependencySet(Path directory)
-		throws IOException {
-
-		DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
-			directory);
-
-		List<Path> jarList = new ArrayList<>();
-
-		for (Path jarPath : directoryStream) {
-			jarList.add(jarPath);
-		}
-
-		Collections.sort(jarList);
-
-		directoryStream.close();
-
-		return new HashSet<>(jarList);
-	}
-
 	private static void _replaceProjectName(
 			Module module, Path projectModulePath)
 		throws IOException {
@@ -707,6 +451,48 @@ public class CreateModule {
 			module.getModuleName());
 
 		Files.write(buildXMLPath, Arrays.asList(content));
+	}
+
+	private static void _resolveDependencyJarSet(
+		Module module, StringBuilder projectSB, StringBuilder testSB) {
+
+		for (JarDependency jarDependency : module.getJarDependencies()) {
+			Path jarPath = jarDependency.getJarPath();
+
+			if (jarDependency.isTest()) {
+				_appendDependencyJar(jarPath, testSB);
+			}
+			else {
+				_appendDependencyJar(jarPath, projectSB);
+			}
+		}
+	}
+
+	private static void _resolveProjectDependencySet(
+		Module module, ProjectDependencyResolver projectDependencyResolver,
+		StringBuilder projectSB, StringBuilder javacSB, StringBuilder testSB) {
+
+		for (ModuleDependency moduleDependency :
+				module.getModuleDependencies()) {
+
+			Module dependencyModule = projectDependencyResolver.resolve(
+				moduleDependency.getModuleRelativePath());
+
+			if (moduleDependency.isTest()) {
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB, testSB);
+			}
+			else {
+				_appendProjectDependencies(
+					dependencyModule.getModuleName(), projectSB, javacSB);
+			}
+		}
+
+		for (String moduleName : module.getPortalLevelModuleDependencies()) {
+			if (!moduleName.isEmpty()) {
+				_appendProjectDependencies(moduleName, projectSB, javacSB);
+			}
+		}
 	}
 
 }

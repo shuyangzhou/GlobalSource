@@ -78,6 +78,8 @@ public class IncrementBuilder {
 		final String excludedTypes = buildProperties.getProperty(
 			"exclude.types");
 
+		final String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
+
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
 			new SimpleFileVisitor<Path>() {
@@ -137,8 +139,9 @@ public class IncrementBuilder {
 							projectDependencyProperties);
 
 						CreateModule.createModule(
-							module, portalPath, excludedTypes,
-							projectDependencyResolver, projectRootPath);
+							module, projectRootPath, excludedTypes,
+							projectDependencyResolver, portalLibJars,
+							portalPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;
