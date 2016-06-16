@@ -121,7 +121,7 @@ public class CreateModule {
 		testSB.append("\t${build.classes.dir}:\\\n");
 		testSB.append("\t${javac.classpath}:\\\n");
 
-		_resolveDependencyJarSet(module, javacSB, testSB);
+		_resolveJarDependencySet(module, javacSB, testSB);
 
 		_resolveProjectDependencySet(
 			module, projectDependencyResolver, projectSB, javacSB, testSB);
@@ -446,7 +446,7 @@ public class CreateModule {
 		Files.write(buildXMLPath, Arrays.asList(content));
 	}
 
-	private static void _resolveDependencyJarSet(
+	private static void _resolveJarDependencySet(
 		Module module, StringBuilder javacSB, StringBuilder testSB) {
 
 		StringBuilder sb = null;
