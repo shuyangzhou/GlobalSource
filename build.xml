@@ -94,8 +94,9 @@
 	<target name="add">
 		<compile />
 
-		<java classname="com.liferay.netbeansproject.IncrementBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
+		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+			<arg value="rebuild=false" />
 		</java>
 	</target>
 
@@ -104,6 +105,7 @@
 
 		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+			<arg value="rebuild=true" />
 		</java>
 	</target>
 
