@@ -96,12 +96,12 @@ public class ProjectBuilder {
 			Map<String, String> umbrellaSourceList)
 		throws Exception {
 
-		final Map<Path, Module> modules = new HashMap<>();
+		final Map<Path, Module> oldModules = new HashMap<>();
 
 		if (!rebuild) {
-			_loadExistingProjects(projectPath.resolve("modules"), modules);
+			_loadExistingProjects(projectPath.resolve("modules"), oldModules);
 
-			if (modules.isEmpty()) {
+			if (oldModules.isEmpty()) {
 				rebuild = true;
 			}
 		}
@@ -115,6 +115,8 @@ public class ProjectBuilder {
 
 		final Set<Path> modulePaths = new HashSet<>();
 
+		final Set<Path> newModules = new HashSet<>();
+
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
 			new SimpleFileVisitor<Path>() {
@@ -124,11 +126,9 @@ public class ProjectBuilder {
 						Path path, BasicFileAttributes basicFileAttributes)
 					throws IOException {
 
-					Path fileNamePath = path.getFileName();
+					if (ignoredDirSet.contains(
+							String.valueOf(path.getFileName()))) {
 
-					String fileName = fileNamePath.toString();
-
-					if (ignoredDirSet.contains(fileName)) {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
@@ -136,7 +136,9 @@ public class ProjectBuilder {
 						return FileVisitResult.CONTINUE;
 					}
 
-					Module module = modules.remove(path);
+					modulePaths.add(path);
+
+					Module module = oldModules.remove(path);
 
 					if ((module == null) ||
 						!module.equals(
@@ -144,7 +146,7 @@ public class ProjectBuilder {
 								null, path, null,
 								projectDependencyProperties))) {
 
-						modulePaths.add(path);
+						newModules.add(path);
 					}
 
 					return FileVisitResult.SKIP_SUBTREE;
@@ -156,11 +158,11 @@ public class ProjectBuilder {
 
 		Map<String, List<JarDependency>> jarDependenciesMap = new HashMap<>();
 
-		for (Path modulePath : modules.keySet()) {
-			String moduleName = ModuleUtil.getModuleName(modulePath);
-
+		for (Path modulePath : oldModules.keySet()) {
 			FileUtil.delete(
-				projectPath.resolve(Paths.get("modules", moduleName)));
+				projectPath.resolve(
+					Paths.get(
+						"modules", ModuleUtil.getModuleName(modulePath))));
 		}
 
 		if (rebuild) {
@@ -169,25 +171,18 @@ public class ProjectBuilder {
 			jarDependenciesMap = GradleUtil.getJarDependencies(
 				portalPath, portalPath.resolve("modules"),
 				displayGradleProcessOutput);
-
-			CreateUmbrella.createUmbrella(
-				portalPath, projectName, umbrellaSourceList, excludedTypes,
-				modulePaths, projectPath);
 		}
 		else {
-			for (Path modulePath : modulePaths) {
-				String moduleName = ModuleUtil.getModuleName(modulePath);
+			for (Path newModule : newModules) {
+				FileUtil.delete(
+					projectPath.resolve(
+						Paths.get(
+							"modules", ModuleUtil.getModuleName(newModule))));
 
-				Path moduleProjectPath = projectPath.resolve(
-					Paths.get("modules", moduleName));
-
-				FileUtil.delete(moduleProjectPath);
-
-				if (Files.exists(modulePath.resolve("build.gradle"))) {
+				if (Files.exists(newModule.resolve("build.gradle"))) {
 					jarDependenciesMap.putAll(
 						GradleUtil.getJarDependencies(
-							portalPath, modulePath,
-							displayGradleProcessOutput));
+							portalPath, newModule, displayGradleProcessOutput));
 				}
 			}
 		}
@@ -204,6 +199,10 @@ public class ProjectBuilder {
 			CreateModule.createModule(
 				module, projectPath, excludedTypes, portalLibJars, portalPath);
 		}
+
+		CreateUmbrella.createUmbrella(
+			portalPath, projectName, umbrellaSourceList, excludedTypes,
+			modulePaths, projectPath);
 	}
 
 	private void _loadExistingProjects(

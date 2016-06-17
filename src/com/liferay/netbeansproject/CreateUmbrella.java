@@ -51,6 +51,8 @@ public class CreateUmbrella {
 			Set<Path> modulePaths, Path projectPath)
 		throws Exception {
 
+		FileUtil.delete(projectPath);
+
 		FileUtil.unZip(projectPath);
 
 		_appendProjectProperties(
