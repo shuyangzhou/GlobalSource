@@ -17,7 +17,6 @@ package com.liferay.netbeansproject;
 import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.container.ModuleDependency;
-import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
@@ -50,7 +49,6 @@ public class CreateModule {
 
 	public static void createModule(
 			Module module, Path projectPath, String excludedTypes,
-			ProjectDependencyResolver projectDependencyResolver,
 			String portalLibJars, Path portalPath)
 		throws Exception {
 
@@ -62,8 +60,7 @@ public class CreateModule {
 		_replaceProjectName(module, projectModulePath);
 
 		_appendProperties(
-			module, excludedTypes, projectDependencyResolver, portalLibJars,
-			portalPath,
+			module, excludedTypes, portalLibJars, portalPath,
 			projectModulePath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(module, portalPath.getParent(), projectModulePath);
@@ -91,9 +88,8 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-			Module module, String excludeTypes,
-			ProjectDependencyResolver projectDependencyResolver,
-			String portalLibJars, Path portalPath, Path projectPropertiesPath)
+			Module module, String excludeTypes, String portalLibJars,
+			Path portalPath, Path projectPropertiesPath)
 		throws Exception {
 
 		String projectName = module.getModuleName();
@@ -123,8 +119,7 @@ public class CreateModule {
 
 		_resolveJarDependencySet(module, javacSB, testSB);
 
-		_resolveProjectDependencySet(
-			module, projectDependencyResolver, projectSB, javacSB, testSB);
+		_resolveProjectDependencySet(module, projectSB, javacSB, testSB);
 
 		javacSB.append(portalLibJars);
 
@@ -468,22 +463,24 @@ public class CreateModule {
 	}
 
 	private static void _resolveProjectDependencySet(
-		Module module, ProjectDependencyResolver projectDependencyResolver,
-		StringBuilder projectSB, StringBuilder javacSB, StringBuilder testSB) {
+		Module module, StringBuilder projectSB, StringBuilder javacSB,
+		StringBuilder testSB) {
 
 		for (ModuleDependency moduleDependency :
 				module.getModuleDependencies()) {
 
-			Module dependencyModule = projectDependencyResolver.resolve(
-				moduleDependency.getModuleRelativePath());
+			Path dependencyModulePath =
+				moduleDependency.getModuleRelativePath();
 
 			if (moduleDependency.isTest()) {
 				_appendProjectDependencies(
-					dependencyModule.getModuleName(), projectSB, testSB);
+					String.valueOf(dependencyModulePath.getFileName()),
+					projectSB, testSB);
 			}
 			else {
 				_appendProjectDependencies(
-					dependencyModule.getModuleName(), projectSB, javacSB);
+					String.valueOf(dependencyModulePath.getFileName()),
+					projectSB, javacSB);
 			}
 		}
 

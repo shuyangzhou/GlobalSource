@@ -16,8 +16,6 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
@@ -49,30 +47,38 @@ import java.util.Set;
 public class ProjectBuilder {
 
 	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		ProjectBuilder projectBuilder = new ProjectBuilder();
-
-		projectBuilder.scanPortal(Paths.get(arguments.get("portal.dir")));
-	}
-
-	public void scanPortal(Path portalPath) throws Exception {
 		Properties buildProperties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		String projectDir = PropertiesUtil.getRequiredProperty(
-			buildProperties, "project.dir");
+		Path projectPath = Paths.get(
+			PropertiesUtil.getRequiredProperty(buildProperties, "project.dir"));
+
+		for (String portal : StringUtil.split(
+				PropertiesUtil.getRequiredProperty(
+					buildProperties, "portal.dirs"),
+				',')) {
+
+			Path portalPath = Paths.get(portal);
+
+			Path portalProjectPath = projectPath.resolve(
+				portalPath.getFileName());
+
+			ProjectBuilder projectBuilder = new ProjectBuilder();
+
+			projectBuilder.scanPortal(
+				portalProjectPath, portalPath, buildProperties);
+		}
+	}
+
+	public void scanPortal(
+			final Path projectPath, Path portalPath, Properties buildProperties)
+		throws Exception {
 
 		String ignoredDirs = PropertiesUtil.getRequiredProperty(
 			buildProperties, "ignored.dirs");
 
 		String projectName = PropertiesUtil.getRequiredProperty(
 			buildProperties, "project.name");
-
-		Path portalNamePath = portalPath.getFileName();
-
-		final Path projectPath = Paths.get(
-			projectDir, portalNamePath.toString());
 
 		FileUtil.delete(projectPath);
 
@@ -129,15 +135,11 @@ public class ProjectBuilder {
 
 		String excludedTypes = buildProperties.getProperty("exclude.types");
 
-		ProjectDependencyResolver projectDependencyResolver =
-			new ProjectDependencyResolver(moduleMap, portalPath);
-
 		String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
 		for (Module module : moduleMap.values()) {
 			CreateModule.createModule(
-				module, projectPath, excludedTypes, projectDependencyResolver,
-				portalLibJars, portalPath);
+				module, projectPath, excludedTypes, portalLibJars, portalPath);
 		}
 
 		CreateUmbrella.createUmbrella(

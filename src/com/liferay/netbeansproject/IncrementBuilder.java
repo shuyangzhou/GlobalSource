@@ -16,12 +16,11 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.JarDependency;
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.resolvers.ProjectDependencyResolver;
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
+import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.IOException;
 
@@ -44,22 +43,42 @@ import java.util.Properties;
  */
 public class IncrementBuilder {
 
-	public static void main(String[] args) throws IOException {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		IncrementBuilder incrementBuilder = new IncrementBuilder();
-
-		incrementBuilder.addModule(Paths.get(arguments.get("portal.dir")));
-	}
-
-	public void addModule(final Path portalPath) throws IOException {
+	public static void main(String[] args) throws Exception {
 		Properties buildProperties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
-		Path portalName = portalPath.getFileName();
+		Path projectPath = Paths.get(
+			PropertiesUtil.getRequiredProperty(buildProperties, "project.dir"));
 
-		final Path projectRootPath = Paths.get(
-			buildProperties.getProperty("project.dir"), portalName.toString());
+		for (String portal : StringUtil.split(
+				PropertiesUtil.getRequiredProperty(
+					buildProperties, "portal.dirs"),
+				',')) {
+
+			Path portalPath = Paths.get(portal);
+
+			Path portalProjectPath = projectPath.resolve(
+				portalPath.getFileName());
+
+			if (Files.exists(portalProjectPath)) {
+				IncrementBuilder incrementBuilder = new IncrementBuilder();
+
+				incrementBuilder.addModule(
+					portalProjectPath, portalPath, buildProperties);
+			}
+			else {
+				ProjectBuilder projectBuilder = new ProjectBuilder();
+
+				projectBuilder.scanPortal(
+					portalProjectPath, portalPath, buildProperties);
+			}
+		}
+	}
+
+	public void addModule(
+			final Path projectRootPath, final Path portalPath,
+			Properties buildProperties)
+		throws IOException {
 
 		final Map<Path, Module> existProjectMap = _getExistingProjects(
 			projectRootPath);
@@ -68,9 +87,6 @@ public class IncrementBuilder {
 
 		final boolean displayGradleProcessOutput = Boolean.valueOf(
 			buildProperties.getProperty("display.gradle.process.output"));
-
-		final ProjectDependencyResolver projectDependencyResolver =
-			new ProjectDependencyResolver(existProjectMap, portalPath);
 
 		final Properties projectDependencyProperties =
 			PropertiesUtil.loadProperties(
@@ -140,8 +156,7 @@ public class IncrementBuilder {
 
 						CreateModule.createModule(
 							module, projectRootPath, excludedTypes,
-							projectDependencyResolver, portalLibJars,
-							portalPath);
+							portalLibJars, portalPath);
 					}
 					catch (IOException ioe) {
 						throw ioe;

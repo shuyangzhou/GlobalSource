@@ -65,18 +65,6 @@
 		test.property.name="jdk8.home"
 	/>
 
-	<macrodef name="build-modules">
-		<attribute name="portal.dir" />
-		<attribute name="project.dir" />
-
-		<sequential>
-			<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
-				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-				<arg value="portal.dir=@{portal.dir}" />
-			</java>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="clean">
 		<attribute name="project.dir" />
 		<sequential>
@@ -103,55 +91,20 @@
 		</sequential>
 	</macrodef>
 
-	<macrodef name="for-each-portal">
-		<element name="steps" />
-		<sequential>
-			<for list="${portal.dirs}" param="portal.dir">
-				<sequential>
-					<local name="portal.name" />
-					<basename property="portal.name" file="@{portal.dir}" />
-
-					<steps />
-				</sequential>
-			</for>
-		</sequential>
-	</macrodef>
-
 	<target name="add">
 		<compile />
 
-		<for-each-portal>
-			<steps>
-				<if>
-					<available file="${project.dir}/${portal.name}" type="dir" />
-					<then>
-						<java classname="com.liferay.netbeansproject.IncrementBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
-							<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-							<arg value="portal.dir=@{portal.dir}" />
-						</java>
-					</then>
-					<else>
-						<build-modules
-							portal.dir="@{portal.dir}"
-							project.dir="${project.dir}/${portal.name}"
-						/>
-					</else>
-				</if>
-			</steps>
-		</for-each-portal>
+		<java classname="com.liferay.netbeansproject.IncrementBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
+			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+		</java>
 	</target>
 
 	<target name="build">
 		<compile />
 
-		<for-each-portal>
-			<steps>
-				<build-modules
-					portal.dir="@{portal.dir}"
-					project.dir="${project.dir}/${portal.name}"
-				/>
-			</steps>
-		</for-each-portal>
+		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
+			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+		</java>
 	</target>
 
 	<target name="clean">
