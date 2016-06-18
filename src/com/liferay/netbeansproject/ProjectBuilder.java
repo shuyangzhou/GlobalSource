@@ -188,6 +188,8 @@ public class ProjectBuilder {
 							displayGradleProcessOutput, true));
 				}
 			}
+
+			GradleUtil.stopGradleDaemon(portalPath, displayGradleProcessOutput);
 		}
 
 		for (Path newModulePath : newModulePaths) {
