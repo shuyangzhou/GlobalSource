@@ -171,7 +171,7 @@ public class ProjectBuilder {
 
 			jarDependenciesMap = GradleUtil.getJarDependencies(
 				portalPath, portalPath.resolve("modules"),
-				displayGradleProcessOutput);
+				displayGradleProcessOutput, false);
 		}
 		else {
 			for (Path newModulePath : newModulePaths) {
@@ -185,7 +185,7 @@ public class ProjectBuilder {
 					jarDependenciesMap.putAll(
 						GradleUtil.getJarDependencies(
 							portalPath, newModulePath,
-							displayGradleProcessOutput));
+							displayGradleProcessOutput, true));
 				}
 			}
 		}

@@ -40,7 +40,7 @@ public class GradleUtil {
 
 	public static Map<String, List<JarDependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath,
-			boolean displayGradleProcessOutput)
+			boolean displayGradleProcessOutput, boolean daemon)
 		throws Exception {
 
 		Path dependenciesDirPath = Files.createTempDirectory(null);
@@ -52,6 +52,11 @@ public class GradleUtil {
 		List<String> gradleTask = new ArrayList<>();
 
 		gradleTask.add(String.valueOf(portalDirPath.resolve("gradlew")));
+
+		if (daemon) {
+			gradleTask.add("--daemon");
+		}
+
 		gradleTask.add("--parallel");
 		gradleTask.add("--init-script=dependency.gradle");
 		gradleTask.add("-p");
