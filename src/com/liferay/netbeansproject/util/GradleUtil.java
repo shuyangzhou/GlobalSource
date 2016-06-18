@@ -185,6 +185,51 @@ public class GradleUtil {
 		return moduleDependencies;
 	}
 
+	public static void stopGradleDaemon(
+			Path portalDirPath, boolean displayGradleProcessOutput)
+		throws Exception {
+
+		List<String> gradleTask = new ArrayList<>();
+
+		gradleTask.add(String.valueOf(portalDirPath.resolve("gradlew")));
+
+		gradleTask.add("--stop");
+
+		ProcessBuilder processBuilder = new ProcessBuilder(gradleTask);
+
+		Process process = processBuilder.start();
+
+		if (displayGradleProcessOutput) {
+			String line = null;
+
+			try(
+				BufferedReader br = new BufferedReader(
+					new InputStreamReader(process.getInputStream()))) {
+
+				while ((line = br.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
+
+			try(
+				BufferedReader br = new BufferedReader(
+					new InputStreamReader(process.getErrorStream()))) {
+
+				while ((line = br.readLine()) != null) {
+					System.out.println(line);
+				}
+			}
+		}
+
+		int exitCode = process.waitFor();
+
+		if (exitCode != 0) {
+			throw new IOException(
+				"Process " + processBuilder.command() + " failed with " +
+					exitCode);
+		}
+	}
+
 	private static String _getTaskName(Path portalDirPath, Path workDirPath) {
 		Path modulesPath = portalDirPath.resolve("modules");
 
