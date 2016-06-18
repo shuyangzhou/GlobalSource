@@ -95,7 +95,9 @@ public class CreateUmbrella {
 			sb.append('\n');
 		}
 
-		Path projectModulesPath = projectPath.resolve("modules");
+		Path projectRootPath = projectPath.getParent();
+
+		Path projectModulesPath = projectRootPath.resolve("modules");
 
 		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 

@@ -190,13 +190,14 @@ public class ProjectBuilder {
 			}
 		}
 
-		for (Path modulePath : modulePaths) {
+		for (Path newModulePath : newModulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve(
-					Paths.get("modules", ModuleUtil.getModuleName(modulePath))),
-				modulePath,
+					Paths.get(
+						"modules", ModuleUtil.getModuleName(newModulePath))),
+				newModulePath,
 				jarDependenciesMap.get(
-					String.valueOf(modulePath.getFileName())),
+					String.valueOf(newModulePath.getFileName())),
 				projectDependencyProperties);
 
 			CreateModule.createModule(
@@ -205,7 +206,7 @@ public class ProjectBuilder {
 
 		CreateUmbrella.createUmbrella(
 			portalPath, projectName, umbrellaSourceList, excludedTypes,
-			modulePaths, projectPath);
+			modulePaths, projectPath.resolve("umbrella"));
 	}
 
 	private void _loadExistingProjects(
