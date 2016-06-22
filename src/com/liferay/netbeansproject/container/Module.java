@@ -82,6 +82,11 @@ public class Module {
 			}
 		}
 
+		if (modulePath.endsWith("WEB-INF")) {
+			modulePath = modulePath.getParent();
+			modulePath = modulePath.getParent();
+		}
+
 		Module module = new Module(
 			projectPath, modulePath, _resolveSourcePath(modulePath),
 			_resolveResourcePath(modulePath, "main"),
