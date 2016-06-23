@@ -30,16 +30,6 @@ import java.util.EnumSet;
  */
 public class ModuleUtil {
 
-	public static String getModuleName(Path modulePath) {
-		Path moduleName = modulePath.getFileName();
-
-		if ("WEB-INF".equals(moduleName.toString())) {
-			moduleName = modulePath.getName(modulePath.getNameCount() - 3);
-		}
-
-		return moduleName.toString();
-	}
-
 	public static String getPortalLibJars(Path portalPath) throws IOException {
 		final StringBuilder sb = new StringBuilder();
 

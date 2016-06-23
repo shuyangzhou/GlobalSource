@@ -15,7 +15,6 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.FileUtil;
-import com.liferay.netbeansproject.util.ModuleUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -102,7 +101,9 @@ public class CreateUmbrella {
 		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
 
 		for (Path modulePath : modulePaths) {
-			String name = ModuleUtil.getModuleName(modulePath);
+			Path modulePathName = modulePath.getFileName();
+
+			String name = modulePathName.toString();
 
 			sb.append("project.");
 			sb.append(name);
@@ -284,9 +285,10 @@ public class CreateUmbrella {
 		configurationElement.appendChild(referencesElement);
 
 		for (Path modulePath : modulePaths) {
+			Path modulePathName = modulePath.getFileName();
+
 			_createReference(
-				document, referencesElement,
-				ModuleUtil.getModuleName(modulePath));
+				document, referencesElement, modulePathName.toString());
 		}
 	}
 

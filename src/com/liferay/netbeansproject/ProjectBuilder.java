@@ -137,6 +137,11 @@ public class ProjectBuilder {
 						return FileVisitResult.CONTINUE;
 					}
 
+					if (path.endsWith("WEB-INF")) {
+						path = path.getParent();
+						path = path.getParent();
+					}
+
 					modulePaths.add(path);
 
 					Module module = oldModulePaths.remove(path);
@@ -160,10 +165,11 @@ public class ProjectBuilder {
 		Map<String, List<JarDependency>> jarDependenciesMap = new HashMap<>();
 
 		for (Path oldModulePath : oldModulePaths.keySet()) {
+			Path oldModulePathName = oldModulePath.getFileName();
+
 			FileUtil.delete(
 				projectPath.resolve(
-					Paths.get(
-						"modules", ModuleUtil.getModuleName(oldModulePath))));
+					Paths.get("modules", oldModulePathName.toString())));
 		}
 
 		if (rebuild) {
@@ -175,11 +181,11 @@ public class ProjectBuilder {
 		}
 		else {
 			for (Path newModulePath : newModulePaths) {
+				Path newModulePathName = newModulePath.getFileName();
+
 				FileUtil.delete(
 					projectPath.resolve(
-						Paths.get(
-							"modules",
-							ModuleUtil.getModuleName(newModulePath))));
+						Paths.get("modules", newModulePathName.toString())));
 
 				if (Files.exists(newModulePath.resolve("build.gradle"))) {
 					jarDependenciesMap.putAll(
@@ -194,10 +200,7 @@ public class ProjectBuilder {
 
 		for (Path newModulePath : newModulePaths) {
 			Module module = Module.createModule(
-				projectPath.resolve(
-					Paths.get(
-						"modules", ModuleUtil.getModuleName(newModulePath))),
-				newModulePath,
+				projectPath.resolve("modules"), newModulePath,
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
 				projectDependencyProperties);
