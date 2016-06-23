@@ -116,6 +116,16 @@ public class Module {
 
 		Properties properties = PropertiesUtil.loadProperties(moduleInfoPath);
 
+		String portalDependenciesString = properties.getProperty(
+			"portal.dependencies");
+
+		List<String> portalDependencies = new ArrayList<>(
+			Arrays.asList(
+				StringUtil.split(
+					portalDependenciesString.substring(
+						1, portalDependenciesString.length() - 1),
+					',')));
+
 		return new Module(
 			projectPath, Paths.get(properties.getProperty("module.path")),
 			_getPath(properties, "source.path"),
@@ -123,8 +133,10 @@ public class Module {
 			_getPath(properties, "test.unit.path"),
 			_getPath(properties, "test.unit.resource.path"),
 			_getPath(properties, "test.integration.path"),
-			_getPath(properties, "test.integration.resource.path"), null, null,
-			null, properties.getProperty("checksum"));
+			_getPath(properties, "test.integration.resource.path"),
+			_getDependencyList(properties.getProperty("module.dependencies")),
+			_getDependencyList(properties.getProperty("jar.dependencies")),
+			portalDependencies, properties.getProperty("checksum"));
 	}
 
 	@Override
@@ -180,7 +192,7 @@ public class Module {
 	}
 
 	public List<String> getPortalLevelModuleDependencies() {
-		return _portalLevelModuleDependencies;
+		return _portalDependencies;
 	}
 
 	public Path getSourcePath() {
@@ -251,6 +263,25 @@ public class Module {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static <T> List<T> _getDependencyList(String dependenciesString) {
+		List<T> dependencies = new ArrayList<>();
+
+		if (dependenciesString != null) {
+			for (String dependencyString :
+					StringUtil.split(dependenciesString, ';')) {
+
+				String[] dependencySplit = StringUtil.split(
+					dependencyString, ',');
+
+				dependencies.add((T)new JarDependency(
+						Paths.get(dependencySplit[0]),
+						Boolean.valueOf(dependencySplit[1])));
+			}
+		}
+
+		return dependencies;
 	}
 
 	private static Path _getPath(Properties properties, String key) {
@@ -369,7 +400,7 @@ public class Module {
 		_testIntegrationResourcePath = testIntegrationResourcePath;
 		_moduleDependencies = moduleDependencies;
 		_jarDependencies = jarDependencies;
-		_portalLevelModuleDependencies = portalLevelModuleDependencies;
+		_portalDependencies = portalLevelModuleDependencies;
 		_checksum = checksum;
 	}
 
@@ -403,6 +434,39 @@ public class Module {
 			throw new Error(nsae);
 		}
 
+		if (_jarDependencies.size() > 0) {
+			StringBuilder jarDependencySB = new StringBuilder();
+
+			for (JarDependency jarDependency : _jarDependencies) {
+				jarDependencySB.append(jarDependency.getJarPath());
+				jarDependencySB.append(',');
+				jarDependencySB.append(jarDependency.isTest());
+				jarDependencySB.append(';');
+			}
+
+			jarDependencySB.setLength(jarDependencySB.length() - 1);
+
+			_putProperty(properties, "jar.dependencies", jarDependencySB);
+		}
+
+		if (_moduleDependencies.size() > 0) {
+			StringBuilder moduleDependencySB = new StringBuilder();
+
+			for (ModuleDependency moduleDependency : _moduleDependencies) {
+				moduleDependencySB.append(
+					moduleDependency.getModuleRelativePath());
+				moduleDependencySB.append(',');
+				moduleDependencySB.append(moduleDependency.isTest());
+				moduleDependencySB.append(';');
+			}
+
+			moduleDependencySB.setLength(moduleDependencySB.length() - 1);
+
+			_putProperty(properties, "module.dependencies", moduleDependencySB);
+		}
+
+		_putProperty(properties, "portal.dependencies", _portalDependencies);
+
 		Files.createDirectories(_projectPath);
 
 		try (Writer writer = Files.newBufferedWriter(
@@ -416,7 +480,7 @@ public class Module {
 	private final List<JarDependency> _jarDependencies;
 	private final List<ModuleDependency> _moduleDependencies;
 	private final Path _modulePath;
-	private final List<String> _portalLevelModuleDependencies;
+	private final List<String> _portalDependencies;
 	private final Path _projectPath;
 	private final Path _sourcePath;
 	private final Path _sourceResourcePath;
