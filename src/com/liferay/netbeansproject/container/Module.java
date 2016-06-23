@@ -34,6 +34,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -116,6 +118,18 @@ public class Module {
 
 		Properties properties = PropertiesUtil.loadProperties(moduleInfoPath);
 
+		List<JarDependency> jarDependencys = new ArrayList<>();
+
+		Map<String, String> jarDependenciesMap = PropertiesUtil.getProperties(
+			properties, "jar.dependencies");
+
+		for (Entry<String, String> entry : jarDependenciesMap.entrySet()) {
+			jarDependencys.add(
+				new JarDependency(
+					Paths.get(entry.getKey()),
+					Boolean.valueOf(entry.getValue())));
+		}
+
 		return new Module(
 			projectPath, Paths.get(properties.getProperty("module.path")),
 			_getPath(properties, "source.path"),
@@ -123,8 +137,8 @@ public class Module {
 			_getPath(properties, "test.unit.path"),
 			_getPath(properties, "test.unit.resource.path"),
 			_getPath(properties, "test.integration.path"),
-			_getPath(properties, "test.integration.resource.path"), null, null,
-			null, properties.getProperty("checksum"));
+			_getPath(properties, "test.integration.resource.path"), null,
+			jarDependencys, null, properties.getProperty("checksum"));
 	}
 
 	@Override
@@ -399,6 +413,13 @@ public class Module {
 		}
 		catch (NoSuchAlgorithmException nsae) {
 			throw new Error(nsae);
+		}
+
+		for (JarDependency jarDependency : _jarDependencies) {
+			_putProperty(
+				properties,
+				"jar.dependencies[" + jarDependency.getJarPath() + "]",
+				jarDependency.isTest());
 		}
 
 		Files.createDirectories(_projectPath);
