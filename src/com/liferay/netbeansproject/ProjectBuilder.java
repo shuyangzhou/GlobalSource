@@ -248,7 +248,7 @@ public class ProjectBuilder {
 			CreateGroupModule.createModule(
 				groupProjectPath, String.valueOf(portalPath.getFileName()),
 				portalPath.relativize(entry.getKey()), entry.getValue(),
-				excludedTypes);
+				excludedTypes, portalLibJars);
 		}
 	}
 

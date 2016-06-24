@@ -40,7 +40,7 @@ public class CreateGroupModule {
 
 	public static void createModule(
 			Path projectPath, String portalName, Path groupPath,
-			List<Module> moduleList, String excludedTypes)
+			List<Module> moduleList, String excludedTypes, String portalLibJars)
 		throws IOException {
 
 		if (groupPath.equals(Paths.get(""))) {
@@ -59,7 +59,7 @@ public class CreateGroupModule {
 
 		_appendProperties(
 			groupPathString, portalName, moduleList, excludedTypes,
-			projectPath.resolve("nbproject/project.properties"));
+			portalLibJars, projectPath.resolve("nbproject/project.properties"));
 	}
 
 	private static void _appendJars(Set<Path> jarSet, StringBuilder sb) {
@@ -98,7 +98,8 @@ public class CreateGroupModule {
 
 	private static void _appendProperties(
 			String groupPathString, String portalName, List<Module> moduleList,
-			String excludeTypes, Path projectPropertiesPath)
+			String excludeTypes, String portalLibJars,
+			Path projectPropertiesPath)
 		throws IOException {
 
 		StringBuilder projectSB = new StringBuilder();
@@ -134,6 +135,8 @@ public class CreateGroupModule {
 
 		_resolveProjectDependencySet(
 			moduleList, portalName, projectSB, javacSB, testSB);
+
+		javacSB.append(portalLibJars);
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, StandardOpenOption.APPEND)) {
