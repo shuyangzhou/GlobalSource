@@ -240,6 +240,16 @@ public class ProjectBuilder {
 			_addToGroupMap(groupMap, module, groupDepth, groupStopWords);
 		}
 
+		Path groupProjectPath = projectPath.resolve("Group-project");
+
+		FileUtil.delete(groupProjectPath);
+
+		for (Map.Entry<Path, List<Module>> entry : groupMap.entrySet()) {
+			CreateGroupModule.createModule(
+				groupProjectPath, portalPath.relativize(entry.getKey()),
+				entry.getValue());
+		}
+
 	}
 
 	private void _addToGroupMap(
