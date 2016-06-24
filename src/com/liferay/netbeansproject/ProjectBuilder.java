@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -77,15 +78,26 @@ public class ProjectBuilder {
 			PropertiesUtil.getProperties(
 				buildProperties, "umbrella.source.list");
 
+		int groupDepth = Integer.valueOf(
+			PropertiesUtil.getRequiredProperty(buildProperties, "group.depth"));
+
+		String groupStopWords = PropertiesUtil.getRequiredProperty(
+			buildProperties, "group.stop.words");
+
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
 		for (String portalDir : portalDirs) {
 			Path portalDirPath = Paths.get(portalDir);
 
+			groupStopWords += "," +
+				String.valueOf(
+					portalDirPath.getName(portalDirPath.getNameCount() - 2));
+
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				projectName, excludeTypes, umbrellaSourceListMap);
+				projectName, excludeTypes, umbrellaSourceListMap, groupDepth,
+				groupStopWords);
 		}
 	}
 
@@ -93,7 +105,8 @@ public class ProjectBuilder {
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			String projectName, String excludedTypes,
-			Map<String, String> umbrellaSourceList)
+			Map<String, String> umbrellaSourceList, int groupDepth,
+			String groupStopWords)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -117,6 +130,8 @@ public class ProjectBuilder {
 		final Set<String> moduleNames = new HashSet<>();
 
 		final Set<Path> newModulePaths = new HashSet<>();
+
+		final List<Module> moduleList = new ArrayList<>();
 
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
@@ -153,6 +168,9 @@ public class ProjectBuilder {
 								portalModuleDependencyProperties))) {
 
 						newModulePaths.add(path);
+					}
+					else {
+						moduleList.add(module);
 					}
 
 					return FileVisitResult.SKIP_SUBTREE;
@@ -205,6 +223,8 @@ public class ProjectBuilder {
 					String.valueOf(newModulePath.getFileName())),
 				portalModuleDependencyProperties);
 
+			moduleList.add(module);
+
 			CreateModule.createModule(
 				module, projectPath, excludedTypes, portalLibJars, portalPath);
 		}
@@ -212,6 +232,40 @@ public class ProjectBuilder {
 		CreateUmbrella.createUmbrella(
 			portalPath, projectName, umbrellaSourceList, excludedTypes,
 			moduleNames, projectPath.resolve("umbrella"));
+
+		Map<Path, List<Module>> groupMap = _createGroupMap(
+			moduleList, groupDepth, groupStopWords);
+	}
+
+	private Map<Path, List<Module>> _createGroupMap(
+		List<Module> moduleList, int groupDepth, String groupStopWords) {
+
+		Map<Path, List<Module>> map = new HashMap<>();
+
+		for (Module module : moduleList) {
+			Path groupPath = module.getModulePath();
+
+			for (int i = 1; i < groupDepth; i++) {
+				if (!groupStopWords.contains(
+						String.valueOf(
+							groupPath.getName(groupPath.getNameCount() - 2)))) {
+
+					groupPath = groupPath.getParent();
+				}
+			}
+
+			List<Module> groupList = map.get(groupPath);
+
+			if (groupList == null) {
+				groupList = new ArrayList<>();
+			}
+
+			groupList.add(module);
+
+			map.put(groupPath, groupList);
+		}
+
+		return map;
 	}
 
 	private void _loadExistingProjects(
