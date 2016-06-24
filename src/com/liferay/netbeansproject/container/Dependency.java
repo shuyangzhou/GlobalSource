@@ -19,15 +19,15 @@ import java.nio.file.Path;
 /**
  * @author Tom Wang
  */
-public class ModuleDependency {
+public class Dependency {
 
-	public ModuleDependency(Path moduleRelativePath, boolean test) {
-		_moduleRelativePath = moduleRelativePath;
+	public Dependency(Path path, boolean test) {
+		_path = path;
 		_test = test;
 	}
 
-	public Path getModuleRelativePath() {
-		return _moduleRelativePath;
+	public Path getPath() {
+		return _path;
 	}
 
 	public boolean isTest() {
@@ -38,15 +38,16 @@ public class ModuleDependency {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("{moduleRelativePath=");
-		sb.append(_moduleRelativePath);
+		sb.append("{Path=");
+		sb.append(_path);
 		sb.append(", test=");
 		sb.append(_test);
+		sb.append("}");
 
 		return sb.toString();
 	}
 
-	private final Path _moduleRelativePath;
+	private final Path _path;
 	private final boolean _test;
 
 }

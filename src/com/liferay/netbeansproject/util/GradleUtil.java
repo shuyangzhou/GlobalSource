@@ -14,8 +14,7 @@
 
 package com.liferay.netbeansproject.util;
 
-import com.liferay.netbeansproject.container.JarDependency;
-import com.liferay.netbeansproject.container.ModuleDependency;
+import com.liferay.netbeansproject.container.Dependency;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,7 +37,7 @@ import java.util.Properties;
  */
 public class GradleUtil {
 
-	public static Map<String, List<JarDependency>> getJarDependencies(
+	public static Map<String, List<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath,
 			boolean displayGradleProcessOutput, boolean daemon)
 		throws Exception {
@@ -103,14 +102,13 @@ public class GradleUtil {
 					exitCode);
 		}
 
-		final Map<String, List<JarDependency>> dependenciesMap =
-			new HashMap<>();
+		final Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
 
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				dependenciesDirPath)) {
 
 			for (Path dependencyPath : directoryStream) {
-				List<JarDependency> jarDependencies = new ArrayList<>();
+				List<Dependency> jarDependencies = new ArrayList<>();
 
 				Properties dependencies = PropertiesUtil.loadProperties(
 					dependencyPath);
@@ -119,16 +117,14 @@ public class GradleUtil {
 						StringUtil.split(
 							dependencies.getProperty("compile"), ':')) {
 
-					jarDependencies.add(
-						new JarDependency(Paths.get(jar), false));
+					jarDependencies.add(new Dependency(Paths.get(jar), false));
 				}
 
 				for (String jar :
 						StringUtil.split(
 							dependencies.getProperty("compileTest"), ':')) {
 
-					jarDependencies.add(
-						new JarDependency(Paths.get(jar), true));
+					jarDependencies.add(new Dependency(Paths.get(jar), true));
 				}
 
 				Path moduleName = dependencyPath.getFileName();
@@ -142,7 +138,7 @@ public class GradleUtil {
 		return dependenciesMap;
 	}
 
-	public static List<ModuleDependency> getModuleDependencies(Path modulePath)
+	public static List<Dependency> getModuleDependencies(Path modulePath)
 		throws IOException {
 
 		Path buildGradlePath = modulePath.resolve("build.gradle");
@@ -151,7 +147,7 @@ public class GradleUtil {
 			return Collections.emptyList();
 		}
 
-		List<ModuleDependency> moduleDependencies = new ArrayList<>();
+		List<Dependency> moduleDependencies = new ArrayList<>();
 
 		for (String line : Files.readAllLines(buildGradlePath)) {
 			if (!line.contains(" project(")) {
@@ -177,7 +173,7 @@ public class GradleUtil {
 			String moduleLocation = line.substring(index1 + 1, index2);
 
 			moduleDependencies.add(
-				new ModuleDependency(
+				new Dependency(
 					Paths.get("modules", StringUtil.split(moduleLocation, ':')),
 					line.startsWith("test")));
 		}

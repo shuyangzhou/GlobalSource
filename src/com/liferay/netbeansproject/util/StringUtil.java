@@ -15,6 +15,7 @@
 package com.liferay.netbeansproject.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -31,6 +32,23 @@ public class StringUtil {
 		}
 
 		return new String(chars);
+	}
+
+	public static String merge(Collection<String> strings, char separator) {
+		if (strings.isEmpty()) {
+			return "";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		for (String s : strings) {
+			sb.append(s);
+			sb.append(separator);
+		}
+
+		sb.setLength(sb.length() - 1);
+
+		return sb.toString();
 	}
 
 	public static String replace(String s, String oldSub, String newSub) {

@@ -14,7 +14,7 @@
 
 package com.liferay.netbeansproject;
 
-import com.liferay.netbeansproject.container.JarDependency;
+import com.liferay.netbeansproject.container.Dependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.FileUtil;
@@ -162,7 +162,7 @@ public class ProjectBuilder {
 
 		String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
-		Map<String, List<JarDependency>> jarDependenciesMap = new HashMap<>();
+		Map<String, List<Dependency>> jarDependenciesMap = new HashMap<>();
 
 		for (Path oldModulePath : oldModulePaths.keySet()) {
 			Path oldModulePathName = oldModulePath.getFileName();

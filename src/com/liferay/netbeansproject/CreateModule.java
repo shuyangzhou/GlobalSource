@@ -14,9 +14,8 @@
 
 package com.liferay.netbeansproject;
 
-import com.liferay.netbeansproject.container.JarDependency;
+import com.liferay.netbeansproject.container.Dependency;
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.container.ModuleDependency;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
@@ -400,10 +399,8 @@ public class CreateModule {
 		referencesElement.setAttribute(
 			"xmlns", "http://www.netbeans.org/ns/ant-project-references/1");
 
-		for (ModuleDependency moduleDependency :
-				module.getModuleDependencies()) {
-
-			Path moduleRelativePath = moduleDependency.getModuleRelativePath();
+		for (Dependency moduleDependency : module.getModuleDependencies()) {
+			Path moduleRelativePath = moduleDependency.getPath();
 
 			_createReference(
 				document, referencesElement,
@@ -446,8 +443,8 @@ public class CreateModule {
 
 		StringBuilder sb = null;
 
-		for (JarDependency jarDependency : module.getJarDependencies()) {
-			Path jarPath = jarDependency.getJarPath();
+		for (Dependency jarDependency : module.getJarDependencies()) {
+			Path jarPath = jarDependency.getPath();
 
 			if (jarDependency.isTest()) {
 				sb = testSB;
@@ -466,11 +463,8 @@ public class CreateModule {
 		Module module, StringBuilder projectSB, StringBuilder javacSB,
 		StringBuilder testSB) {
 
-		for (ModuleDependency moduleDependency :
-				module.getModuleDependencies()) {
-
-			Path dependencyModulePath =
-				moduleDependency.getModuleRelativePath();
+		for (Dependency moduleDependency : module.getModuleDependencies()) {
+			Path dependencyModulePath = moduleDependency.getPath();
 
 			if (moduleDependency.isTest()) {
 				_appendProjectDependencies(
