@@ -14,6 +14,7 @@
 
 package com.liferay.netbeansproject;
 
+import com.liferay.netbeansproject.container.Dependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.StringUtil;
@@ -27,7 +28,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Tom Wang
@@ -58,6 +61,14 @@ public class CreateGroupModule {
 			projectPath.resolve("nbproject/project.properties"));
 	}
 
+	private static void _appendJars(Set<Path> jarSet, StringBuilder sb) {
+		for (Path jarPath : jarSet) {
+			sb.append('\t');
+			sb.append(jarPath);
+			sb.append(":\\\n");
+		}
+	}
+
 	private static void _appendProperties(
 			String groupPathString, List<Module> moduleList,
 			String excludeTypes, Path projectPropertiesPath)
@@ -79,10 +90,35 @@ public class CreateGroupModule {
 
 		_appendSourcePaths(moduleList, projectSB);
 
+		Set<Path> javacJars = new LinkedHashSet<>();
+		Set<Path> testJars = new LinkedHashSet<>();
+
+		_resolveJarDependencySet(moduleList, javacJars, testJars);
+
+		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
+
+		StringBuilder testSB = new StringBuilder("javac.test.classpath=\\\n");
+
+		testSB.append("\t${build.classes.dir}:\\\n");
+		testSB.append("\t${javac.classpath}:\\\n");
+
+		_appendJars(javacJars, javacSB);
+		_appendJars(testJars, testSB);
+
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, StandardOpenOption.APPEND)) {
 
 			bufferedWriter.append(projectSB);
+			bufferedWriter.newLine();
+
+			javacSB.setLength(javacSB.length() - 3);
+
+			bufferedWriter.append(javacSB);
+			bufferedWriter.newLine();
+
+			testSB.setLength(testSB.length() - 3);
+
+			bufferedWriter.append(testSB);
 			bufferedWriter.newLine();
 		}
 	}
@@ -151,6 +187,23 @@ public class CreateGroupModule {
 			projectName);
 
 		Files.write(buildXMLPath, Arrays.asList(content));
+	}
+
+	private static void _resolveJarDependencySet(
+		List<Module> moduleList, Set<Path> javacJars, Set<Path> testJars) {
+
+		for (Module module : moduleList) {
+			for (Dependency jarDependency : module.getJarDependencies()) {
+				Path jarPath = jarDependency.getPath();
+
+				if (jarDependency.isTest()) {
+					testJars.add(jarPath);
+				}
+				else {
+					javacJars.add(jarPath);
+				}
+			}
+		}
 	}
 
 }
