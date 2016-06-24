@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,8 +39,8 @@ import java.util.Set;
 public class CreateGroupModule {
 
 	public static void createModule(
-			Path projectPath, Path groupPath, List<Module> moduleList,
-			String excludedTypes)
+			Path projectPath, String portalName, Path groupPath,
+			List<Module> moduleList, String excludedTypes)
 		throws IOException {
 
 		if (groupPath.equals(Paths.get(""))) {
@@ -57,7 +58,7 @@ public class CreateGroupModule {
 		_replaceProjectName(groupPathString, projectPath);
 
 		_appendProperties(
-			groupPathString, moduleList, excludedTypes,
+			groupPathString, portalName, moduleList, excludedTypes,
 			projectPath.resolve("nbproject/project.properties"));
 	}
 
@@ -69,8 +70,34 @@ public class CreateGroupModule {
 		}
 	}
 
+	private static void _appendProjectDependencies(
+		String moduleName, String portalName, StringBuilder projectSB,
+		StringBuilder javacSB) {
+
+		projectSB.append("project.");
+		projectSB.append(moduleName);
+		projectSB.append("=../../");
+		projectSB.append(portalName);
+		projectSB.append('/');
+		projectSB.append("modules");
+		projectSB.append('/');
+		projectSB.append(moduleName);
+		projectSB.append('\n');
+		projectSB.append("reference.");
+		projectSB.append(moduleName);
+		projectSB.append(".jar=${project.");
+		projectSB.append(moduleName);
+		projectSB.append("}/dist/");
+		projectSB.append(moduleName);
+		projectSB.append(".jar\n");
+
+		javacSB.append("\t${reference.");
+		javacSB.append(moduleName);
+		javacSB.append(".jar}:\\\n");
+	}
+
 	private static void _appendProperties(
-			String groupPathString, List<Module> moduleList,
+			String groupPathString, String portalName, List<Module> moduleList,
 			String excludeTypes, Path projectPropertiesPath)
 		throws IOException {
 
@@ -104,6 +131,9 @@ public class CreateGroupModule {
 
 		_appendJars(javacJars, javacSB);
 		_appendJars(testJars, testSB);
+
+		_resolveProjectDependencySet(
+			moduleList, portalName, projectSB, javacSB, testSB);
 
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, StandardOpenOption.APPEND)) {
@@ -201,6 +231,48 @@ public class CreateGroupModule {
 				}
 				else {
 					javacJars.add(jarPath);
+				}
+			}
+		}
+	}
+
+	private static void _resolveProjectDependencySet(
+		List<Module> moduleList, String portalName, StringBuilder projectSB,
+		StringBuilder javacSB, StringBuilder testSB) {
+
+		Set<String> resolvedSet = new HashSet<>();
+
+		for (Module module : moduleList) {
+			for (Dependency moduleDependency : module.getModuleDependencies()) {
+				Path dependencyModulePath = moduleDependency.getPath();
+
+				if (!resolvedSet.contains(
+						String.valueOf(dependencyModulePath.getFileName()))) {
+
+					if (moduleDependency.isTest()) {
+						_appendProjectDependencies(
+							String.valueOf(dependencyModulePath.getFileName()),
+							portalName, projectSB, testSB);
+					}
+					else {
+						_appendProjectDependencies(
+							String.valueOf(dependencyModulePath.getFileName()),
+							portalName, projectSB, javacSB);
+					}
+
+					resolvedSet.add(
+						String.valueOf(dependencyModulePath.getFileName()));
+				}
+			}
+
+			for (String moduleName : module.getPortalModuleDependencies()) {
+				if (!resolvedSet.contains(moduleName)) {
+					if (!moduleName.isEmpty()) {
+						_appendProjectDependencies(
+							moduleName, portalName, projectSB, javacSB);
+
+						resolvedSet.add(moduleName);
+					}
 				}
 			}
 		}

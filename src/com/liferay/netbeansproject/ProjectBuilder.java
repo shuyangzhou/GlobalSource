@@ -246,8 +246,9 @@ public class ProjectBuilder {
 
 		for (Map.Entry<Path, List<Module>> entry : groupMap.entrySet()) {
 			CreateGroupModule.createModule(
-				groupProjectPath, portalPath.relativize(entry.getKey()),
-				entry.getValue(), excludedTypes);
+				groupProjectPath, String.valueOf(portalPath.getFileName()),
+				portalPath.relativize(entry.getKey()), entry.getValue(),
+				excludedTypes);
 		}
 	}
 
