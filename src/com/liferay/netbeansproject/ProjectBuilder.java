@@ -82,15 +82,23 @@ public class ProjectBuilder {
 		int groupDepth = Integer.valueOf(
 			PropertiesUtil.getRequiredProperty(buildProperties, "group.depth"));
 
+		String groupStopWords = PropertiesUtil.getRequiredProperty(
+			buildProperties, "group.stop.words");
+
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
 		for (String portalDir : portalDirs) {
 			Path portalDirPath = Paths.get(portalDir);
 
+			groupStopWords += "," +
+				String.valueOf(
+					portalDirPath.getName(portalDirPath.getNameCount() - 2));
+
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				projectName, excludeTypes, umbrellaSourceListMap, groupDepth);
+				projectName, excludeTypes, umbrellaSourceListMap, groupDepth,
+				groupStopWords);
 		}
 	}
 
@@ -98,7 +106,8 @@ public class ProjectBuilder {
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			String projectName, String excludedTypes,
-			Map<String, String> umbrellaSourceList, int groupDepth)
+			Map<String, String> umbrellaSourceList, int groupDepth,
+			String groupStopWords)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -228,17 +237,24 @@ public class ProjectBuilder {
 		Map<Path, List<Module>> groupMap = new TreeMap<>();
 
 		for (Module module : moduleMap.values()) {
-			_addToGroupMap(groupMap, module, groupDepth);
+			_addToGroupMap(groupMap, module, groupDepth, groupStopWords);
 		}
+
 	}
 
 	private void _addToGroupMap(
-		Map<Path, List<Module>> groupMap, Module module, int groupDepth) {
+		Map<Path, List<Module>> groupMap, Module module, int groupDepth,
+		String groupStopWords) {
 
 		Path groupPath = module.getModulePath();
 
 		for (int i = 1; i < groupDepth; i++) {
-			groupPath = groupPath.getParent();
+			if (!groupStopWords.contains(
+					String.valueOf(
+						groupPath.getName(groupPath.getNameCount() - 2)))) {
+
+				groupPath = groupPath.getParent();
+			}
 		}
 
 		List<Module> groupList = groupMap.get(groupPath);
