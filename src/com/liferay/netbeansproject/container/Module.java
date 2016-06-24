@@ -44,7 +44,7 @@ public class Module {
 
 	public static Module createModule(
 			Path projectPath, Path modulePath, List<Dependency> jarDependencies,
-			Properties projectDependencyProperties)
+			Properties portalModuleDependencyProperties)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -95,8 +95,8 @@ public class Module {
 			_resolveTestPath(modulePath, false),
 			_resolveResourcePath(modulePath, "testIntegration"),
 			GradleUtil.getModuleDependencies(modulePath), jarDependencies,
-			_resolvePortalLevelDependencies(
-				projectDependencyProperties,
+			_resolvePortalModuleDependencies(
+				portalModuleDependencyProperties,
 				moduleName.toString()),
 			checksum);
 
@@ -128,7 +128,7 @@ public class Module {
 			_getDependencyList(properties.getProperty("jar.dependencies")),
 			Arrays.asList(
 				StringUtil.split(
-					properties.getProperty("portal.dependencies"), ',')),
+					properties.getProperty("portal.module.dependencies"), ',')),
 			properties.getProperty("checksum"));
 	}
 
@@ -184,8 +184,8 @@ public class Module {
 		return _modulePath;
 	}
 
-	public List<String> getPortalLevelModuleDependencies() {
-		return _portalLevelModuleDependencies;
+	public List<String> getPortalModuleDependencies() {
+		return _portalModuleDependencies;
 	}
 
 	public Path getSourcePath() {
@@ -312,7 +312,7 @@ public class Module {
 		}
 	}
 
-	private static List<String> _resolvePortalLevelDependencies(
+	private static List<String> _resolvePortalModuleDependencies(
 			Properties properties, String moduleName)
 		throws IOException {
 
@@ -397,7 +397,7 @@ public class Module {
 		Path sourceResourcePath, Path testUnitPath, Path testUnitResourcePath,
 		Path testIntegrationPath, Path testIntegrationResourcePath,
 		List<Dependency> moduleDependencies, List<Dependency> jarDependencies,
-		List<String> portalLevelModuleDependencies, String checksum) {
+		List<String> portalModuleDependencies, String checksum) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -409,7 +409,7 @@ public class Module {
 		_testIntegrationResourcePath = testIntegrationResourcePath;
 		_moduleDependencies = moduleDependencies;
 		_jarDependencies = jarDependencies;
-		_portalLevelModuleDependencies = portalLevelModuleDependencies;
+		_portalModuleDependencies = portalModuleDependencies;
 		_checksum = checksum;
 	}
 
@@ -456,8 +456,8 @@ public class Module {
 		}
 
 		_putProperty(
-			properties, "portal.dependencies",
-			StringUtil.merge(_portalLevelModuleDependencies, ','));
+			properties, "portal.module.dependencies",
+			StringUtil.merge(_portalModuleDependencies, ','));
 
 		Files.createDirectories(_projectPath);
 
@@ -472,7 +472,7 @@ public class Module {
 	private final List<Dependency> _jarDependencies;
 	private final List<Dependency> _moduleDependencies;
 	private final Path _modulePath;
-	private final List<String> _portalLevelModuleDependencies;
+	private final List<String> _portalModuleDependencies;
 	private final Path _projectPath;
 	private final Path _sourcePath;
 	private final Path _sourceResourcePath;

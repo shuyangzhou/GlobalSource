@@ -407,7 +407,7 @@ public class CreateModule {
 				String.valueOf(moduleRelativePath.getFileName()));
 		}
 
-		for (String dependency : module.getPortalLevelModuleDependencies()) {
+		for (String dependency : module.getPortalModuleDependencies()) {
 			_createReference(document, referencesElement, dependency);
 		}
 	}
@@ -478,7 +478,7 @@ public class CreateModule {
 			}
 		}
 
-		for (String moduleName : module.getPortalLevelModuleDependencies()) {
+		for (String moduleName : module.getPortalModuleDependencies()) {
 			if (!moduleName.isEmpty()) {
 				_appendProjectDependencies(moduleName, projectSB, javacSB);
 			}

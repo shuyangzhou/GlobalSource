@@ -110,9 +110,9 @@ public class ProjectBuilder {
 		final Set<String> ignoredDirSet = new HashSet<>(
 			Arrays.asList(StringUtil.split(ignoredDirs, ',')));
 
-		final Properties projectDependencyProperties =
+		final Properties portalModuleDependencyProperties =
 			PropertiesUtil.loadProperties(
-				Paths.get("project-dependency.properties"));
+				Paths.get("portal-module-dependency.properties"));
 
 		final Set<String> moduleNames = new HashSet<>();
 
@@ -150,7 +150,7 @@ public class ProjectBuilder {
 						!module.equals(
 							Module.createModule(
 								null, path, null,
-								projectDependencyProperties))) {
+								portalModuleDependencyProperties))) {
 
 						newModulePaths.add(path);
 					}
@@ -203,7 +203,7 @@ public class ProjectBuilder {
 				projectPath.resolve("modules"), newModulePath,
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
-				projectDependencyProperties);
+				portalModuleDependencyProperties);
 
 			CreateModule.createModule(
 				module, projectPath, excludedTypes, portalLibJars, portalPath);
