@@ -54,13 +54,13 @@ public class CreateGroupModule {
 		_replaceProjectName(groupPathString, projectPath);
 
 		_appendProperties(
-			groupPathString, excludedTypes,
+			groupPathString, moduleList, excludedTypes,
 			projectPath.resolve("nbproject/project.properties"));
 	}
 
 	private static void _appendProperties(
-			String groupPathString, String excludeTypes,
-			Path projectPropertiesPath)
+			String groupPathString, List<Module> moduleList,
+			String excludeTypes, Path projectPropertiesPath)
 		throws IOException {
 
 		StringBuilder projectSB = new StringBuilder();
@@ -77,11 +77,66 @@ public class CreateGroupModule {
 		projectSB.append(groupPathString);
 		projectSB.append(".jar\n");
 
+		_appendSourcePaths(moduleList, projectSB);
+
 		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
 				projectPropertiesPath, StandardOpenOption.APPEND)) {
 
 			bufferedWriter.append(projectSB);
 			bufferedWriter.newLine();
+		}
+	}
+
+	private static void _appendSourcePathIndividual(
+		Path path, String prefix, String name, String subfix,
+		StringBuilder sb) {
+
+		if (path == null) {
+			return;
+		}
+
+		sb.append("file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append('=');
+		sb.append(path);
+		sb.append('\n');
+		sb.append(prefix);
+		sb.append('.');
+		sb.append(name);
+		sb.append('.');
+		sb.append(subfix);
+		sb.append(".dir=${file.reference.");
+		sb.append(name);
+		sb.append('-');
+		sb.append(subfix);
+		sb.append("}\n");
+	}
+
+	private static void _appendSourcePaths(
+		List<Module> moduleList, StringBuilder projectSB) {
+
+		for (Module module : moduleList) {
+			String moduleName = module.getModuleName();
+
+			_appendSourcePathIndividual(
+				module.getSourcePath(), "src", moduleName, "src", projectSB);
+			_appendSourcePathIndividual(
+				module.getSourceResourcePath(), "src", moduleName, "resources",
+				projectSB);
+			_appendSourcePathIndividual(
+				module.getTestUnitPath(), "test", moduleName, "test-unit",
+				projectSB);
+			_appendSourcePathIndividual(
+				module.getTestUnitResourcePath(), "test", moduleName,
+				"test-unit-resources", projectSB);
+			_appendSourcePathIndividual(
+				module.getTestIntegrationPath(), "test", moduleName,
+				"test-integration", projectSB);
+			_appendSourcePathIndividual(
+				module.getTestIntegrationPath(), "test", moduleName,
+				"test-integration-resources", projectSB);
 		}
 	}
 
