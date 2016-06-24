@@ -21,6 +21,7 @@ import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 /**
  * @author Tom Wang
  */
@@ -41,7 +53,7 @@ public class CreateGroupModule {
 	public static void createModule(
 			Path projectPath, String portalName, Path groupPath,
 			List<Module> moduleList, String excludedTypes, String portalLibJars)
-		throws IOException {
+		throws Exception {
 
 		if (groupPath.equals(Paths.get(""))) {
 			groupPath = groupPath.resolve("portal");
@@ -60,6 +72,8 @@ public class CreateGroupModule {
 		_appendProperties(
 			groupPathString, portalName, moduleList, excludedTypes,
 			portalLibJars, projectPath.resolve("nbproject/project.properties"));
+
+		_createProjectXML(groupPathString, moduleList, projectPath);
 	}
 
 	private static void _appendJars(Set<Path> jarSet, StringBuilder sb) {
@@ -207,6 +221,234 @@ public class CreateGroupModule {
 				module.getTestIntegrationPath(), "test", moduleName,
 				"test-integration-resources", projectSB);
 		}
+	}
+
+	private static void _createData(
+		Document document, String groupPathString, Element configurationElement,
+		List<Module> moduleList) {
+
+		Element dataElement = document.createElement("data");
+
+		configurationElement.appendChild(dataElement);
+
+		dataElement.setAttribute(
+			"xmlns", "http://www.netbeans.org/ns/j2se-project/3");
+
+		Element nameElement = document.createElement("name");
+
+		dataElement.appendChild(nameElement);
+
+		nameElement.appendChild(document.createTextNode(groupPathString));
+
+		Element sourceRootsElement = document.createElement("source-roots");
+
+		dataElement.appendChild(sourceRootsElement);
+
+		Element testRootsElement = document.createElement("test-roots");
+
+		dataElement.appendChild(testRootsElement);
+
+		for (Module module : moduleList) {
+			String moduleName = module.getModuleName();
+
+			if (module.getSourcePath() != null) {
+				_createRoots(
+					document, sourceRootsElement, moduleName + "-src",
+					"src." + moduleName + ".src.dir");
+			}
+
+			if (module.getSourceResourcePath() != null) {
+				_createRoots(
+					document, sourceRootsElement, moduleName + "-resources",
+					"src." + moduleName + ".resources.dir");
+			}
+
+			if (module.getTestUnitPath() != null) {
+				_createRoots(
+					document, testRootsElement, moduleName + "-test-unit",
+					"test." + moduleName + ".test-unit.dir");
+			}
+
+			if (module.getTestUnitResourcePath() != null) {
+				_createRoots(
+					document, testRootsElement,
+					moduleName + "-test-unit-resources",
+					"test." + moduleName + ".test-unit-resources.dir");
+			}
+
+			if (module.getTestIntegrationPath() != null) {
+				_createRoots(
+					document, testRootsElement,
+					moduleName + "-test-integration",
+					"test." + moduleName + ".test-integration.dir");
+			}
+
+			if (module.getTestIntegrationResourcePath() != null) {
+				_createRoots(
+					document, testRootsElement,
+					moduleName + "-test-integration-resources",
+					"test." + moduleName + ".test-integration-resources.dir");
+			}
+		}
+	}
+
+	private static void _createProjectElement(
+			Document document, String groupPathString, List<Module> moduleList)
+		throws IOException {
+
+		Element projectElement = document.createElement("project");
+
+		document.appendChild(projectElement);
+
+		projectElement.setAttribute(
+			"xmlns", "http://www.netbeans.org/ns/project/1");
+
+		Element typeElement = document.createElement("type");
+
+		projectElement.appendChild(typeElement);
+
+		typeElement.appendChild(
+			document.createTextNode("org.netbeans.modules.java.j2seproject"));
+
+		Element configurationElement = document.createElement("configuration");
+
+		projectElement.appendChild(configurationElement);
+
+		_createData(
+			document, groupPathString, configurationElement, moduleList);
+
+		_createReferences(document, configurationElement, moduleList);
+	}
+
+	private static void _createProjectXML(
+			String groupPathString, List<Module> moduleList,
+			Path projectModulePath)
+		throws Exception {
+
+		DocumentBuilderFactory documentBuilderFactory =
+			DocumentBuilderFactory.newInstance();
+
+		DocumentBuilder documentBuilder =
+			documentBuilderFactory.newDocumentBuilder();
+
+		Document document = documentBuilder.newDocument();
+
+		_createProjectElement(document, groupPathString, moduleList);
+
+		TransformerFactory transformerFactory =
+			TransformerFactory.newInstance();
+
+		Transformer transformer = transformerFactory.newTransformer();
+
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty(
+			"{http://xml.apache.org/xslt}indent-amount", "4");
+
+		try (Writer writer = Files.newBufferedWriter(
+				projectModulePath.resolve("nbproject/project.xml"))) {
+
+			transformer.transform(
+				new DOMSource(document), new StreamResult(writer));
+		}
+	}
+
+	private static void _createReference(
+			Document document, Element referencesElement, String module)
+		throws IOException {
+
+		Element referenceElement = document.createElement("reference");
+
+		referencesElement.appendChild(referenceElement);
+
+		Element foreignProjectElement = document.createElement(
+			"foreign-project");
+
+		referenceElement.appendChild(foreignProjectElement);
+
+		foreignProjectElement.appendChild(document.createTextNode(module));
+
+		Element artifactTypeElement = document.createElement("artifact-type");
+
+		referenceElement.appendChild(artifactTypeElement);
+
+		artifactTypeElement.appendChild(document.createTextNode("jar"));
+
+		Element scriptElement = document.createElement("script");
+
+		referenceElement.appendChild(scriptElement);
+
+		scriptElement.appendChild(document.createTextNode("build.xml"));
+
+		Element targetElement = document.createElement("target");
+
+		referenceElement.appendChild(targetElement);
+
+		targetElement.appendChild(document.createTextNode("jar"));
+
+		Element cleanTargetElement = document.createElement("clean-target");
+
+		referenceElement.appendChild(cleanTargetElement);
+
+		cleanTargetElement.appendChild(document.createTextNode("clean"));
+
+		Element idElement = document.createElement("id");
+
+		referenceElement.appendChild(idElement);
+
+		idElement.appendChild(document.createTextNode("jar"));
+	}
+
+	private static void _createReferences(
+			Document document, Element configurationElement,
+			List<Module> moduleList)
+		throws IOException {
+
+		Element referencesElement = document.createElement("references");
+
+		configurationElement.appendChild(referencesElement);
+
+		referencesElement.setAttribute(
+			"xmlns", "http://www.netbeans.org/ns/ant-project-references/1");
+
+		Set<String> resolvedSet = new HashSet<>();
+
+		for (Module module : moduleList) {
+			for (Dependency moduleDependency : module.getModuleDependencies()) {
+				Path moduleRelativePath = moduleDependency.getPath();
+
+				if (!resolvedSet.contains(
+						String.valueOf(moduleRelativePath.getFileName()))) {
+
+					_createReference(
+						document, referencesElement,
+						String.valueOf(moduleRelativePath.getFileName()));
+
+					resolvedSet.add(
+						String.valueOf(moduleRelativePath.getFileName()));
+				}
+			}
+
+			for (String dependency : module.getPortalModuleDependencies()) {
+				if (!resolvedSet.contains(dependency)) {
+					_createReference(document, referencesElement, dependency);
+
+					resolvedSet.add(dependency);
+				}
+			}
+		}
+	}
+
+	private static void _createRoots(
+		Document document, Element sourceRootsElement, String label,
+		String rootId) {
+
+		Element rootElement = document.createElement("root");
+
+		sourceRootsElement.appendChild(rootElement);
+
+		rootElement.setAttribute("id", rootId);
+
+		rootElement.setAttribute("name", label);
 	}
 
 	private static void _replaceProjectName(
