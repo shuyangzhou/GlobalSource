@@ -186,7 +186,7 @@ public class ProjectBuilder {
 
 		String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
-		Map<String, List<Dependency>> jarDependenciesMap = new HashMap<>();
+		Map<String, Set<Dependency>> jarDependenciesMap = new HashMap<>();
 
 		for (Path oldModulePath : oldModulePaths.keySet()) {
 			Path oldModulePathName = oldModulePath.getFileName();

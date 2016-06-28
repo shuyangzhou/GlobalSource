@@ -16,6 +16,8 @@ package com.liferay.netbeansproject.container;
 
 import java.nio.file.Path;
 
+import java.util.Objects;
+
 /**
  * @author Tom Wang
  */
@@ -26,8 +28,36 @@ public class Dependency {
 		_test = test;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (!(obj instanceof Dependency)) {
+			return false;
+		}
+
+		Dependency dependency = (Dependency)obj;
+
+		if (Objects.equals(_path, dependency._path)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public Path getName() {
+		return _path.getFileName();
+	}
+
 	public Path getPath() {
 		return _path;
+	}
+
+	@Override
+	public int hashCode() {
+		return _path.hashCode();
 	}
 
 	public boolean isTest() {

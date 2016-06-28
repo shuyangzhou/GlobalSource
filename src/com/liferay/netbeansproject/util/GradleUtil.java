@@ -28,16 +28,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Tom Wang
  */
 public class GradleUtil {
 
-	public static Map<String, List<Dependency>> getJarDependencies(
+	public static Map<String, Set<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath,
 			boolean displayGradleProcessOutput, boolean daemon)
 		throws Exception {
@@ -102,13 +104,15 @@ public class GradleUtil {
 					exitCode);
 		}
 
-		final Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
+		Map<String, Set<Dependency>> dependenciesMap = new HashMap<>();
 
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				dependenciesDirPath)) {
 
+			Path portalToolsPath = portalDirPath.resolve("tools/sdk");
+
 			for (Path dependencyPath : directoryStream) {
-				List<Dependency> jarDependencies = new ArrayList<>();
+				Set<Dependency> jarDependencies = new HashSet<>();
 
 				Properties dependencies = PropertiesUtil.loadProperties(
 					dependencyPath);
@@ -117,14 +121,20 @@ public class GradleUtil {
 						StringUtil.split(
 							dependencies.getProperty("compile"), ':')) {
 
-					jarDependencies.add(new Dependency(Paths.get(jar), false));
+					if (!jar.startsWith(portalToolsPath.toString())) {
+						jarDependencies.add(
+							new Dependency(Paths.get(jar), false));
+					}
 				}
 
 				for (String jar :
 						StringUtil.split(
 							dependencies.getProperty("compileTest"), ':')) {
 
-					jarDependencies.add(new Dependency(Paths.get(jar), true));
+					if (!jar.startsWith(portalToolsPath.toString())) {
+						jarDependencies.add(
+							new Dependency(Paths.get(jar), true));
+					}
 				}
 
 				Path moduleName = dependencyPath.getFileName();
@@ -138,16 +148,16 @@ public class GradleUtil {
 		return dependenciesMap;
 	}
 
-	public static List<Dependency> getModuleDependencies(Path modulePath)
+	public static Set<Dependency> getModuleDependencies(Path modulePath)
 		throws IOException {
 
 		Path buildGradlePath = modulePath.resolve("build.gradle");
 
 		if (!Files.exists(buildGradlePath)) {
-			return Collections.emptyList();
+			return Collections.emptySet();
 		}
 
-		List<Dependency> moduleDependencies = new ArrayList<>();
+		Set<Dependency> moduleDependencies = new HashSet<>();
 
 		for (String line : Files.readAllLines(buildGradlePath)) {
 			if (!line.contains(" project(")) {

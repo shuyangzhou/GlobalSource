@@ -30,12 +30,12 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Tom Wang
@@ -43,12 +43,12 @@ import java.util.Properties;
 public class Module {
 
 	public static Module createModule(
-			Path projectPath, Path modulePath, List<Dependency> jarDependencies,
+			Path projectPath, Path modulePath, Set<Dependency> jarDependencies,
 			Properties portalModuleDependencyProperties)
 		throws IOException {
 
 		if (jarDependencies == null) {
-			jarDependencies = new ArrayList<>();
+			jarDependencies = new HashSet<>();
 		}
 
 		Path moduleLibPath = modulePath.resolve("lib");
@@ -126,9 +126,11 @@ public class Module {
 			_getPath(properties, "test.integration.resource.path"),
 			_getDependencyList(properties.getProperty("module.dependencies")),
 			_getDependencyList(properties.getProperty("jar.dependencies")),
-			Arrays.asList(
-				StringUtil.split(
-					properties.getProperty("portal.module.dependencies"), ',')),
+			new HashSet(
+				Arrays.asList(
+					StringUtil.split(
+						properties.getProperty("portal.module.dependencies"),
+						','))),
 			properties.getProperty("checksum"));
 	}
 
@@ -166,11 +168,11 @@ public class Module {
 		return _checksum;
 	}
 
-	public List<Dependency> getJarDependencies() {
+	public Set<Dependency> getJarDependencies() {
 		return _jarDependencies;
 	}
 
-	public List<Dependency> getModuleDependencies() {
+	public Set<Dependency> getModuleDependencies() {
 		return _moduleDependencies;
 	}
 
@@ -184,7 +186,7 @@ public class Module {
 		return _modulePath;
 	}
 
-	public List<String> getPortalModuleDependencies() {
+	public Set<String> getPortalModuleDependencies() {
 		return _portalModuleDependencies;
 	}
 
@@ -259,7 +261,7 @@ public class Module {
 	}
 
 	private static String _createDependencyString(
-		List<Dependency> dependencies) {
+		Set<Dependency> dependencies) {
 
 		StringBuilder dependenciesSB = new StringBuilder();
 
@@ -275,12 +277,12 @@ public class Module {
 		return dependenciesSB.toString();
 	}
 
-	private static List<Dependency> _getDependencyList(String dependencies) {
+	private static Set<Dependency> _getDependencyList(String dependencies) {
 		if (dependencies == null) {
-			return Collections.emptyList();
+			return Collections.emptySet();
 		}
 
-		List<Dependency> dependencyList = new ArrayList<>();
+		Set<Dependency> dependencyList = new HashSet<>();
 
 		for (String dependencyString : StringUtil.split(dependencies, ';')) {
 			String[] dependencySplit = StringUtil.split(dependencyString, ',');
@@ -312,7 +314,7 @@ public class Module {
 		}
 	}
 
-	private static List<String> _resolvePortalModuleDependencies(
+	private static Set<String> _resolvePortalModuleDependencies(
 			Properties properties, String moduleName)
 		throws IOException {
 
@@ -323,7 +325,7 @@ public class Module {
 				properties, "portal.module.dependencies");
 		}
 
-		return Arrays.asList(StringUtil.split(dependencies, ','));
+		return new HashSet(Arrays.asList(StringUtil.split(dependencies, ',')));
 	}
 
 	private static Path _resolveResourcePath(Path modulePath, String type) {
@@ -396,8 +398,8 @@ public class Module {
 		Path projectPath, Path modulePath, Path sourcePath,
 		Path sourceResourcePath, Path testUnitPath, Path testUnitResourcePath,
 		Path testIntegrationPath, Path testIntegrationResourcePath,
-		List<Dependency> moduleDependencies, List<Dependency> jarDependencies,
-		List<String> portalModuleDependencies, String checksum) {
+		Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
+		Set<String> portalModuleDependencies, String checksum) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -469,10 +471,10 @@ public class Module {
 	}
 
 	private final String _checksum;
-	private final List<Dependency> _jarDependencies;
-	private final List<Dependency> _moduleDependencies;
+	private final Set<Dependency> _jarDependencies;
+	private final Set<Dependency> _moduleDependencies;
 	private final Path _modulePath;
-	private final List<String> _portalModuleDependencies;
+	private final Set<String> _portalModuleDependencies;
 	private final Path _projectPath;
 	private final Path _sourcePath;
 	private final Path _sourceResourcePath;
