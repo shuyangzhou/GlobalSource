@@ -102,7 +102,7 @@ public class GradleUtil {
 					exitCode);
 		}
 
-		final Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
+		Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
 
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				dependenciesDirPath)) {
@@ -124,7 +124,12 @@ public class GradleUtil {
 						StringUtil.split(
 							dependencies.getProperty("compileTest"), ':')) {
 
-					jarDependencies.add(new Dependency(Paths.get(jar), true));
+					Dependency dependency = new Dependency(
+						Paths.get(jar), true);
+
+					if (!jarDependencies.contains(dependency)) {
+						jarDependencies.add(dependency);
+					}
 				}
 
 				Path moduleName = dependencyPath.getFileName();
