@@ -102,10 +102,12 @@ public class GradleUtil {
 					exitCode);
 		}
 
-		final Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
+		Map<String, List<Dependency>> dependenciesMap = new HashMap<>();
 
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				dependenciesDirPath)) {
+
+			Path portalToolsPath = portalDirPath.resolve("tools/sdk");
 
 			for (Path dependencyPath : directoryStream) {
 				List<Dependency> jarDependencies = new ArrayList<>();
@@ -117,14 +119,23 @@ public class GradleUtil {
 						StringUtil.split(
 							dependencies.getProperty("compile"), ':')) {
 
-					jarDependencies.add(new Dependency(Paths.get(jar), false));
+					if (!jar.startsWith(portalToolsPath.toString())) {
+						jarDependencies.add(
+							new Dependency(Paths.get(jar), false));
+					}
 				}
 
 				for (String jar :
 						StringUtil.split(
 							dependencies.getProperty("compileTest"), ':')) {
+					if (!jar.startsWith(portalToolsPath.toString())) {
+						Dependency dependency = new Dependency(
+							Paths.get(jar), true);
 
-					jarDependencies.add(new Dependency(Paths.get(jar), true));
+						if (!jarDependencies.contains(dependency)) {
+							jarDependencies.add(dependency);
+						}
+					}
 				}
 
 				Path moduleName = dependencyPath.getFileName();
