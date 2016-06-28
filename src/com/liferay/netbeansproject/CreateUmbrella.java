@@ -17,29 +17,15 @@ package com.liferay.netbeansproject;
 import com.liferay.netbeansproject.template.FreeMarkerUtil;
 import com.liferay.netbeansproject.util.FileUtil;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.Writer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  * @author Tom Wang
@@ -47,14 +33,12 @@ import org.w3c.dom.Element;
 public class CreateUmbrella {
 
 	public static void createUmbrella(
-			Path portalPath, String projectName,
-			Map<String, String> umbrellaSourceMap, String excludeTypes,
-			Set<String> moduleNames, Path projectPath)
+			Path portalPath, Set<String> moduleNames, Path projectPath)
 		throws Exception {
 
 		FileUtil.delete(projectPath);
 
-		FileUtil.unZip(projectPath);
+		Files.createDirectories(projectPath.resolve("nbproject"));
 
 		try (Writer writer = Files.newBufferedWriter(
 				projectPath.resolve("build.xml"))) {
@@ -66,245 +50,30 @@ public class CreateUmbrella {
 				writer);
 		}
 
-		_appendProjectProperties(
-			portalPath, excludeTypes, umbrellaSourceMap, moduleNames,
-			projectPath);
+		Map<String, Object> data = new HashMap<>();
 
-		_createProjectXML(
-			projectName, umbrellaSourceMap, moduleNames, projectPath);
-	}
+		data.put("portalPath", portalPath);
 
-	private static void _appendProjectProperties(
-			Path portalPath, String excludeTypes,
-			Map<String, String> umbrellaSourceMap, Set<String> moduleNames,
-			Path projectPath)
-		throws IOException {
+		Path projectParentPath = projectPath.getParent();
 
-		StringBuilder sb = new StringBuilder();
+		data.put("projectModulesPath", projectParentPath.resolve("modules"));
+		data.put("moduleNames", moduleNames);
 
-		sb.append("excludes=");
+		try (Writer writer = Files.newBufferedWriter(
+				projectPath.resolve("nbproject/project.properties"))) {
 
-		if (excludeTypes != null) {
-			sb.append(excludeTypes);
+			FreeMarkerUtil.process(
+				"resources/umbrella_project_properties.ftl", data, writer);
 		}
 
-		sb.append('\n');
-
-		for (Entry<String, String> source : umbrellaSourceMap.entrySet()) {
-			String key = source.getKey();
-
-			sb.append("file.reference.");
-			sb.append(key);
-			sb.append(".src=");
-			sb.append(portalPath.resolve(source.getValue()));
-			sb.append('\n');
-			sb.append("src.");
-			sb.append(key);
-			sb.append(".dir=${file.reference.");
-			sb.append(key);
-			sb.append(".src}");
-			sb.append('\n');
-		}
-
-		Path projectRootPath = projectPath.getParent();
-
-		Path projectModulesPath = projectRootPath.resolve("modules");
-
-		StringBuilder javacSB = new StringBuilder("javac.classpath=\\\n");
-
-		for (String moduleName : moduleNames) {
-			sb.append("project.");
-			sb.append(moduleName);
-			sb.append('=');
-			sb.append(projectModulesPath.resolve(moduleName));
-			sb.append('\n');
-			sb.append("reference.");
-			sb.append(moduleName);
-			sb.append(".jar=${project.");
-			sb.append(moduleName);
-			sb.append("}/dist/");
-			sb.append(moduleName);
-			sb.append(".jar\n");
-
-			javacSB.append("\t${reference.");
-			javacSB.append(moduleName);
-			javacSB.append(".jar}:\\\n");
-		}
-
-		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-				projectPath.resolve("nbproject/project.properties"),
-				StandardOpenOption.APPEND)) {
-
-			bufferedWriter.append(sb);
-			bufferedWriter.newLine();
-
-			if (!moduleNames.isEmpty()) {
-				javacSB.setLength(javacSB.length() - 3);
-			}
-
-			bufferedWriter.append(javacSB);
-			bufferedWriter.newLine();
-		}
-	}
-
-	private static void _createData(
-		Document document, Element configurationElement,
-		Map<String, String> umbrellaSourceMap, String projectName) {
-
-		Element dataElement = document.createElement("data");
-
-		configurationElement.appendChild(dataElement);
-
-		dataElement.setAttribute(
-			"xmlns", "http://www.netbeans.org/ns/j2se-project/3");
-
-		Element nameElement = document.createElement("name");
-
-		dataElement.appendChild(nameElement);
-
-		nameElement.appendChild(document.createTextNode(projectName));
-
-		Element sourceRootsElement = document.createElement("source-roots");
-
-		dataElement.appendChild(sourceRootsElement);
-
-		for (String module : umbrellaSourceMap.keySet()) {
-			_createRoot(document, sourceRootsElement, "src." + module + ".dir");
-		}
-
-		dataElement.appendChild(document.createElement("test-roots"));
-	}
-
-	private static void _createProjectElement(
-		Document document, String projectName,
-		Map<String, String> umbrellaSourceMap, Set<String> moduleNames) {
-
-		Element projectElement = document.createElement("project");
-
-		document.appendChild(projectElement);
-
-		projectElement.setAttribute(
-			"xmlns", "http://www.netbeans.org/ns/project/1");
-
-		Element typeElement = document.createElement("type");
-
-		projectElement.appendChild(typeElement);
-
-		typeElement.appendChild(
-			document.createTextNode("org.netbeans.modules.java.j2seproject"));
-
-		Element configurationElement = document.createElement("configuration");
-
-		projectElement.appendChild(configurationElement);
-
-		_createData(
-			document, configurationElement, umbrellaSourceMap, projectName);
-
-		_createReferences(document, configurationElement, moduleNames);
-	}
-
-	private static void _createProjectXML(
-			String projectName, Map<String, String> umbrellaSourceMap,
-			Set<String> moduleNames, Path projectPath)
-		throws Exception {
-
-		DocumentBuilderFactory documentBuilderFactory =
-			DocumentBuilderFactory.newInstance();
-
-		DocumentBuilder documentBuilder =
-			documentBuilderFactory.newDocumentBuilder();
-
-		Document document = documentBuilder.newDocument();
-
-		_createProjectElement(
-			document, projectName, umbrellaSourceMap, moduleNames);
-
-		TransformerFactory transformerFactory =
-			TransformerFactory.newInstance();
-
-		Transformer transformer = transformerFactory.newTransformer();
-
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty(
-			"{http://xml.apache.org/xslt}indent-amount", "4");
+		data.put("portalName", portalPath.getFileName());
 
 		try (Writer writer = Files.newBufferedWriter(
 				projectPath.resolve("nbproject/project.xml"))) {
 
-			transformer.transform(
-				new DOMSource(document), new StreamResult(writer));
+			FreeMarkerUtil.process(
+				"resources/umbrella_project_xml.ftl", data, writer);
 		}
-	}
-
-	private static void _createReference(
-		Document document, Element referencesElement, String module) {
-
-		Element referenceElement = document.createElement("reference");
-
-		referencesElement.appendChild(referenceElement);
-
-		Element foreignProjectElement = document.createElement(
-			"foreign-project");
-
-		referenceElement.appendChild(foreignProjectElement);
-
-		foreignProjectElement.appendChild(document.createTextNode(module));
-
-		Element artifactTypeElement = document.createElement("artifact-type");
-
-		referenceElement.appendChild(artifactTypeElement);
-
-		artifactTypeElement.appendChild(document.createTextNode("jar"));
-
-		Element scriptElement = document.createElement("script");
-
-		referenceElement.appendChild(scriptElement);
-
-		scriptElement.appendChild(document.createTextNode("build.xml"));
-
-		Element targetElement = document.createElement("target");
-
-		referenceElement.appendChild(targetElement);
-
-		targetElement.appendChild(document.createTextNode("jar"));
-
-		Element cleanTargetElement = document.createElement("clean-target");
-
-		referenceElement.appendChild(cleanTargetElement);
-
-		cleanTargetElement.appendChild(document.createTextNode("clean"));
-
-		Element idElement = document.createElement("id");
-
-		referenceElement.appendChild(idElement);
-
-		idElement.appendChild(document.createTextNode("jar"));
-	}
-
-	private static void _createReferences(
-		Document document, Element configurationElement,
-		Set<String> moduleNames) {
-
-		Element referencesElement = document.createElement("references");
-
-		referencesElement.setAttribute(
-			"xmlns", "http://www.netbeans.org/ns/ant-project-references/1");
-
-		configurationElement.appendChild(referencesElement);
-
-		for (String moduleName : moduleNames) {
-			_createReference(document, referencesElement, moduleName);
-		}
-	}
-
-	private static void _createRoot(
-		Document document, Element sourceRootsElement, String module) {
-
-		Element rootElement = document.createElement("root");
-
-		sourceRootsElement.appendChild(rootElement);
-
-		rootElement.setAttribute("id", module);
 	}
 
 }

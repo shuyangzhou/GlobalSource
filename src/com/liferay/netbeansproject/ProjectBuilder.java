@@ -69,15 +69,6 @@ public class ProjectBuilder {
 		String ignoredDirs = PropertiesUtil.getRequiredProperty(
 			buildProperties, "ignored.dirs");
 
-		String projectName = PropertiesUtil.getRequiredProperty(
-			buildProperties, "project.name");
-
-		String excludeTypes = buildProperties.getProperty("exclude.types");
-
-		Map<String, String> umbrellaSourceListMap =
-			PropertiesUtil.getProperties(
-				buildProperties, "umbrella.source.list");
-
 		int groupDepth = Integer.valueOf(
 			PropertiesUtil.getRequiredProperty(buildProperties, "group.depth"));
 
@@ -102,17 +93,14 @@ public class ProjectBuilder {
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				projectName, excludeTypes, umbrellaSourceListMap, groupDepth,
-				currentGroupStopWords);
+				groupDepth, currentGroupStopWords);
 		}
 	}
 
 	public void scanPortal(
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
-			String projectName, String excludedTypes,
-			Map<String, String> umbrellaSourceList, int groupDepth,
-			List<String> groupStopWords)
+			int groupDepth, List<String> groupStopWords)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -236,8 +224,7 @@ public class ProjectBuilder {
 		}
 
 		CreateUmbrella.createUmbrella(
-			portalPath, projectName, umbrellaSourceList, excludedTypes,
-			moduleNames, projectPath.resolve("umbrella"));
+			portalPath, moduleNames, projectPath.resolve("umbrella"));
 
 		Map<Path, List<Module>> moduleGroups = _createModuleGroups(
 			modules, groupDepth, groupStopWords);

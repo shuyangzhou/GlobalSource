@@ -15,7 +15,6 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.util.FileUtil;
 
 import java.io.IOException;
 
@@ -36,8 +35,6 @@ public class CreateGroupModule {
 		String projectName = _createProjectName(portalPath, groupPath);
 
 		projectPath = projectPath.resolve(projectName);
-
-		FileUtil.unZip(projectPath);
 	}
 
 	private static String _createProjectName(Path portalPath, Path groupPath) {
