@@ -14,24 +14,31 @@
 
 package com.liferay.netbeansproject.util;
 
+import com.liferay.netbeansproject.container.Dependency;
+
 import java.io.IOException;
 
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Tom Wang
  */
 public class ModuleUtil {
 
-	public static String getPortalLibJars(Path portalPath) throws IOException {
-		final StringBuilder sb = new StringBuilder();
+	public static Set<Dependency> getPortalLibJars(Path portalPath)
+		throws IOException {
+
+		final Set<Dependency> jarSet = new HashSet<>();
 
 		Files.walkFileTree(
 			portalPath.resolve("lib"), EnumSet.allOf(FileVisitOption.class),
@@ -46,9 +53,8 @@ public class ModuleUtil {
 					String filePathString = filePath.toString();
 
 					if (filePathString.endsWith(".jar")) {
-						sb.append('\t');
-						sb.append(filePathString);
-						sb.append(":\\\n");
+						jarSet.add(
+							new Dependency(Paths.get(filePathString), false));
 					}
 
 					return FileVisitResult.CONTINUE;
@@ -56,7 +62,7 @@ public class ModuleUtil {
 
 			});
 
-		return sb.toString();
+		return jarSet;
 	}
 
 }

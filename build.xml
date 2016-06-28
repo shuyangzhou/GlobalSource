@@ -12,6 +12,10 @@
 		<fileset dir="lib" includes="ivy-2.4.0.jar" />
 	</path>
 
+	 <path id="lib.classpath">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
 	<property file="build-ext.properties" />
 	<property file="build.properties" />
 
@@ -80,6 +84,7 @@
 			<mkdir dir="classes" />
 
 			<javac
+				classpathref="lib.classpath"
 				debug="true"
 				destdir="classes"
 				executable="${javac.executable}"
@@ -88,13 +93,18 @@
 
 				<src path="src" />
 			</javac>
+
+			<copy todir="classes">
+			    <fileset dir="src"
+			             includes="**/*.ftl" />
+			</copy>
 		</sequential>
 	</macrodef>
 
 	<target name="add">
 		<compile />
 
-		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
+		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}" jvm="${java.executable}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 			<arg value="rebuild=false" />
 		</java>
@@ -103,7 +113,7 @@
 	<target name="build">
 		<compile />
 
-		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" fork="${java.fork}" jvm="${java.executable}">
+		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}" jvm="${java.executable}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 			<arg value="rebuild=true" />
 		</java>

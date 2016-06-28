@@ -184,8 +184,6 @@ public class ProjectBuilder {
 
 			});
 
-		String portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
-
 		Map<String, Set<Dependency>> jarDependenciesMap = new HashMap<>();
 
 		for (Path oldModulePath : oldModulePaths.keySet()) {
@@ -222,6 +220,8 @@ public class ProjectBuilder {
 			GradleUtil.stopGradleDaemon(portalPath, displayGradleProcessOutput);
 		}
 
+		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
+
 		for (Path newModulePath : newModulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve("modules"), newModulePath,
@@ -232,7 +232,7 @@ public class ProjectBuilder {
 			modules.add(module);
 
 			CreateModule.createModule(
-				module, projectPath, excludedTypes, portalLibJars, portalPath);
+				module, projectPath, portalLibJars, portalPath);
 		}
 
 		CreateUmbrella.createUmbrella(

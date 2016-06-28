@@ -15,8 +15,10 @@
 package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.util.FileUtil;
+import com.liferay.netbeansproject.util.FreeMarkerUtil;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -24,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -53,6 +56,16 @@ public class CreateUmbrella {
 		FileUtil.delete(projectPath);
 
 		FileUtil.unZip(projectPath);
+
+		Map<String, String> data = new HashMap<>();
+
+		data.put("projectName", "IndividualModuleUmbrella");
+
+		Path buildXMLPath = projectPath.resolve("build.xml");
+
+		try (Writer writer = new FileWriter(buildXMLPath.toFile())) {
+			FreeMarkerUtil.process("resources/buildXML.ftl", data, writer);
+		}
 
 		_appendProjectProperties(
 			portalPath, excludeTypes, umbrellaSourceMap, moduleNames,
