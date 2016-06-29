@@ -235,7 +235,8 @@ public class ProjectBuilder {
 
 		for (Map.Entry<Path, List<Module>> entry : moduleGroups.entrySet()) {
 			CreateGroupModule.createModule(
-				groupProjectPath, portalPath, entry.getKey(), entry.getValue());
+				groupProjectPath, portalPath, entry.getKey(), entry.getValue(),
+				portalLibJars);
 		}
 	}
 
