@@ -3,7 +3,7 @@
 	<type>org.netbeans.modules.java.j2seproject</type>
 	<configuration>
 		<data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-			<name>${portalName}</name>
+			<name>${portalName}-umbrella</name>
 			<source-roots>
 				<root id="src.portal-web.dir"/>
 				<root id="src.portal-web-functional.dir"/>
