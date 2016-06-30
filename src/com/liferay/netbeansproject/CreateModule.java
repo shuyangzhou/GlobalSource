@@ -47,7 +47,7 @@ public class CreateModule {
 		_generateBuildXML(module, projectModulePath.resolve("build.xml"));
 
 		_appendProperties(
-			module, portalLibJars,
+			module, portalPath, portalLibJars,
 			projectModulePath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(
@@ -56,13 +56,14 @@ public class CreateModule {
 	}
 
 	private static void _appendProperties(
-			Module module, Set<Dependency> portalLibJars,
+			Module module, Path portalPath, Set<Dependency> portalLibJars,
 			Path projectPropertiesPath)
 		throws Exception {
 
 		Map<String, Object> data = new HashMap<>();
 
 		data.put("module", module);
+		data.put("portalPath", portalPath);
 		data.put("portalLibJars", portalLibJars);
 
 		try (Writer writer = Files.newBufferedWriter(projectPropertiesPath)) {
