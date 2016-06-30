@@ -238,6 +238,11 @@ public class ProjectBuilder {
 				groupProjectPath, portalPath, entry.getKey(), entry.getValue(),
 				portalLibJars);
 		}
+
+		Path groupUmbrellaPath = projectPath.resolve("group-umbrella");
+
+		CreateGroupUmbrella.createUmbrella(
+			portalPath, moduleGroups.keySet(), groupUmbrellaPath);
 	}
 
 	private Map<Path, List<Module>> _createModuleGroups(
