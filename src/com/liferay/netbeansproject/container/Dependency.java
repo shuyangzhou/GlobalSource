@@ -23,8 +23,9 @@ import java.util.Objects;
  */
 public class Dependency implements Comparable<Dependency> {
 
-	public Dependency(Path path, boolean test) {
+	public Dependency(Path path, Path sourcePath, boolean test) {
 		_path = path;
+		_sourcePath = sourcePath;
 		_test = test;
 	}
 
@@ -62,6 +63,10 @@ public class Dependency implements Comparable<Dependency> {
 		return _path;
 	}
 
+	public Path getSourcePath() {
+		return _sourcePath;
+	}
+
 	@Override
 	public int hashCode() {
 		return _path.hashCode();
@@ -77,6 +82,8 @@ public class Dependency implements Comparable<Dependency> {
 
 		sb.append("{Path=");
 		sb.append(_path);
+		sb.append(", sourcePath=");
+		sb.append(_sourcePath);
 		sb.append(", test=");
 		sb.append(_test);
 		sb.append("}");
@@ -85,6 +92,7 @@ public class Dependency implements Comparable<Dependency> {
 	}
 
 	private final Path _path;
+	private final Path _sourcePath;
 	private final boolean _test;
 
 }

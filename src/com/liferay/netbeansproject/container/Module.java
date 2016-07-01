@@ -58,7 +58,7 @@ public class Module {
 					Files.newDirectoryStream(moduleLibPath, "*.jar")) {
 
 				for (Path jarPath : directoryStream) {
-					jarDependencies.add(new Dependency(jarPath, false));
+					jarDependencies.add(new Dependency(jarPath, null, false));
 				}
 			}
 		}
@@ -268,6 +268,8 @@ public class Module {
 		for (Dependency dependency : dependencies) {
 			dependenciesSB.append(dependency.getPath());
 			dependenciesSB.append(',');
+			dependenciesSB.append(dependency.getSourcePath());
+			dependenciesSB.append(',');
 			dependenciesSB.append(dependency.isTest());
 			dependenciesSB.append(';');
 		}
@@ -287,9 +289,15 @@ public class Module {
 		for (String dependencyString : StringUtil.split(dependencies, ';')) {
 			String[] dependencySplit = StringUtil.split(dependencyString, ',');
 
+			Path sourcePath = null;
+
+			if (!dependencySplit[1].equals("null")) {
+				sourcePath = Paths.get(dependencySplit[1]);
+			}
+
 			dependencyList.add(
 				new Dependency(
-					Paths.get(dependencySplit[0]),
+					Paths.get(dependencySplit[0]), sourcePath,
 					Boolean.valueOf(dependencySplit[1])));
 		}
 

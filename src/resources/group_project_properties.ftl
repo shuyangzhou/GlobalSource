@@ -100,6 +100,9 @@ test.${module.getModuleName()}.test-integration-resources.dir=${"$"}{file.refere
 </#list>
 <#list jarDependencies as jarDependency>
 file.reference.${jarDependency.getName()}=${jarDependency.getPath()}
+<#if jarDependency.getSourcePath()??>
+source.reference.${jarDependency.getName()}=${jarDependency.getSourcePath()}
+</#if>
 </#list>
 <#list moduleDependencies as dependency>
 project.${dependency.getName()}=../../modules/${dependency.getName()}

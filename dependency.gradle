@@ -29,6 +29,27 @@ allprojects {
 				}
 
 				sb.append('\n')
+
+				def componentIds = configuration.incoming.resolutionResult.allDependencies.collect {
+					it.selected.id
+				}
+
+				def result = dependencies.createArtifactResolutionQuery()
+					.forComponents(componentIds)
+					.withArtifacts(JvmLibrary, SourcesArtifact)
+					.execute()
+
+				sb.append(configuration.name)
+				sb.append("Sources=")
+
+				for (component in result.resolvedComponents) {
+					component.getArtifacts(SourcesArtifact).each {
+						sb.append("${it.file}")
+						sb.append(':')
+					}
+				}
+
+				sb.append('\n')
 			}
 		}
 

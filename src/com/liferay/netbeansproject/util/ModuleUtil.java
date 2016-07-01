@@ -54,7 +54,8 @@ public class ModuleUtil {
 
 					if (filePathString.endsWith(".jar")) {
 						jarSet.add(
-							new Dependency(Paths.get(filePathString), false));
+							new Dependency(
+								Paths.get(filePathString), null, false));
 					}
 
 					return FileVisitResult.CONTINUE;

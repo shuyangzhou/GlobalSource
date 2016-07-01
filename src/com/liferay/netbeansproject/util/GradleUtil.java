@@ -109,7 +109,8 @@ public class GradleUtil {
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				dependenciesDirPath)) {
 
-			Path portalToolsPath = portalDirPath.resolve("tools/sdk");
+			String portalToolsPath = String.valueOf(
+				portalDirPath.resolve("tools/sdk"));
 
 			for (Path dependencyPath : directoryStream) {
 				Set<Dependency> jarDependencies = new HashSet<>();
@@ -117,29 +118,38 @@ public class GradleUtil {
 				Properties dependencies = PropertiesUtil.loadProperties(
 					dependencyPath);
 
+				String[] sourceSet = StringUtil.split(
+					dependencies.getProperty("compileSources"), ':');
+
 				for (String jar :
 						StringUtil.split(
 							dependencies.getProperty("compile"), ':')) {
 
-					if (!jar.startsWith(portalToolsPath.toString())) {
+					if (!jar.startsWith(portalToolsPath)) {
 						jarDependencies.add(
-							new Dependency(Paths.get(jar), false));
+							_createDependencyWithSource(
+								Paths.get(jar), sourceSet, false));
 					}
 				}
+
+				sourceSet = StringUtil.split(
+					dependencies.getProperty("testIntegrationRuntimeSources"),
+					':');
 
 				for (String jar :
 						StringUtil.split(
 							dependencies.getProperty("compileTest"), ':')) {
 
-					if (!jar.startsWith(portalToolsPath.toString())) {
+					if (!jar.startsWith(portalToolsPath)) {
 						jarDependencies.add(
-							new Dependency(Paths.get(jar), true));
+							_createDependencyWithSource(
+								Paths.get(jar), sourceSet, true));
 					}
 				}
 
-				Path moduleName = dependencyPath.getFileName();
-
-				dependenciesMap.put(moduleName.toString(), jarDependencies);
+				dependenciesMap.put(
+					String.valueOf(dependencyPath.getFileName()),
+					jarDependencies);
 			}
 		}
 
@@ -185,7 +195,7 @@ public class GradleUtil {
 			moduleDependencies.add(
 				new Dependency(
 					Paths.get("modules", StringUtil.split(moduleLocation, ':')),
-					line.startsWith("test")));
+					null, line.startsWith("test")));
 		}
 
 		return moduleDependencies;
@@ -234,6 +244,24 @@ public class GradleUtil {
 				"Process " + processBuilder.command() + " failed with " +
 					exitCode);
 		}
+	}
+
+	private static Dependency _createDependencyWithSource(
+		Path jarPath, String[] sourceSet, boolean isTest) {
+
+		String jarName = String.valueOf(jarPath.getFileName());
+
+		jarName = jarName.substring(0, jarName.length() - 4);
+
+		Path sourcePath = null;
+
+		for (String source : sourceSet) {
+			if (source.contains(jarName)) {
+				sourcePath = Paths.get(source);
+			}
+		}
+
+		return new Dependency(jarPath, sourcePath, isTest);
 	}
 
 	private static String _getTaskName(Path portalDirPath, Path workDirPath) {
