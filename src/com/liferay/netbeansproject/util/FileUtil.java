@@ -27,6 +27,46 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class FileUtil {
 
+	public static void copy(Path sourcePath, Path targetPath)
+		throws IOException {
+
+		if (!Files.exists(sourcePath)) {
+			throw new IOException(sourcePath + " does not exist");
+		}
+
+		Files.walkFileTree(
+			sourcePath,
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(
+						Path path, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					Files.createDirectories(
+						targetPath.resolve(sourcePath.relativize(path)));
+
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(
+						Path path, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					Path targetFilePath = targetPath.resolve(
+						sourcePath.relativize(path));
+
+					if (!Files.exists(targetFilePath)) {
+						Files.copy(path, targetFilePath);
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
+	}
+
 	public static void delete(Path projectDirPath) throws IOException {
 		if (!Files.exists(projectDirPath)) {
 			return;

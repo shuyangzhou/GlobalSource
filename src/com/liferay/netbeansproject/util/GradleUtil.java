@@ -65,6 +65,15 @@ public class GradleUtil {
 		gradleTask.add(_getTaskName(portalDirPath, workDirPath));
 		gradleTask.add(
 			"-PdependencyDirectory=".concat(dependenciesDirPath.toString()));
+		gradleTask.add("-g");
+
+		Path gradleCachePath = Paths.get(".gradle");
+
+		FileUtil.copy(
+			portalDirPath.resolve(".gradle/caches/modules-2/files-2.1"),
+			gradleCachePath.resolve("caches/modules-2/files-2.1"));
+
+		gradleTask.add(String.valueOf(gradleCachePath));
 
 		ProcessBuilder processBuilder = new ProcessBuilder(gradleTask);
 
