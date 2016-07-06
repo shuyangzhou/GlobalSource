@@ -121,6 +121,8 @@ public class GradleUtil {
 			String portalToolsPath = String.valueOf(
 				portalDirPath.resolve("tools/sdk"));
 
+			String liferayJarsIdentifier = "/com.liferay";
+
 			for (Path dependencyPath : directoryStream) {
 				Set<Dependency> jarDependencies = new HashSet<>();
 
@@ -137,12 +139,15 @@ public class GradleUtil {
 					if (!jar.startsWith(portalToolsPath)) {
 						Path jarPath = Paths.get(jar);
 
+						Path sourcePath = null;
+
+						if (!jar.contains(liferayJarsIdentifier)) {
+							sourcePath = sourceJarPaths.get(
+								String.valueOf(jarPath.getFileName()));
+						}
+
 						jarDependencies.add(
-							new Dependency(
-								jarPath,
-								sourceJarPaths.get(
-									String.valueOf(jarPath.getFileName())),
-								false));
+							new Dependency(jarPath, sourcePath, false));
 					}
 				}
 
@@ -156,12 +161,15 @@ public class GradleUtil {
 					if (!jar.startsWith(portalToolsPath)) {
 						Path jarPath = Paths.get(jar);
 
+						Path sourcePath = null;
+
+						if (!jar.contains(liferayJarsIdentifier)) {
+							sourcePath = sourceJarPaths.get(
+								String.valueOf(jarPath.getFileName()));
+						}
+
 						jarDependencies.add(
-							new Dependency(
-								jarPath,
-								sourceJarPaths.get(
-									String.valueOf(jarPath.getFileName())),
-								true));
+							new Dependency(jarPath, sourcePath, true));
 					}
 				}
 
