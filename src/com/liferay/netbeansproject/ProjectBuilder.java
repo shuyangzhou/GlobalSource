@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
@@ -62,6 +63,11 @@ public class ProjectBuilder {
 
 		Path projectDirPath = Paths.get(
 			PropertiesUtil.getRequiredProperty(buildProperties, "project.dir"));
+
+		Files.copy(
+			Paths.get("lib/ant-contrib.jar"),
+			projectDirPath.resolve("ant-contrib.jar"),
+			StandardCopyOption.REPLACE_EXISTING);
 
 		boolean displayGradleProcessOutput = Boolean.valueOf(
 			buildProperties.getProperty("display.gradle.process.output"));

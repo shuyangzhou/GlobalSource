@@ -51,17 +51,9 @@ public class Module implements Comparable<Module> {
 			jarDependencies = new HashSet<>();
 		}
 
-		Path moduleLibPath = modulePath.resolve("lib");
-
-		if (Files.exists(moduleLibPath)) {
-			try (DirectoryStream<Path> directoryStream =
-					Files.newDirectoryStream(moduleLibPath, "*.jar")) {
-
-				for (Path jarPath : directoryStream) {
-					jarDependencies.add(new Dependency(jarPath, null, false));
-				}
-			}
-		}
+		_addLibJarsToSet(modulePath.resolve("lib"), jarDependencies);
+		_addLibJarsToSet(
+			modulePath.resolve("docroot/WEB-INF/lib"), jarDependencies);
 
 		String checksum = null;
 
@@ -265,6 +257,21 @@ public class Module implements Comparable<Module> {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static void _addLibJarsToSet(
+			Path moduleLibPath, Set<Dependency> jarDependencies)
+		throws IOException {
+
+		if (Files.exists(moduleLibPath)) {
+			try (DirectoryStream<Path> directoryStream =
+					Files.newDirectoryStream(moduleLibPath, "*.jar")) {
+
+				for (Path jarPath : directoryStream) {
+					jarDependencies.add(new Dependency(jarPath, null, false));
+				}
+			}
+		}
 	}
 
 	private static String _createDependencyString(

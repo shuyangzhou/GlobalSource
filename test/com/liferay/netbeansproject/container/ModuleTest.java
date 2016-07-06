@@ -34,7 +34,7 @@ public class ModuleTest {
 	@Before
 	public void setup() throws IOException {
 		_projectDependencyProperties = PropertiesUtil.loadProperties(
-			Paths.get("project-dependency.properties"));
+			Paths.get("portal-module-dependency.properties"));
 	}
 
 	@After
