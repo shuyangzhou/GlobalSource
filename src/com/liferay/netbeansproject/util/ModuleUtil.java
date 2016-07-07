@@ -66,4 +66,30 @@ public class ModuleUtil {
 		return jarSet;
 	}
 
+	public static String getSymbolicName(Path path) throws IOException {
+		Path bndPath = path.resolve("bnd.bnd");
+
+		if (!Files.exists(bndPath)) {
+			return "com.liferay." + String.valueOf(path.getFileName());
+		}
+
+		for (String line : Files.readAllLines(bndPath)) {
+			if (!line.contains("Bundle-SymbolicName")) {
+				continue;
+			}
+
+			String[] lineSplit = StringUtil.split(line, ':');
+
+			if (lineSplit[1].equals(" ${manifest.bundle.symbolic.name}")) {
+				String symbolicName = String.valueOf(path.getFileName());
+
+				return "com.liferay." + symbolicName.replace('-', '.');
+			}
+
+			return lineSplit[1].trim();
+		}
+
+		throw new IOException("Cannot find symbolic name");
+	}
+
 }
