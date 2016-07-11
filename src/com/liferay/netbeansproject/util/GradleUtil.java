@@ -41,7 +41,8 @@ public class GradleUtil {
 
 	public static Map<String, Set<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath,
-			boolean displayGradleProcessOutput, boolean daemon)
+			boolean displayGradleProcessOutput, boolean daemon,
+			Set<String> whiteListJars)
 		throws Exception {
 
 		Path dependenciesDirPath = Files.createTempDirectory(null);
@@ -121,57 +122,25 @@ public class GradleUtil {
 			String portalToolsPath = String.valueOf(
 				portalDirPath.resolve("tools/sdk"));
 
-			String liferayJarsIdentifier = "/com.liferay";
+			String liferayJarsIdentifier = "/com.liferay/com.liferay";
+
+			String liferayPortalJarsIdentifier = "/com.liferay.portal";
 
 			for (Path dependencyPath : directoryStream) {
 				Set<Dependency> jarDependencies = new HashSet<>();
 
-				Properties dependencies = PropertiesUtil.loadProperties(
-					dependencyPath);
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
+						dependencyPath, "compile", "compileSources", false,
+						whiteListJars, portalToolsPath, liferayJarsIdentifier,
+						liferayPortalJarsIdentifier));
 
-				Map<String, Path> sourceJarPaths = _loadSourceJarPaths(
-					dependencies.getProperty("compileSources"));
-
-				for (String jar :
-						StringUtil.split(
-							dependencies.getProperty("compile"), ':')) {
-
-					if (!jar.startsWith(portalToolsPath)) {
-						Path jarPath = Paths.get(jar);
-
-						Path sourcePath = null;
-
-						if (!jar.contains(liferayJarsIdentifier)) {
-							sourcePath = sourceJarPaths.get(
-								String.valueOf(jarPath.getFileName()));
-						}
-
-						jarDependencies.add(
-							new Dependency(jarPath, sourcePath, false));
-					}
-				}
-
-				sourceJarPaths = _loadSourceJarPaths(
-					dependencies.getProperty("testIntegrationRuntimeSources"));
-
-				for (String jar :
-						StringUtil.split(
-							dependencies.getProperty("compileTest"), ':')) {
-
-					if (!jar.startsWith(portalToolsPath)) {
-						Path jarPath = Paths.get(jar);
-
-						Path sourcePath = null;
-
-						if (!jar.contains(liferayJarsIdentifier)) {
-							sourcePath = sourceJarPaths.get(
-								String.valueOf(jarPath.getFileName()));
-						}
-
-						jarDependencies.add(
-							new Dependency(jarPath, sourcePath, true));
-					}
-				}
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
+						dependencyPath, "compileTest",
+						"testIntegrationRuntimeSources", true, whiteListJars,
+						portalToolsPath, liferayJarsIdentifier,
+						liferayPortalJarsIdentifier));
 
 				dependenciesMap.put(
 					String.valueOf(dependencyPath.getFileName()),
@@ -298,6 +267,42 @@ public class GradleUtil {
 				"Process " + processBuilder.command() + " failed with " +
 					exitCode);
 		}
+	}
+
+	private static Set<Dependency> _getConfigurationDependencies(
+			Path dependencyPath, String configurationName, String sourceName,
+			boolean isTest, Set<String> whiteListJars, String portalToolsPath,
+			String liferayJarsIdentifier, String liferayPortalJarsIdentifier)
+		throws IOException {
+
+		Properties dependencies = PropertiesUtil.loadProperties(dependencyPath);
+
+		Map<String, Path> sourceJarPaths = _loadSourceJarPaths(
+			dependencies.getProperty(sourceName));
+
+		Set<Dependency> jarDependencies = new HashSet<>();
+
+		for (String jar :
+				StringUtil.split(
+					dependencies.getProperty(configurationName), ':')) {
+
+			Path jarPath = Paths.get(jar);
+
+			if (whiteListJars.contains(
+					String.valueOf(jarPath.getFileName())) ||
+				(!jar.startsWith(portalToolsPath) &&
+				 !jar.contains(liferayJarsIdentifier) &&
+				 !jar.contains(liferayPortalJarsIdentifier))) {
+
+				jarDependencies.add(
+					new Dependency(
+						jarPath, sourceJarPaths.get(
+							String.valueOf(jarPath.getFileName())),
+						isTest));
+			}
+		}
+
+		return jarDependencies;
 	}
 
 	private static String _getTaskName(Path portalDirPath, Path workDirPath) {
