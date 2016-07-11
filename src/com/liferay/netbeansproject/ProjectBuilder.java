@@ -123,6 +123,8 @@ public class ProjectBuilder {
 
 		final Set<String> moduleNames = new HashSet<>();
 
+		final Map<String, Path> moduleSymbolicNames = new HashMap<>();
+
 		final Set<Path> newModulePaths = new HashSet<>();
 
 		final List<Module> modules = new ArrayList<>();
@@ -153,12 +155,21 @@ public class ProjectBuilder {
 
 					moduleNames.add(String.valueOf(path.getFileName()));
 
+					String symbolicName = ModuleUtil.getSymbolicName(path);
+
+					if (symbolicName != null) {
+						moduleSymbolicNames.put(
+							symbolicName,
+							Paths.get(
+								"modules", String.valueOf(path.getFileName())));
+					}
+
 					Module module = oldModulePaths.remove(path);
 
 					if ((module == null) ||
 						!module.equals(
 							Module.createModule(
-								null, path, null,
+								null, path, null, null,
 								portalModuleDependencyProperties))) {
 
 						newModulePaths.add(path);
@@ -171,6 +182,15 @@ public class ProjectBuilder {
 				}
 
 			});
+
+		Map<Path, Set<Dependency>> moduleDependenciesMap = new HashMap<>();
+
+		for (Path newModulePath : newModulePaths) {
+			moduleDependenciesMap.put(
+				newModulePath,
+				GradleUtil.getModuleDependencies(
+					newModulePath, moduleSymbolicNames));
+		}
 
 		Map<String, Set<Dependency>> jarDependenciesMap = new HashMap<>();
 
@@ -187,7 +207,8 @@ public class ProjectBuilder {
 
 			jarDependenciesMap = GradleUtil.getJarDependencies(
 				portalPath, portalPath.resolve("modules"),
-				displayGradleProcessOutput, false);
+				moduleSymbolicNames.keySet(), displayGradleProcessOutput,
+				false);
 		}
 		else {
 			for (Path newModulePath : newModulePaths) {
@@ -201,6 +222,7 @@ public class ProjectBuilder {
 					jarDependenciesMap.putAll(
 						GradleUtil.getJarDependencies(
 							portalPath, newModulePath,
+							moduleSymbolicNames.keySet(),
 							displayGradleProcessOutput, true));
 				}
 			}
@@ -213,6 +235,7 @@ public class ProjectBuilder {
 		for (Path newModulePath : newModulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve("modules"), newModulePath,
+				moduleDependenciesMap.get(newModulePath),
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
 				portalModuleDependencyProperties);

@@ -34,6 +34,22 @@ public class StringUtil {
 		return new String(chars);
 	}
 
+	public static String extractQuotedText(String line) {
+		int index1 = line.indexOf('\"');
+
+		if (index1 < 0) {
+			throw new IllegalStateException("Broken syntax in " + line);
+		}
+
+		int index2 = line.indexOf('\"', index1 + 1);
+
+		if (index2 < 0) {
+			throw new IllegalStateException("Broken syntax in " + line);
+		}
+
+		return line.substring(index1 + 1, index2);
+	}
+
 	public static String merge(Collection<String> strings, char separator) {
 		if (strings.isEmpty()) {
 			return "";
@@ -108,6 +124,40 @@ public class StringUtil {
 		}
 
 		return values.toArray(new String[values.size()]);
+	}
+
+	public static String[] split(String s, String delimiter) {
+		if ((delimiter == null) || delimiter.equals("")) {
+			return _emptyStringArray;
+		}
+
+		s = s.trim();
+
+		if (s.equals(delimiter)) {
+			return _emptyStringArray;
+		}
+
+		if (delimiter.length() == 1) {
+			return split(s, delimiter.charAt(0));
+		}
+
+		List<String> nodeValues = new ArrayList<>();
+
+		int offset = 0;
+		int pos = s.indexOf(delimiter, offset);
+
+		while (pos != -1) {
+			nodeValues.add(s.substring(offset, pos));
+
+			offset = pos + delimiter.length();
+			pos = s.indexOf(delimiter, offset);
+		}
+
+		if (offset < s.length()) {
+			nodeValues.add(s.substring(offset));
+		}
+
+		return nodeValues.toArray(new String[nodeValues.size()]);
 	}
 
 	private static final char[] _HEX_DIGITS = {

@@ -40,7 +40,7 @@ import java.util.Set;
 public class GradleUtil {
 
 	public static Map<String, Set<Dependency>> getJarDependencies(
-			Path portalDirPath, Path workDirPath,
+			Path portalDirPath, Path workDirPath, Set<String> symbolicNameSet,
 			boolean displayGradleProcessOutput, boolean daemon)
 		throws Exception {
 
@@ -121,57 +121,19 @@ public class GradleUtil {
 			String portalToolsPath = String.valueOf(
 				portalDirPath.resolve("tools/sdk"));
 
-			String liferayJarsIdentifier = "/com.liferay";
-
 			for (Path dependencyPath : directoryStream) {
 				Set<Dependency> jarDependencies = new HashSet<>();
 
-				Properties dependencies = PropertiesUtil.loadProperties(
-					dependencyPath);
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
+						dependencyPath, "compile", "compileSources", false,
+						portalToolsPath, symbolicNameSet));
 
-				Map<String, Path> sourceJarPaths = _loadSourceJarPaths(
-					dependencies.getProperty("compileSources"));
-
-				for (String jar :
-						StringUtil.split(
-							dependencies.getProperty("compile"), ':')) {
-
-					if (!jar.startsWith(portalToolsPath)) {
-						Path jarPath = Paths.get(jar);
-
-						Path sourcePath = null;
-
-						if (!jar.contains(liferayJarsIdentifier)) {
-							sourcePath = sourceJarPaths.get(
-								String.valueOf(jarPath.getFileName()));
-						}
-
-						jarDependencies.add(
-							new Dependency(jarPath, sourcePath, false));
-					}
-				}
-
-				sourceJarPaths = _loadSourceJarPaths(
-					dependencies.getProperty("testIntegrationRuntimeSources"));
-
-				for (String jar :
-						StringUtil.split(
-							dependencies.getProperty("compileTest"), ':')) {
-
-					if (!jar.startsWith(portalToolsPath)) {
-						Path jarPath = Paths.get(jar);
-
-						Path sourcePath = null;
-
-						if (!jar.contains(liferayJarsIdentifier)) {
-							sourcePath = sourceJarPaths.get(
-								String.valueOf(jarPath.getFileName()));
-						}
-
-						jarDependencies.add(
-							new Dependency(jarPath, sourcePath, true));
-					}
-				}
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
+						dependencyPath, "compileTest",
+						"testIntegrationRuntimeSources", true, portalToolsPath,
+						symbolicNameSet));
 
 				dependenciesMap.put(
 					String.valueOf(dependencyPath.getFileName()),
@@ -184,7 +146,8 @@ public class GradleUtil {
 		return dependenciesMap;
 	}
 
-	public static Set<Dependency> getModuleDependencies(Path modulePath)
+	public static Set<Dependency> getModuleDependencies(
+			Path modulePath, Map<String, Path> symbolicNames)
 		throws IOException {
 
 		Path buildGradlePath = modulePath.resolve("build.gradle");
@@ -196,32 +159,33 @@ public class GradleUtil {
 		Set<Dependency> moduleDependencies = new HashSet<>();
 
 		for (String line : Files.readAllLines(buildGradlePath)) {
-			if (!line.contains(" project(")) {
+			Path moduleProjectPath = null;
+
+			if (line.contains(" project(")) {
+				moduleProjectPath = Paths.get(
+					"modules",
+					StringUtil.split(
+						StringUtil.extractQuotedText(line.trim()), ':'));
+			}
+			else if (line.contains("name: \"com.liferay")) {
+				String[] split = StringUtil.split(line.trim(), ',');
+
+				String moduleSymbolicName = StringUtil.extractQuotedText(
+					split[1]);
+
+				if (!symbolicNames.containsKey(moduleSymbolicName)) {
+					continue;
+				}
+
+				moduleProjectPath = symbolicNames.get(moduleSymbolicName);
+			}
+			else {
 				continue;
 			}
 
-			line = line.trim();
-
-			int index1 = line.indexOf('\"');
-
-			if (index1 < 0) {
-				throw new IllegalStateException(
-					"Broken syntax in " + buildGradlePath);
-			}
-
-			int index2 = line.indexOf('\"', index1 + 1);
-
-			if (index2 < 0) {
-				throw new IllegalStateException(
-					"Broken syntax in " + buildGradlePath);
-			}
-
-			String moduleLocation = line.substring(index1 + 1, index2);
-
 			moduleDependencies.add(
 				new Dependency(
-					Paths.get("modules", StringUtil.split(moduleLocation, ':')),
-					null, line.startsWith("test")));
+					moduleProjectPath, null, line.startsWith("test")));
 		}
 
 		return moduleDependencies;
@@ -270,6 +234,48 @@ public class GradleUtil {
 				"Process " + processBuilder.command() + " failed with " +
 					exitCode);
 		}
+	}
+
+	private static Set<Dependency> _getConfigurationDependencies(
+			Path dependencyPath, String configurationName, String sourceName,
+			boolean isTest, String portalToolsPath, Set<String> symbolicNameSet)
+		throws IOException {
+
+		Properties dependencies = PropertiesUtil.loadProperties(dependencyPath);
+
+		Map<String, Path> sourceJarPaths = _loadSourceJarPaths(
+			dependencies.getProperty(sourceName));
+
+		Set<Dependency> jarDependencies = new HashSet<>();
+
+		for (String jar :
+				StringUtil.split(
+					dependencies.getProperty(configurationName), ':')) {
+
+			if (!jar.startsWith(portalToolsPath)) {
+				continue;
+			}
+
+			Path jarPath = Paths.get(jar);
+
+			String jarName = String.valueOf(jarPath.getFileName());
+
+			if (jarName.startsWith("com.liferay")) {
+				String[] jarPathSplit = StringUtil.split(jarName, '-');
+
+				if (symbolicNameSet.contains(jarPathSplit[0])) {
+					continue;
+				}
+			}
+
+			jarDependencies.add(
+				new Dependency(
+					jarPath, sourceJarPaths.get(
+						String.valueOf(jarPath.getFileName())),
+					isTest));
+		}
+
+		return jarDependencies;
 	}
 
 	private static String _getTaskName(Path portalDirPath, Path workDirPath) {
