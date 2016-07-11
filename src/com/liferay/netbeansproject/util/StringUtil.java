@@ -34,6 +34,22 @@ public class StringUtil {
 		return new String(chars);
 	}
 
+	public static String extractQuotedText(String line) {
+		int index1 = line.indexOf('\"');
+
+		if (index1 < 0) {
+			throw new IllegalStateException("Broken syntax in " + line);
+		}
+
+		int index2 = line.indexOf('\"', index1 + 1);
+
+		if (index2 < 0) {
+			throw new IllegalStateException("Broken syntax in " + line);
+		}
+
+		return line.substring(index1 + 1, index2);
+	}
+
 	public static String merge(Collection<String> strings, char separator) {
 		if (strings.isEmpty()) {
 			return "";

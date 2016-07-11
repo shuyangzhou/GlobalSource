@@ -14,7 +14,6 @@
 
 package com.liferay.netbeansproject.container;
 
-import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.HashUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
@@ -43,7 +42,8 @@ import java.util.Set;
 public class Module implements Comparable<Module> {
 
 	public static Module createModule(
-			Path projectPath, Path modulePath, Set<Dependency> jarDependencies,
+			Path projectPath, Path modulePath,
+			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
 			Properties portalModuleDependencyProperties)
 		throws IOException {
 
@@ -94,7 +94,7 @@ public class Module implements Comparable<Module> {
 			_resolveResourcePath(modulePath, "test"),
 			_resolveTestPath(modulePath, false),
 			_resolveResourcePath(modulePath, "testIntegration"),
-			GradleUtil.getModuleDependencies(modulePath), jarDependencies,
+			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties,
 				moduleName.toString()),

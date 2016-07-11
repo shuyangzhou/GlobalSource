@@ -184,7 +184,9 @@ public class GradleUtil {
 		return dependenciesMap;
 	}
 
-	public static Set<Dependency> getModuleDependencies(Path modulePath)
+	public static Set<Dependency> getModuleDependencies(
+			Path modulePath, Set<String> symbolicNames,
+			Set<String> whiteListJars)
 		throws IOException {
 
 		Path buildGradlePath = modulePath.resolve("build.gradle");
@@ -196,32 +198,58 @@ public class GradleUtil {
 		Set<Dependency> moduleDependencies = new HashSet<>();
 
 		for (String line : Files.readAllLines(buildGradlePath)) {
-			if (!line.contains(" project(")) {
+			Path moduleProjectPath = null;
+
+			if (line.contains(" project(")) {
+				moduleProjectPath = Paths.get(
+					"modules",
+					StringUtil.split(
+						StringUtil.extractQuotedText(line.trim()), ':'));
+			}
+			else if (line.contains("name: \"com.liferay")) {
+				String[] split = StringUtil.split(line.trim(), ',');
+
+				String moduleSymbolicName = StringUtil.extractQuotedText(
+					split[1]);
+
+				if (!symbolicNames.contains(moduleSymbolicName)) {
+					StringBuilder sb = new StringBuilder(moduleSymbolicName);
+
+					if (split[2].contains("version")) {
+						sb.append('-');
+						sb.append(StringUtil.extractQuotedText(split[2]));
+					}
+
+					sb.append(".jar");
+
+					whiteListJars.add(sb.toString());
+
+					continue;
+				}
+
+				String moduleLocation = moduleSymbolicName.substring(12);
+
+				if (moduleLocation.contains("exportimport")) {
+					moduleLocation = StringUtil.replace(
+						moduleLocation, "exportimport", "export-import");
+				}
+
+				if (moduleLocation.contains("privatemessaging")) {
+					moduleLocation = StringUtil.replace(
+						moduleLocation, "privatemessaging",
+						"private-messaging");
+				}
+
+				moduleProjectPath = Paths.get(
+					"modules", moduleLocation.replace('.', '-'));
+			}
+			else {
 				continue;
 			}
 
-			line = line.trim();
-
-			int index1 = line.indexOf('\"');
-
-			if (index1 < 0) {
-				throw new IllegalStateException(
-					"Broken syntax in " + buildGradlePath);
-			}
-
-			int index2 = line.indexOf('\"', index1 + 1);
-
-			if (index2 < 0) {
-				throw new IllegalStateException(
-					"Broken syntax in " + buildGradlePath);
-			}
-
-			String moduleLocation = line.substring(index1 + 1, index2);
-
 			moduleDependencies.add(
 				new Dependency(
-					Paths.get("modules", StringUtil.split(moduleLocation, ':')),
-					null, line.startsWith("test")));
+					moduleProjectPath, null, line.startsWith("test")));
 		}
 
 		return moduleDependencies;
