@@ -96,8 +96,7 @@ public class Module implements Comparable<Module> {
 			_resolveResourcePath(modulePath, "testIntegration"),
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
-				portalModuleDependencyProperties,
-				moduleName.toString()),
+				portalModuleDependencyProperties, moduleName.toString()),
 			checksum);
 
 		if (projectPath != null) {

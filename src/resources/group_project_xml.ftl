@@ -14,6 +14,7 @@
 				</#if>
 				</#list>
 			</source-roots>
+
 			<test-roots>
 				<#list moduleList as module>
 				<#if module.getTestUnitPath()??>
@@ -31,6 +32,7 @@
 				</#list>
 			</test-roots>
 		</data>
+
 		<references xmlns="http://www.netbeans.org/ns/ant-project-references/1">
 			<#list moduleDependencies as dependency>
 				<reference>

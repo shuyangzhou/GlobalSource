@@ -10,6 +10,7 @@
 			</source-roots>
 			<test-roots/>
 		</data>
+
 		<references xmlns="http://www.netbeans.org/ns/ant-project-references/1">
 			<#list moduleNames as moduleName>
 			<reference>

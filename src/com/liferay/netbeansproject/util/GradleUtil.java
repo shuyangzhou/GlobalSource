@@ -161,7 +161,7 @@ public class GradleUtil {
 		for (String line : Files.readAllLines(buildGradlePath)) {
 			Path moduleProjectPath = null;
 
-			if (line.contains(" project(")) {
+			if (line.contains(" project(") || line.contains(" project (")) {
 				moduleProjectPath = Paths.get(
 					"modules",
 					StringUtil.split(

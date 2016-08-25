@@ -18,6 +18,7 @@
 					<root id="src.test.dir" name="portal-test"/>
 				</#if>
 			</source-roots>
+
 			<test-roots>
 				<#if module.getTestUnitPath()??>
 					<root id="test.${module.getModuleName()}.test-unit.dir" name="test-unit"/>
@@ -33,6 +34,7 @@
 				</#if>
 			</test-roots>
 		</data>
+
 		<references xmlns="http://www.netbeans.org/ns/ant-project-references/1">
 			<#list module.getModuleDependencies() as dependency>
 				<reference>
