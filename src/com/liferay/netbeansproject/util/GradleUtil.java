@@ -300,10 +300,14 @@ public class GradleUtil {
 		for (String sourceJarLocation : StringUtil.split(sources, ':')) {
 			Path path = Paths.get(sourceJarLocation);
 
-			sourceJarPaths.put(
-				StringUtil.replace(
-					String.valueOf(path.getFileName()), "-sources.jar", ".jar"),
-				path);
+			String fileName = String.valueOf(path.getFileName());
+
+			if (!fileName.startsWith("javax.portlet") &&
+				!fileName.startsWith("javax.servlet")) {
+
+				sourceJarPaths.put(
+					StringUtil.replace(fileName, "-sources.jar", ".jar"), path);
+			}
 		}
 
 		return sourceJarPaths;
