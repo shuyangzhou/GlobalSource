@@ -70,8 +70,8 @@ public class GradleUtil {
 		Path gradleCachePath = Paths.get(".gradle");
 
 		FileUtil.copy(
-			portalDirPath.resolve(".gradle/caches/modules-2/files-2.1"),
-			gradleCachePath.resolve("caches/modules-2/files-2.1"));
+			portalDirPath.resolve(".gradle"),
+			gradleCachePath);
 
 		gradleTask.add(String.valueOf(gradleCachePath));
 
