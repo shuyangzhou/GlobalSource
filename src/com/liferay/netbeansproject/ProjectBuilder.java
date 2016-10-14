@@ -248,6 +248,10 @@ public class ProjectBuilder {
 		CreateUmbrella.createUmbrella(
 			portalPath, moduleNames, projectPath.resolve("umbrella"));
 
+		if (groupDepth < 1) {
+			return;
+		}
+
 		Map<Path, List<Module>> moduleGroups = _createModuleGroups(
 			modules, groupDepth, groupStopWords);
 
