@@ -73,6 +73,8 @@ file.reference.portal-web.src=${portalPath}/portal-web/docroot
 src.portal-web.dir=${"$"}{file.reference.portal-web.src}
 file.reference.portal-web-functional.src=${portalPath}/portal-web/test/functional
 src.portal-web-functional.dir=${"$"}{file.reference.portal-web-functional.src}
+file.reference.portal-definitions.src=${portalPath}/definitions
+src.portal-definitions.dir=${"$"}{file.reference.portal-definitions.src}
 
 <#list moduleNames as moduleName>
 project.${moduleName}=${projectModulesPath}/${moduleName}

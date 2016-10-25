@@ -7,6 +7,7 @@
 			<source-roots>
 				<root id="src.portal-web.dir"/>
 				<root id="src.portal-web-functional.dir"/>
+				<root id="src.portal-definitions.dir" />
 			</source-roots>
 			<test-roots/>
 		</data>
