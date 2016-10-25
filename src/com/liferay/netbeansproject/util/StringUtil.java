@@ -92,6 +92,7 @@ public class StringUtil {
 			sb.append(newSub);
 
 			x = y + length;
+
 			y = s.indexOf(oldSub, x);
 		}
 
@@ -110,12 +111,14 @@ public class StringUtil {
 		List<String> values = new ArrayList<>();
 
 		int offset = 0;
+
 		int pos = s.indexOf(delimiter, offset);
 
 		while (pos != -1) {
 			values.add(s.substring(offset, pos));
 
 			offset = pos + 1;
+
 			pos = s.indexOf(delimiter, offset);
 		}
 
@@ -144,12 +147,14 @@ public class StringUtil {
 		List<String> nodeValues = new ArrayList<>();
 
 		int offset = 0;
+
 		int pos = s.indexOf(delimiter, offset);
 
 		while (pos != -1) {
 			nodeValues.add(s.substring(offset, pos));
 
 			offset = pos + delimiter.length();
+
 			pos = s.indexOf(delimiter, offset);
 		}
 

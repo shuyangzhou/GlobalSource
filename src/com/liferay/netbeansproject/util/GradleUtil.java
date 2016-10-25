@@ -21,18 +21,30 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * @author Tom Wang
@@ -44,7 +56,7 @@ public class GradleUtil {
 			boolean displayGradleProcessOutput, boolean daemon)
 		throws Exception {
 
-		installPortalSnapshots(portalDirPath);
+		_checkPortalSnapshotsVersions(portalDirPath);
 
 		Path dependenciesDirPath = Files.createTempDirectory(null);
 
@@ -86,8 +98,7 @@ public class GradleUtil {
 		if (displayGradleProcessOutput) {
 			String line = null;
 
-			try(
-				BufferedReader br = new BufferedReader(
+			try (BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getInputStream()))) {
 
 				while ((line = br.readLine()) != null) {
@@ -95,8 +106,7 @@ public class GradleUtil {
 				}
 			}
 
-			try(
-				BufferedReader br = new BufferedReader(
+			try (BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getErrorStream()))) {
 
 				while ((line = br.readLine()) != null) {
@@ -191,42 +201,6 @@ public class GradleUtil {
 		return moduleDependencies;
 	}
 
-	public static void installPortalSnapshots(Path portalDirPath)
-		throws IOException {
-
-		List<String> antTask = new ArrayList<>();
-
-		antTask.add("ant");
-
-		antTask.add("install-portal-snapshots");
-
-		ProcessBuilder processBuilder = new ProcessBuilder(antTask);
-
-		processBuilder.directory(portalDirPath.toFile());
-
-		Process process = processBuilder.start();
-
-		String line = null;
-
-		try(
-			BufferedReader br = new BufferedReader(
-				new InputStreamReader(process.getInputStream()))) {
-
-			while ((line = br.readLine()) != null) {
-				System.out.println(line);
-			}
-		}
-
-		try(
-			BufferedReader br = new BufferedReader(
-				new InputStreamReader(process.getErrorStream()))) {
-
-			while ((line = br.readLine()) != null) {
-				System.out.println(line);
-			}
-		}
-	}
-
 	public static void stopGradleDaemon(
 			Path portalDirPath, boolean displayGradleProcessOutput)
 		throws Exception {
@@ -244,8 +218,7 @@ public class GradleUtil {
 		if (displayGradleProcessOutput) {
 			String line = null;
 
-			try(
-				BufferedReader br = new BufferedReader(
+			try (BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getInputStream()))) {
 
 				while ((line = br.readLine()) != null) {
@@ -253,8 +226,7 @@ public class GradleUtil {
 				}
 			}
 
-			try(
-				BufferedReader br = new BufferedReader(
+			try (BufferedReader br = new BufferedReader(
 					new InputStreamReader(process.getErrorStream()))) {
 
 				while ((line = br.readLine()) != null) {
@@ -270,6 +242,74 @@ public class GradleUtil {
 				"Process " + processBuilder.command() + " failed with " +
 					exitCode);
 		}
+	}
+
+	private static boolean _checkPortalSnapshotsVersions(Path portalDirPath)
+		throws IOException {
+
+		Files.walkFileTree(
+			portalDirPath, EnumSet.allOf(FileVisitOption.class),
+			Integer.MAX_VALUE,
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult preVisitDirectory(
+						Path path, BasicFileAttributes basicFileAttributes)
+					throws IOException {
+
+					Path bndPath = path.resolve("bnd.bnd");
+
+					if (Files.exists(bndPath)) {
+						String dirName = String.valueOf(path.getFileName());
+
+						dirName = dirName.replace("-", ".");
+
+						Path metadataPath = Paths.get(
+							System.getProperty("user.home"), ".m2",
+							"repository", "com", "liferay", "portal",
+							"com.liferay." + dirName,
+							"maven-metadata-local.xml");
+
+						try {
+							if (!_getMetadataVersion(metadataPath).startsWith(
+									_getBundleVersion(bndPath))) {
+
+								_installPortalSnapshot(path);
+							}
+						}
+						catch (Exception e) {
+							throw new IOException(e);
+						}
+
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					if ((path != portalDirPath) &&
+						(path.getParent() != portalDirPath)) {
+
+						return FileVisitResult.SKIP_SUBTREE;
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
+
+		return true;
+	}
+
+	private static String _getBundleVersion(Path bndPath) throws IOException {
+		List<String> content = Files.readAllLines(bndPath);
+
+		for (String line : content) {
+			if (line.startsWith("Bundle-Version:")) {
+				String[] split = StringUtil.split(line, ":");
+
+				return split[1].trim();
+			}
+		}
+
+		return null;
 	}
 
 	private static Set<Dependency> _getConfigurationDependencies(
@@ -314,6 +354,24 @@ public class GradleUtil {
 		return jarDependencies;
 	}
 
+	private static String _getMetadataVersion(Path metadataPath)
+		throws Exception {
+
+		DocumentBuilderFactory documentBulderFactory =
+			DocumentBuilderFactory.newInstance();
+
+		DocumentBuilder documentBuilder =
+			documentBulderFactory.newDocumentBuilder();
+
+		Document document = documentBuilder.parse(metadataPath.toFile());
+
+		NodeList nodeList = document.getElementsByTagName("version");
+
+		Node node = nodeList.item(0);
+
+		return node.getTextContent();
+	}
+
 	private static String _getTaskName(Path portalDirPath, Path workDirPath) {
 		Path modulesPath = portalDirPath.resolve("modules");
 
@@ -328,6 +386,38 @@ public class GradleUtil {
 		relativeWorkPathString = relativeWorkPathString.replace('/', ':');
 
 		return relativeWorkPathString.concat(":").concat("printDependencies");
+	}
+
+	private static void _installPortalSnapshot(Path path) throws IOException {
+		List<String> antTask = new ArrayList<>();
+
+		antTask.add("ant");
+
+		antTask.add("install-portal-snapshot");
+
+		ProcessBuilder processBuilder = new ProcessBuilder(antTask);
+
+		processBuilder.directory(path.toFile());
+
+		Process process = processBuilder.start();
+
+		String line = null;
+
+		try (BufferedReader br = new BufferedReader(
+				new InputStreamReader(process.getInputStream()))) {
+
+			while ((line = br.readLine()) != null) {
+				System.out.println(line);
+			}
+		}
+
+		try (BufferedReader br = new BufferedReader(
+				new InputStreamReader(process.getErrorStream()))) {
+
+			while ((line = br.readLine()) != null) {
+				System.out.println(line);
+			}
+		}
 	}
 
 	private static Map<String, Path> _loadSourceJarPaths(String sources) {

@@ -57,6 +57,7 @@ public class CreateUmbrella {
 		Path projectParentPath = projectPath.getParent();
 
 		data.put("projectModulesPath", projectParentPath.resolve("modules"));
+
 		data.put("moduleNames", moduleNames);
 
 		try (Writer writer = Files.newBufferedWriter(

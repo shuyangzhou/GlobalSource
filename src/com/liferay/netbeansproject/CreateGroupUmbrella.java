@@ -64,6 +64,7 @@ public class CreateGroupUmbrella {
 
 		data.put(
 			"projectModulesPath", projectParentPath.resolve("group-modules"));
+
 		data.put("moduleNames", moduleNames);
 
 		try (Writer writer = Files.newBufferedWriter(
