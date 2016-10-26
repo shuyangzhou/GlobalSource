@@ -83,6 +83,8 @@ public class GradleUtil {
 
 		Path gradleCachePath = Paths.get(".gradle");
 
+		Files.deleteIfExists(gradleCachePath.resolve("gradle.properties"));
+
 		FileUtil.copy(portalDirPath.resolve(".gradle"), gradleCachePath);
 
 		gradleTask.add(String.valueOf(gradleCachePath));
