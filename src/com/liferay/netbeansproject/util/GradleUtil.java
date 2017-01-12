@@ -430,12 +430,18 @@ public class GradleUtil {
 
 			String fileName = String.valueOf(path.getFileName());
 
-			if (!fileName.startsWith("javax.portlet") &&
-				!fileName.startsWith("javax.servlet")) {
+			if ((fileName.startsWith("javax.portlet") ||
+				fileName.startsWith("javax.servlet"))) {
 
-				sourceJarPaths.put(
-					StringUtil.replace(fileName, "-sources.jar", ".jar"), path);
+				if (!(sourceJarLocation.contains("org.glassfish.web") &&
+					!sourceJarLocation.contains("LIFERAY-PATCHED"))) {
+
+					continue;
+				}
 			}
+
+			sourceJarPaths.put(
+				StringUtil.replace(fileName, "-sources.jar", ".jar"), path);
 		}
 
 		return sourceJarPaths;
