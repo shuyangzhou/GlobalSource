@@ -82,11 +82,11 @@ public class CreateGroupModule {
 
 		Map<String, Object> data = new HashMap<>();
 
-		data.put("projectName", projectName);
-		data.put("moduleList", moduleList);
 		data.put("jarDependencies", jarDependencies);
 		data.put("moduleDependencies", moduleDependencies);
+		data.put("moduleList", moduleList);
 		data.put("portalLibJars", portalLibJars);
+		data.put("projectName", projectName);
 
 		try (Writer writer = Files.newBufferedWriter(projectPropertiesPath)) {
 			FreeMarkerUtil.process(
@@ -113,9 +113,9 @@ public class CreateGroupModule {
 
 		Map<String, Object> data = new HashMap<>();
 
-		data.put("projectName", projectName);
-		data.put("moduleList", moduleList);
 		data.put("moduleDependencies", moduleDependencies);
+		data.put("moduleList", moduleList);
+		data.put("projectName", projectName);
 
 		try (Writer writer = Files.newBufferedWriter(projectXMLPath)) {
 			FreeMarkerUtil.process(

@@ -143,6 +143,12 @@ public class GradleUtil {
 
 				jarDependencies.addAll(
 					_getConfigurationDependencies(
+						dependencyPath, "compileInclude",
+						"compileIncludeSources", false, portalToolsPath,
+						symbolicNameSet));
+
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
 						dependencyPath, "compileTest",
 						"testIntegrationRuntimeSources", true, portalToolsPath,
 						symbolicNameSet));
@@ -316,7 +322,7 @@ public class GradleUtil {
 
 	private static Set<Dependency> _getConfigurationDependencies(
 			Path dependencyPath, String configurationName, String sourceName,
-			boolean isTest, String portalToolsPath, Set<String> symbolicNameSet)
+			boolean test, String portalToolsPath, Set<String> symbolicNameSet)
 		throws IOException {
 
 		Properties dependencies = PropertiesUtil.loadProperties(dependencyPath);
@@ -348,9 +354,9 @@ public class GradleUtil {
 
 			jarDependencies.add(
 				new Dependency(
-					jarPath, sourceJarPaths.get(
-						String.valueOf(jarPath.getFileName())),
-					isTest));
+					jarPath,
+					sourceJarPaths.get(String.valueOf(jarPath.getFileName())),
+					test));
 		}
 
 		return jarDependencies;
@@ -430,8 +436,8 @@ public class GradleUtil {
 
 			String fileName = String.valueOf(path.getFileName());
 
-			if ((fileName.startsWith("javax.portlet") ||
-				fileName.startsWith("javax.servlet"))) {
+			if (fileName.startsWith("javax.portlet") ||
+				fileName.startsWith("javax.servlet")) {
 
 				if (!(sourceJarLocation.contains("org.glassfish.web") &&
 					!sourceJarLocation.contains("LIFERAY-PATCHED"))) {

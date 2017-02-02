@@ -63,8 +63,8 @@ public class CreateModule {
 		Map<String, Object> data = new HashMap<>();
 
 		data.put("module", module);
-		data.put("portalPath", portalPath);
 		data.put("portalLibJars", portalLibJars);
+		data.put("portalPath", portalPath);
 
 		try (Writer writer = Files.newBufferedWriter(projectPropertiesPath)) {
 			FreeMarkerUtil.process(
