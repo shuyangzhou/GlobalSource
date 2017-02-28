@@ -133,8 +133,6 @@
 
 		<taskdef classpathref="source.formatter.classpath" resource="com/liferay/source/formatter/ant/taskdefs.properties" />
 
-		<ivy:settings file="ivy-settings.xml" />
-
 		<format-source baseDir="src" />
 	</target>
 </project>

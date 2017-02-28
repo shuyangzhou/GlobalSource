@@ -1,0 +1,6 @@
+<ivysettings>
+	<settings defaultResolver="liferay" />
+	<resolvers>
+		<ibiblio name="liferay" m2compatible="true" root="https://repository.liferay.com/nexus/content/repositories/liferay-public-releases" />
+	</resolvers>
+</ivysettings>
