@@ -80,6 +80,11 @@ public class ProjectBuilder {
 
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
+		Map<String, String> trunkMap = PropertiesUtil.getProperties(
+			buildProperties, "trunk");
+		Map<String, String> tomcatVersionMap = PropertiesUtil.getProperties(
+			buildProperties, "tomcat.version");
+
 		for (String portalDir : portalDirs) {
 			Path portalDirPath = Paths.get(portalDir);
 
@@ -90,17 +95,27 @@ public class ProjectBuilder {
 				String.valueOf(
 					portalDirPath.getName(portalDirPath.getNameCount() - 2)));
 
+			Path trunkPath = null;
+
+			String trunkLocation = trunkMap.get(portalDir);
+
+			if (trunkLocation != null) {
+				trunkPath = Paths.get(trunkLocation);
+			}
+
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				groupDepth, currentGroupStopWords);
+				groupDepth, currentGroupStopWords, trunkPath,
+				tomcatVersionMap.get(portalDir));
 		}
 	}
 
 	public void scanPortal(
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
-			int groupDepth, List<String> groupStopWords)
+			int groupDepth, List<String> groupStopWords, Path trunkPath,
+			String tomcatVersion)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -246,7 +261,8 @@ public class ProjectBuilder {
 		}
 
 		CreateUmbrella.createUmbrella(
-			portalPath, moduleNames, projectPath.resolve("umbrella"));
+			portalPath, moduleNames, projectPath.resolve("umbrella"), trunkPath,
+			tomcatVersion);
 
 		if (groupDepth < 1) {
 			return;
@@ -267,7 +283,7 @@ public class ProjectBuilder {
 
 		CreateGroupUmbrella.createUmbrella(
 			portalPath, moduleGroups.keySet(),
-			projectPath.resolve("group-umbrella"));
+			projectPath.resolve("group-umbrella"), trunkPath, tomcatVersion);
 	}
 
 	private Map<Path, List<Module>> _createModuleGroups(

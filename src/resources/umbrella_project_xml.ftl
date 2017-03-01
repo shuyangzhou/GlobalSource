@@ -8,6 +8,9 @@
 				<root id="src.portal-web.dir"/>
 				<root id="src.portal-web-functional.dir"/>
 				<root id="src.portal-definitions.dir" />
+				<#if trunkPath??>
+				<root id="src.tomcat-work.dir" />
+				</#if>
 			</source-roots>
 			<test-roots/>
 		</data>
