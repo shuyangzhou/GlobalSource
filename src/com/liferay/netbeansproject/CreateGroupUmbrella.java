@@ -34,7 +34,8 @@ import java.util.Set;
 public class CreateGroupUmbrella {
 
 	public static void createUmbrella(
-			Path portalPath, Set<Path> groupPathSet, Path groupUmbrellaPath)
+			Path portalPath, Set<Path> groupPathSet, Path groupUmbrellaPath,
+			Path trunkPath, String tomcatVersion)
 		throws Exception {
 
 		FileUtil.delete(groupUmbrellaPath);
@@ -66,6 +67,10 @@ public class CreateGroupUmbrella {
 			"projectModulesPath", projectParentPath.resolve("group-modules"));
 
 		data.put("moduleNames", moduleNames);
+
+		data.put("trunkPath", trunkPath);
+
+		data.put("tomcatVersion", tomcatVersion);
 
 		try (Writer writer = Files.newBufferedWriter(
 				groupUmbrellaPath.resolve("nbproject/project.properties"))) {
