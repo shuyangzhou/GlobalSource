@@ -39,8 +39,18 @@ public class CreateModule {
 			Path portalPath)
 		throws Exception {
 
+		createModule(
+			module, projectPath, portalLibJars, portalPath,
+			module.getModuleName());
+	}
+
+	public static void createModule(
+			Module module, Path projectPath, Set<Dependency> portalLibJars,
+			Path portalPath, String name)
+		throws Exception {
+
 		Path projectModulePath = projectPath.resolve(
-			Paths.get("modules", module.getModuleName()));
+			Paths.get("modules", name));
 
 		Files.createDirectories(projectModulePath.resolve("nbproject"));
 

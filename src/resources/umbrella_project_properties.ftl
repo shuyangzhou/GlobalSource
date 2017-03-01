@@ -68,13 +68,18 @@ run.test.classpath=\
 	${"$"}{javac.test.classpath}:\
 	${"$"}{build.test.classes.dir}
 source.encoding=UTF-8
-excludes=**/*.css,**/*.js,**/*.json,**/*.sass,**/*.scss
+excludes=**/*.css,**/*.js,**/*.json,**/*.sass,**/*.scss,**/*.class
 file.reference.portal-web.src=${portalPath}/portal-web/docroot
 src.portal-web.dir=${"$"}{file.reference.portal-web.src}
 file.reference.portal-web-functional.src=${portalPath}/portal-web/test/functional
 src.portal-web-functional.dir=${"$"}{file.reference.portal-web-functional.src}
 file.reference.portal-definitions.src=${portalPath}/definitions
 src.portal-definitions.dir=${"$"}{file.reference.portal-definitions.src}
+
+<#if trunkPath??>
+file.reference.tomcat-work.src=${trunkPath}/tomcat-${tomcatVersion}/work/Catalina/localhost/ROOT
+src.tomcat-work.dir=${"$"}{file.reference.tomcat-work.src}
+</#if>
 
 <#list moduleNames as moduleName>
 project.${moduleName}=${projectModulesPath}/${moduleName}
