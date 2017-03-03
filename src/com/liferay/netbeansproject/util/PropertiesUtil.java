@@ -69,28 +69,37 @@ public class PropertiesUtil {
 			properties.load(in);
 		}
 
-		Path fileNamePath = filePath.getFileName();
-
-		String fileName = fileNamePath.toString();
+		String fileName = String.valueOf(filePath.getFileName());
 
 		int index = fileName.indexOf('.');
 
+		_loadExtFiles(properties, filePath, fileName, "-ext", index);
+
+		_loadExtFiles(
+			properties, filePath, fileName,
+			"." + System.getProperty("user.name"),
+			fileName.indexOf('.', index + 1));
+
+		return properties;
+	}
+
+	private static void _loadExtFiles(
+			Properties properties, Path filePath, String fileName, String tag,
+			int index)
+		throws IOException {
+
 		if (index < 0) {
-			return properties;
+			return;
 		}
 
-		String extFileName =
-			fileName.substring(0, index) + "-ext" + fileName.substring(index);
-
-		Path extFilePath = filePath.resolveSibling(extFileName);
+		Path extFilePath = filePath.resolveSibling(
+			fileName.substring(0, index) + tag + fileName.substring(index));
 
 		if (Files.exists(extFilePath)) {
 			try (InputStream in = Files.newInputStream(extFilePath)) {
 				properties.load(in);
 			}
 		}
-
-		return properties;
 	}
 
 }

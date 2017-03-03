@@ -78,6 +78,10 @@ public class ProjectBuilder {
 					buildProperties, "group.stop.words"),
 				','));
 
+		boolean includeTomcatWorkJSP = Boolean.valueOf(
+			PropertiesUtil.getRequiredProperty(
+				buildProperties, "include.tomcat.work.jsp"));
+
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
 		for (String portalDir : portalDirs) {
@@ -90,17 +94,31 @@ public class ProjectBuilder {
 				String.valueOf(
 					portalDirPath.getName(portalDirPath.getNameCount() - 2)));
 
+			Properties appServerProperties = new Properties();
+
+			Path trunkPath = null;
+
+			if (includeTomcatWorkJSP) {
+				appServerProperties = PropertiesUtil.loadProperties(
+					portalDirPath.resolve("app.server.properties"));
+
+				trunkPath = Paths.get(
+					appServerProperties.getProperty("app.server.parent.dir"));
+			}
+
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				groupDepth, currentGroupStopWords);
+				groupDepth, currentGroupStopWords, trunkPath,
+				appServerProperties.getProperty("app.server.tomcat.version"));
 		}
 	}
 
 	public void scanPortal(
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
-			int groupDepth, List<String> groupStopWords)
+			int groupDepth, List<String> groupStopWords, Path trunkPath,
+			String tomcatVersion)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -246,7 +264,8 @@ public class ProjectBuilder {
 		}
 
 		CreateUmbrella.createUmbrella(
-			portalPath, moduleNames, projectPath.resolve("umbrella"));
+			portalPath, moduleNames, projectPath.resolve("umbrella"), trunkPath,
+			tomcatVersion);
 
 		if (groupDepth < 1) {
 			return;
@@ -267,7 +286,7 @@ public class ProjectBuilder {
 
 		CreateGroupUmbrella.createUmbrella(
 			portalPath, moduleGroups.keySet(),
-			projectPath.resolve("group-umbrella"));
+			projectPath.resolve("group-umbrella"), trunkPath, tomcatVersion);
 	}
 
 	private Map<Path, List<Module>> _createModuleGroups(

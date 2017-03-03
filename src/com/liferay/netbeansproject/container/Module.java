@@ -47,6 +47,17 @@ public class Module implements Comparable<Module> {
 			Properties portalModuleDependencyProperties)
 		throws IOException {
 
+		return createModule(
+			projectPath, modulePath, moduleDependencies, jarDependencies,
+			portalModuleDependencyProperties, modulePath.getFileName());
+	}
+
+	public static Module createModule(
+			Path projectPath, Path modulePath,
+			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
+			Properties portalModuleDependencyProperties, Path moduleName)
+		throws IOException {
+
 		if (jarDependencies == null) {
 			jarDependencies = new HashSet<>();
 		}
@@ -88,8 +99,6 @@ public class Module implements Comparable<Module> {
 				throw new Error(nsae);
 			}
 		}
-
-		Path moduleName = modulePath.getFileName();
 
 		if (projectPath != null) {
 			projectPath = projectPath.resolve(moduleName);

@@ -33,7 +33,8 @@ import java.util.Set;
 public class CreateUmbrella {
 
 	public static void createUmbrella(
-			Path portalPath, Set<String> moduleNames, Path projectPath)
+			Path portalPath, Set<String> moduleNames, Path projectPath,
+			Path trunkPath, String tomcatVersion)
 		throws Exception {
 
 		FileUtil.delete(projectPath);
@@ -59,6 +60,10 @@ public class CreateUmbrella {
 		data.put("projectModulesPath", projectParentPath.resolve("modules"));
 
 		data.put("moduleNames", moduleNames);
+
+		data.put("trunkPath", trunkPath);
+
+		data.put("tomcatVersion", tomcatVersion);
 
 		try (Writer writer = Files.newBufferedWriter(
 				projectPath.resolve("nbproject/project.properties"))) {
