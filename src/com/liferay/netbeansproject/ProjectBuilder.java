@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * @author Tom Wang
@@ -80,7 +81,7 @@ public class ProjectBuilder {
 
 		boolean includeTomcatWorkJSP = Boolean.valueOf(
 			PropertiesUtil.getRequiredProperty(
-				buildProperties, "include.tomcat.work.jsp"));
+				buildProperties, "include.generated.jsp.servlet"));
 
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
@@ -98,19 +99,42 @@ public class ProjectBuilder {
 
 			Path trunkPath = null;
 
+			Map<String, Path> trunkWorkMap = new HashMap<>();
+
 			if (includeTomcatWorkJSP) {
 				appServerProperties = PropertiesUtil.loadProperties(
 					portalDirPath.resolve("app.server.properties"));
 
 				trunkPath = Paths.get(
 					appServerProperties.getProperty("app.server.parent.dir"));
+
+				try (Stream<Path> paths = Files.walk(
+						trunkPath.resolve("work"), 1)) {
+
+					paths.forEach(filePath -> {
+						String fileName = String.valueOf(
+							filePath.getFileName());
+
+						int index = fileName.indexOf('-');
+
+						if (fileName.startsWith("com.liferay.") &&
+							(index > 0)) {
+
+							String moduleName = fileName.substring(12, index);
+
+							trunkWorkMap.put(
+								moduleName.replace('.', '-'), filePath);
+						}
+					});
+				}
 			}
 
 			projectBuilder.scanPortal(
 				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
 				groupDepth, currentGroupStopWords, trunkPath,
-				appServerProperties.getProperty("app.server.tomcat.version"));
+				appServerProperties.getProperty("app.server.tomcat.version"),
+				trunkWorkMap);
 		}
 	}
 
@@ -118,7 +142,7 @@ public class ProjectBuilder {
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			int groupDepth, List<String> groupStopWords, Path trunkPath,
-			String tomcatVersion)
+			String tomcatVersion, Map<String, Path> trunkWorkMap)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -188,7 +212,8 @@ public class ProjectBuilder {
 						!module.equals(
 							Module.createModule(
 								null, path, null, null,
-								portalModuleDependencyProperties))) {
+								portalModuleDependencyProperties,
+								trunkWorkMap))) {
 
 						newModulePaths.add(path);
 					}
@@ -255,7 +280,7 @@ public class ProjectBuilder {
 				moduleDependenciesMap.get(newModulePath),
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
-				portalModuleDependencyProperties);
+				portalModuleDependencyProperties, trunkWorkMap);
 
 			modules.add(module);
 

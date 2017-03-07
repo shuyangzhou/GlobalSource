@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -44,18 +45,21 @@ public class Module implements Comparable<Module> {
 	public static Module createModule(
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-			Properties portalModuleDependencyProperties)
+			Properties portalModuleDependencyProperties,
+			Map<String, Path> trunkWorkMap)
 		throws IOException {
 
 		return createModule(
 			projectPath, modulePath, moduleDependencies, jarDependencies,
-			portalModuleDependencyProperties, modulePath.getFileName());
+			portalModuleDependencyProperties, trunkWorkMap,
+			modulePath.getFileName());
 	}
 
 	public static Module createModule(
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-			Properties portalModuleDependencyProperties, Path moduleName)
+			Properties portalModuleDependencyProperties,
+			Map<String, Path> trunkWorkMap, Path moduleName)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -104,13 +108,16 @@ public class Module implements Comparable<Module> {
 			projectPath = projectPath.resolve(moduleName);
 		}
 
+		Path jspPath = trunkWorkMap.get(
+			String.valueOf(modulePath.getFileName()));
+
 		Module module = new Module(
 			projectPath, modulePath, _resolveSourcePath(modulePath),
 			_resolveResourcePath(modulePath, "main"),
 			_resolveTestPath(modulePath, true),
 			_resolveResourcePath(modulePath, "test"),
 			_resolveTestPath(modulePath, false),
-			_resolveResourcePath(modulePath, "testIntegration"),
+			_resolveResourcePath(modulePath, "testIntegration"), jspPath,
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties, moduleName.toString()),
@@ -140,6 +147,7 @@ public class Module implements Comparable<Module> {
 			_getPath(properties, "test.unit.resource.path"),
 			_getPath(properties, "test.integration.path"),
 			_getPath(properties, "test.integration.resource.path"),
+			_getPath(properties, "jsp.path"),
 			_getDependencyList(properties.getProperty("module.dependencies")),
 			_getDependencyList(properties.getProperty("jar.dependencies")),
 			new HashSet(
@@ -179,6 +187,7 @@ public class Module implements Comparable<Module> {
 			Objects.equals(
 				_testIntegrationResourcePath,
 				module._testIntegrationResourcePath) &&
+			Objects.equals(_jspPath, module._jspPath) &&
 			Objects.equals(_checksum, module._checksum)) {
 
 			return true;
@@ -193,6 +202,10 @@ public class Module implements Comparable<Module> {
 
 	public Set<Dependency> getJarDependencies() {
 		return _jarDependencies;
+	}
+
+	public Path getJspPath() {
+		return _jspPath;
 	}
 
 	public Set<Dependency> getModuleDependencies() {
@@ -247,6 +260,7 @@ public class Module implements Comparable<Module> {
 		hashCode = HashUtil.hash(hashCode, _testUnitResourcePath);
 		hashCode = HashUtil.hash(hashCode, _testIntegrationPath);
 		hashCode = HashUtil.hash(hashCode, _testIntegrationResourcePath);
+		hashCode = HashUtil.hash(hashCode, _jspPath);
 		hashCode = HashUtil.hash(hashCode, _checksum);
 
 		return hashCode;
@@ -272,6 +286,8 @@ public class Module implements Comparable<Module> {
 		sb.append(_testIntegrationPath);
 		sb.append(", testIntegrationResourcePath=");
 		sb.append(_testIntegrationResourcePath);
+		sb.append(", jspPath=");
+		sb.append(_jspPath);
 		sb.append(", moduleDependencies=");
 		sb.append(_moduleDependencies);
 		sb.append(", jarDependencies=");
@@ -429,8 +445,9 @@ public class Module implements Comparable<Module> {
 		Path projectPath, Path modulePath, Path sourcePath,
 		Path sourceResourcePath, Path testUnitPath, Path testUnitResourcePath,
 		Path testIntegrationPath, Path testIntegrationResourcePath,
-		Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-		Set<String> portalModuleDependencies, String checksum) {
+		Path jspPath, Set<Dependency> moduleDependencies,
+		Set<Dependency> jarDependencies, Set<String> portalModuleDependencies,
+		String checksum) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -440,6 +457,7 @@ public class Module implements Comparable<Module> {
 		_testUnitResourcePath = testUnitResourcePath;
 		_testIntegrationPath = testIntegrationPath;
 		_testIntegrationResourcePath = testIntegrationResourcePath;
+		_jspPath = jspPath;
 		_moduleDependencies = moduleDependencies;
 		_jarDependencies = jarDependencies;
 		_portalModuleDependencies = portalModuleDependencies;
@@ -459,6 +477,7 @@ public class Module implements Comparable<Module> {
 		_putProperty(
 			properties, "test.integration.resource.path",
 			_testIntegrationResourcePath);
+		_putProperty(properties, "jsp.path", _jspPath);
 
 		Path gradleFilePath = _modulePath.resolve("build.gradle");
 
@@ -503,6 +522,7 @@ public class Module implements Comparable<Module> {
 
 	private final String _checksum;
 	private final Set<Dependency> _jarDependencies;
+	private final Path _jspPath;
 	private final Set<Dependency> _moduleDependencies;
 	private final Path _modulePath;
 	private final Set<String> _portalModuleDependencies;

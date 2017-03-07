@@ -12,6 +12,9 @@
 				<#if module.getSourceResourcePath()??>
 					<root id="src.${module.getModuleName()}.resources.dir" name="${module.getModuleName()}.resources"/>
 				</#if>
+				<#if module.getJspPath()??>
+					<root id="src.${module.getModuleName()}.jsp.dir" name="${module.getModuleName()}.jsp-src"/>
+				</#if>
 				</#list>
 			</source-roots>
 

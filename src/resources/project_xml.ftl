@@ -11,6 +11,9 @@
 				<#if module.getSourceResourcePath()??>
 					<root id="src.${module.getModuleName()}.resources.dir" name="resources"/>
 				</#if>
+				<#if module.getJspPath()??>
+					<root id="src.${module.getModuleName()}.jsp.dir" name="jsp-src"/>
+				</#if>
 				<#if module.getModuleName() == "portal-impl">
 					<root id="src.test.dir" name="portal-test-integration"/>
 				</#if>

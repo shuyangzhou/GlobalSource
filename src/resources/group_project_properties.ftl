@@ -68,7 +68,7 @@ run.test.classpath=\
 	${"$"}{javac.test.classpath}:\
 	${"$"}{build.test.classes.dir}
 source.encoding=UTF-8
-excludes=**/*.css,**/*.js,**/*.json,**/*.sass,**/*.scss
+excludes=**/*.css,**/*.js,**/*.json,**/*.sass,**/*.scss,**/*.class
 application.title=${projectName}
 dist.jar=${r"${dist.dir}"}/${projectName}.jar
 
@@ -96,6 +96,10 @@ test.${module.getModuleName()}.test-unit-resources.dir=${"$"}{file.reference.${m
 <#if module.getTestIntegrationResourcePath()??>
 file.reference.${module.getModuleName()}-test-integration-resources=${module.getTestIntegrationResourcePath()}
 test.${module.getModuleName()}.test-integration-resources.dir=${"$"}{file.reference.${module.getModuleName()}-test-integration-resources}
+</#if>
+<#if module.getJspPath()??>
+file.reference.${module.getModuleName()}-jsp.src=${module.getJspPath()}
+src.${module.getModuleName()}.jsp.dir=${"$"}{file.reference.${module.getModuleName()}-jsp.src}
 </#if>
 </#list>
 <#list jarDependencies as jarDependency>
