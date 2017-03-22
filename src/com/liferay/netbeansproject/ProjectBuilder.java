@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * @author Tom Wang
@@ -79,7 +78,7 @@ public class ProjectBuilder {
 					buildProperties, "group.stop.words"),
 				','));
 
-		boolean includeTomcatWorkJSP = Boolean.valueOf(
+		boolean includeJsps = Boolean.valueOf(
 			PropertiesUtil.getRequiredProperty(
 				buildProperties, "include.generated.jsp.servlet"));
 
@@ -99,34 +98,12 @@ public class ProjectBuilder {
 
 			Path trunkPath = null;
 
-			Map<String, Path> trunkWorkMap = new HashMap<>();
-
-			if (includeTomcatWorkJSP) {
+			if (includeJsps) {
 				appServerProperties = PropertiesUtil.loadProperties(
 					portalDirPath.resolve("app.server.properties"));
 
 				trunkPath = Paths.get(
 					appServerProperties.getProperty("app.server.parent.dir"));
-
-				try (Stream<Path> paths = Files.walk(
-						trunkPath.resolve("work"), 1)) {
-
-					paths.forEach(filePath -> {
-						String fileName = String.valueOf(
-							filePath.getFileName());
-
-						int index = fileName.indexOf('-');
-
-						if (fileName.startsWith("com.liferay.") &&
-							(index > 0)) {
-
-							String moduleName = fileName.substring(12, index);
-
-							trunkWorkMap.put(
-								moduleName.replace('.', '-'), filePath);
-						}
-					});
-				}
 			}
 
 			projectBuilder.scanPortal(
@@ -134,7 +111,7 @@ public class ProjectBuilder {
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
 				groupDepth, currentGroupStopWords, trunkPath,
 				appServerProperties.getProperty("app.server.tomcat.version"),
-				trunkWorkMap);
+				includeJsps);
 		}
 	}
 
@@ -142,7 +119,7 @@ public class ProjectBuilder {
 			boolean rebuild, final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			int groupDepth, List<String> groupStopWords, Path trunkPath,
-			String tomcatVersion, Map<String, Path> trunkWorkMap)
+			String tomcatVersion, boolean includeJsps)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -212,8 +189,8 @@ public class ProjectBuilder {
 						!module.equals(
 							Module.createModule(
 								null, path, null, null,
-								portalModuleDependencyProperties,
-								trunkWorkMap))) {
+								portalModuleDependencyProperties, trunkPath,
+								includeJsps))) {
 
 						newModulePaths.add(path);
 					}
@@ -280,7 +257,7 @@ public class ProjectBuilder {
 				moduleDependenciesMap.get(newModulePath),
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
-				portalModuleDependencyProperties, trunkWorkMap);
+				portalModuleDependencyProperties, trunkPath, includeJsps);
 
 			modules.add(module);
 

@@ -32,10 +32,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * @author Tom Wang
@@ -45,21 +46,21 @@ public class Module implements Comparable<Module> {
 	public static Module createModule(
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-			Properties portalModuleDependencyProperties,
-			Map<String, Path> trunkWorkMap)
+			Properties portalModuleDependencyProperties, Path trunkPath,
+			boolean includeTomcatWorkJSP)
 		throws IOException {
 
 		return createModule(
 			projectPath, modulePath, moduleDependencies, jarDependencies,
-			portalModuleDependencyProperties, trunkWorkMap,
+			portalModuleDependencyProperties, trunkPath, includeTomcatWorkJSP,
 			modulePath.getFileName());
 	}
 
 	public static Module createModule(
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-			Properties portalModuleDependencyProperties,
-			Map<String, Path> trunkWorkMap, Path moduleName)
+			Properties portalModuleDependencyProperties, Path trunkPath,
+			boolean includeJsps, Path moduleName)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -108,8 +109,24 @@ public class Module implements Comparable<Module> {
 			projectPath = projectPath.resolve(moduleName);
 		}
 
-		Path jspPath = trunkWorkMap.get(
-			String.valueOf(modulePath.getFileName()));
+		Path resourcesPath = Paths.get(
+			modulePath.toString(), "src", "main", "resources", "META-INF",
+			"resources");
+
+		Path jspPath = null;
+
+		if (includeJsps) {
+			if (Files.exists(resourcesPath)) {
+				Stream<Path> jspStream = Files.list(resourcesPath)
+					.filter(fileName -> fileName.toString().endsWith(".jsp"));
+
+				if (jspStream.count() > 0) {
+					jspPath = Paths.get(
+						trunkPath.toString(), "work",
+						_getWorkPath(modulePath.resolve("bnd.bnd")));
+				}
+			}
+		}
 
 		Module module = new Module(
 			projectPath, modulePath, _resolveSourcePath(modulePath),
@@ -351,6 +368,32 @@ public class Module implements Comparable<Module> {
 		}
 
 		return Paths.get(value);
+	}
+
+	private static String _getWorkPath(Path bndPath) throws IOException {
+		List<String> lines = Files.readAllLines(bndPath);
+
+		String fileName = "";
+
+		for (String line : lines) {
+			if (line.startsWith("Bundle-SymbolicName")) {
+				String[] split = StringUtil.split(line, ':');
+
+				fileName = split[1].trim();
+			}
+
+			if (line.startsWith("Bundle-Version")) {
+				String[] split = StringUtil.split(line, ':');
+
+				fileName += "-" + split[1].trim();
+			}
+		}
+
+		if (fileName.isEmpty()) {
+			throw new IOException("Incorrect filename, check " + bndPath);
+		}
+
+		return fileName;
 	}
 
 	private static void _putProperty(
