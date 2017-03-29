@@ -138,7 +138,7 @@ public class Module implements Comparable<Module> {
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties, moduleName.toString()),
-			checksum);
+			checksum, _resolveJdkVersion(gradleFilePath));
 
 		if (projectPath != null) {
 			module._save();
@@ -172,7 +172,8 @@ public class Module implements Comparable<Module> {
 					StringUtil.split(
 						properties.getProperty("portal.module.dependencies"),
 						','))),
-			properties.getProperty("checksum"));
+			properties.getProperty("checksum"),
+			properties.getProperty("jdk.version"));
 	}
 
 	@Override
@@ -219,6 +220,10 @@ public class Module implements Comparable<Module> {
 
 	public Set<Dependency> getJarDependencies() {
 		return _jarDependencies;
+	}
+
+	public String getJdkVersion() {
+		return _jdkVersion;
 	}
 
 	public Path getJspPath() {
@@ -404,6 +409,26 @@ public class Module implements Comparable<Module> {
 		}
 	}
 
+	private static String _resolveJdkVersion(Path gradleFilePath)
+		throws IOException {
+
+		if (!Files.exists(gradleFilePath)) {
+			return "1.7";
+		}
+
+		List<String> lines = Files.readAllLines(gradleFilePath);
+
+		for (String line : lines) {
+			if (line.startsWith("sourceCompatibility")) {
+				String[] split = StringUtil.split(line, '=');
+
+				return StringUtil.extractQuotedText(split[1]);
+			}
+		}
+
+		return "1.7";
+	}
+
 	private static Set<String> _resolvePortalModuleDependencies(
 			Properties properties, String moduleName)
 		throws IOException {
@@ -490,7 +515,7 @@ public class Module implements Comparable<Module> {
 		Path testIntegrationPath, Path testIntegrationResourcePath,
 		Path jspPath, Set<Dependency> moduleDependencies,
 		Set<Dependency> jarDependencies, Set<String> portalModuleDependencies,
-		String checksum) {
+		String checksum, String jdkVersion) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -505,6 +530,7 @@ public class Module implements Comparable<Module> {
 		_jarDependencies = jarDependencies;
 		_portalModuleDependencies = portalModuleDependencies;
 		_checksum = checksum;
+		_jdkVersion = jdkVersion;
 	}
 
 	private void _save() throws IOException {
@@ -554,6 +580,8 @@ public class Module implements Comparable<Module> {
 			properties, "portal.module.dependencies",
 			StringUtil.merge(_portalModuleDependencies, ','));
 
+		_putProperty(properties, "jdk.version", _jdkVersion);
+
 		Files.createDirectories(_projectPath);
 
 		try (Writer writer = Files.newBufferedWriter(
@@ -565,6 +593,7 @@ public class Module implements Comparable<Module> {
 
 	private final String _checksum;
 	private final Set<Dependency> _jarDependencies;
+	private final String _jdkVersion;
 	private final Path _jspPath;
 	private final Set<Dependency> _moduleDependencies;
 	private final Path _modulePath;
