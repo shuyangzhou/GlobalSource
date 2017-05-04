@@ -272,11 +272,9 @@ public class GradleUtil {
 
 						dirName = dirName.replace("-", ".");
 
-						Path metadataPath = Paths.get(
-							System.getProperty("user.home"), ".m2",
-							"repository", "com", "liferay", "portal",
-							"com.liferay." + dirName,
-							"maven-metadata-local.xml");
+						Path metadataPath = portalDirPath.resolve(
+							".m2/com/liferay/portal/com.liferay." + dirName +
+								"/maven-metadata-local.xml");
 
 						try {
 							if (!_getMetadataVersion(metadataPath).startsWith(
