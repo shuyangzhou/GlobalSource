@@ -54,7 +54,8 @@ public class GradleUtil {
 
 	public static Map<String, Set<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath, Set<String> symbolicNameSet,
-			boolean displayGradleProcessOutput, boolean daemon)
+			boolean displayGradleProcessOutput, boolean daemon,
+			String gradleBuildExcludeDirs)
 		throws Exception {
 
 		_checkPortalSnapshotsVersions(portalDirPath);
@@ -80,6 +81,7 @@ public class GradleUtil {
 		gradleTask.add(_getTaskName(portalDirPath, workDirPath));
 		gradleTask.add(
 			"-PdependencyDirectory=".concat(dependenciesDirPath.toString()));
+		gradleTask.add("-Dbuild.exclude.dirs=" + gradleBuildExcludeDirs);
 		gradleTask.add("-g");
 
 		Path gradleCachePath = Paths.get(".gradle");
