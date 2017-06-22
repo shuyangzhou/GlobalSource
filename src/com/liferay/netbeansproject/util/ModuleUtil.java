@@ -27,8 +27,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Tom Wang
@@ -38,7 +38,7 @@ public class ModuleUtil {
 	public static Set<Dependency> getPortalLibJars(Path portalPath)
 		throws IOException {
 
-		final Set<Dependency> jarSet = new HashSet<>();
+		final Set<Dependency> jarSet = new TreeSet<>();
 
 		Files.walkFileTree(
 			portalPath.resolve("lib"), EnumSet.allOf(FileVisitOption.class),
