@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -53,7 +54,8 @@ public class GradleUtil {
 
 	public static Map<String, Set<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath, Set<String> symbolicNameSet,
-			boolean displayGradleProcessOutput, boolean daemon)
+			boolean displayGradleProcessOutput, boolean daemon,
+			String gradleBuildExcludeDirs)
 		throws Exception {
 
 		_checkPortalSnapshotsVersions(portalDirPath);
@@ -79,6 +81,7 @@ public class GradleUtil {
 		gradleTask.add(_getTaskName(portalDirPath, workDirPath));
 		gradleTask.add(
 			"-PdependencyDirectory=".concat(dependenciesDirPath.toString()));
+		gradleTask.add("-Dbuild.exclude.dirs=" + gradleBuildExcludeDirs);
 		gradleTask.add("-g");
 
 		Path gradleCachePath = Paths.get(".gradle");
@@ -134,7 +137,7 @@ public class GradleUtil {
 				portalDirPath.resolve("tools/sdk"));
 
 			for (Path dependencyPath : directoryStream) {
-				Set<Dependency> jarDependencies = new HashSet<>();
+				Set<Dependency> jarDependencies = new TreeSet<>();
 
 				jarDependencies.addAll(
 					_getConfigurationDependencies(
