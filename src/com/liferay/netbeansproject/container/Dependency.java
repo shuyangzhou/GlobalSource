@@ -32,7 +32,7 @@ public class Dependency implements Comparable<Dependency> {
 	@Override
 	public int compareTo(Dependency dependency) {
 		int value =
-			_path.getFileName().compareTo(dependency._path.getFileName());
+			_path.compareTo(dependency._path);
 
 		if (value != 0) {
 			return value;
