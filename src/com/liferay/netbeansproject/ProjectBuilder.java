@@ -85,6 +85,8 @@ public class ProjectBuilder {
 		String gradleBuildExcludeDirs = buildProperties.getProperty(
 			"gradle.build.exclude.dirs");
 
+		String gradleOpts = buildProperties.getProperty("gradle.opts");
+
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
 		for (String portalDir : portalDirs) {
@@ -114,7 +116,7 @@ public class ProjectBuilder {
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
 				groupDepth, currentGroupStopWords, trunkPath,
 				appServerProperties.getProperty("app.server.tomcat.version"),
-				includeJsps, gradleBuildExcludeDirs);
+				includeJsps, gradleBuildExcludeDirs, gradleOpts);
 		}
 	}
 
@@ -123,7 +125,7 @@ public class ProjectBuilder {
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			int groupDepth, List<String> groupStopWords, Path trunkPath,
 			String tomcatVersion, boolean includeJsps,
-			String gradleBuildExcludeDirs)
+			String gradleBuildExcludeDirs, String gradleOpts)
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
@@ -232,7 +234,7 @@ public class ProjectBuilder {
 			jarDependenciesMap = GradleUtil.getJarDependencies(
 				portalPath, portalPath.resolve("modules"),
 				moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
-				gradleBuildExcludeDirs);
+				gradleBuildExcludeDirs, gradleOpts);
 		}
 		else {
 			for (Path newModulePath : newModulePaths) {
@@ -248,7 +250,7 @@ public class ProjectBuilder {
 							portalPath, newModulePath,
 							moduleProjectPaths.keySet(),
 							displayGradleProcessOutput, true,
-							gradleBuildExcludeDirs));
+							gradleBuildExcludeDirs, gradleOpts));
 				}
 			}
 

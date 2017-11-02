@@ -55,7 +55,7 @@ public class GradleUtil {
 	public static Map<String, Set<Dependency>> getJarDependencies(
 			Path portalDirPath, Path workDirPath, Set<String> symbolicNameSet,
 			boolean displayGradleProcessOutput, boolean daemon,
-			String gradleBuildExcludeDirs)
+			String gradleBuildExcludeDirs, String gradleOpts)
 		throws Exception {
 
 		_checkPortalSnapshotsVersions(portalDirPath);
@@ -96,7 +96,7 @@ public class GradleUtil {
 
 		Map<String, String> env = processBuilder.environment();
 
-		env.put("GRADLE_OPTS", "-Xmx2g");
+		env.put("GRADLE_OPTS", gradleOpts);
 
 		Process process = processBuilder.start();
 
