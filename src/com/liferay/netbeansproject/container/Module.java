@@ -433,14 +433,24 @@ public class Module implements Comparable<Module> {
 			Properties properties, String moduleName)
 		throws IOException {
 
+		StringBuilder sb = new StringBuilder();
+
 		String dependencies = properties.getProperty(moduleName);
 
 		if (dependencies == null) {
-			dependencies = PropertiesUtil.getRequiredProperty(
-				properties, "portal.module.dependencies");
+			sb.append(
+				PropertiesUtil.getRequiredProperty(
+					properties, "portal.module.dependencies"));
+		}
+		else {
+			if (!dependencies.isEmpty()) {
+				sb.append(dependencies);
+				sb.append(',');
+			}
+			sb.append(properties.getProperty("petra.modules"));
 		}
 
-		return new HashSet(Arrays.asList(StringUtil.split(dependencies, ',')));
+		return new HashSet(Arrays.asList(StringUtil.split(sb.toString(), ',')));
 	}
 
 	private static Path _resolveResourcePath(Path modulePath, String type) {
