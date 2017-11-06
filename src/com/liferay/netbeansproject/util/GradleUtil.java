@@ -177,7 +177,7 @@ public class GradleUtil {
 			return Collections.emptySet();
 		}
 
-		Set<Dependency> moduleDependencies = new HashSet<>();
+		Set<Dependency> moduleDependencies = new TreeSet<>();
 
 		for (String line : Files.readAllLines(buildGradlePath)) {
 			Path moduleProjectPath = null;

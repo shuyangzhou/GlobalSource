@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
@@ -450,7 +451,7 @@ public class Module implements Comparable<Module> {
 			sb.append(properties.getProperty("petra.modules"));
 		}
 
-		return new HashSet(Arrays.asList(StringUtil.split(sb.toString(), ',')));
+		return new TreeSet(Arrays.asList(StringUtil.split(sb.toString(), ',')));
 	}
 
 	private static Path _resolveResourcePath(Path modulePath, String type) {
