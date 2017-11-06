@@ -259,6 +259,8 @@ public class ProjectBuilder {
 
 		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
+		Set<Dependency> compatJars = ModuleUtil.getCompatJars(portalPath);
+
 		for (Path newModulePath : newModulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve("modules"), newModulePath,
@@ -270,7 +272,7 @@ public class ProjectBuilder {
 			modules.add(module);
 
 			CreateModule.createModule(
-				module, projectPath, portalLibJars, portalPath);
+				module, projectPath, portalLibJars, compatJars, portalPath);
 		}
 
 		CreateUmbrella.createUmbrella(
@@ -291,7 +293,7 @@ public class ProjectBuilder {
 		for (Map.Entry<Path, List<Module>> entry : moduleGroups.entrySet()) {
 			CreateGroupModule.createModule(
 				groupProjectPath, portalPath, entry.getKey(), entry.getValue(),
-				portalLibJars);
+				portalLibJars, compatJars);
 		}
 
 		CreateGroupUmbrella.createUmbrella(

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,8 @@ public class CreateGroupModule {
 
 	public static void createModule(
 			Path projectPath, Path portalPath, Path groupPath,
-			List<Module> moduleList, Set<Dependency> portalLibJars)
+			List<Module> moduleList, Set<Dependency> portalLibJars,
+			Set<Dependency> compatJars)
 		throws Exception {
 
 		Collections.sort(moduleList);
@@ -64,9 +66,19 @@ public class CreateGroupModule {
 					dependency -> !dependency.getPath().startsWith(groupPath))
 				.collect(Collectors.toSet());
 
+		String modulePath = groupPath.toString();
+
+		Set<Dependency> combinedJars = new TreeSet<>();
+
+		combinedJars.addAll(compatJars);
+
+		if (!modulePath.contains("modules")) {
+			combinedJars.addAll(portalLibJars);
+		}
+
 		_appendProperties(
 			projectName, moduleList, jarDependencies, moduleDependencies,
-			portalLibJars, projectPath.resolve("nbproject/project.properties"));
+			combinedJars, projectPath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(
 			projectName, moduleList, moduleDependencies,

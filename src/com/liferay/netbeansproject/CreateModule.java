@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Tom Wang
@@ -36,17 +37,17 @@ public class CreateModule {
 
 	public static void createModule(
 			Module module, Path projectPath, Set<Dependency> portalLibJars,
-			Path portalPath)
+			Set<Dependency> compatJars, Path portalPath)
 		throws Exception {
 
 		createModule(
-			module, projectPath, portalLibJars, portalPath,
+			module, projectPath, portalLibJars, compatJars, portalPath,
 			module.getModuleName());
 	}
 
 	public static void createModule(
 			Module module, Path projectPath, Set<Dependency> portalLibJars,
-			Path portalPath, String name)
+			Set<Dependency> compatJars, Path portalPath, String name)
 		throws Exception {
 
 		Path projectModulePath = projectPath.resolve(
@@ -56,8 +57,18 @@ public class CreateModule {
 
 		_generateBuildXML(module, projectModulePath.resolve("build.xml"));
 
+		String modulePath = String.valueOf(module.getModulePath());
+
+		Set<Dependency> combinedJars = new TreeSet<>();
+
+		combinedJars.addAll(compatJars);
+
+		if (!modulePath.contains("modules")) {
+			combinedJars.addAll(portalLibJars);
+		}
+
 		_appendProperties(
-			module, portalPath, portalLibJars,
+			module, portalPath, combinedJars,
 			projectModulePath.resolve("nbproject/project.properties"));
 
 		_createProjectXML(

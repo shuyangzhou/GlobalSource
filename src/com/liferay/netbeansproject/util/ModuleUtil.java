@@ -35,13 +35,64 @@ import java.util.TreeSet;
  */
 public class ModuleUtil {
 
+	public static Set<Dependency> getCompatJars(Path portalPath)
+		throws IOException {
+
+		final Set<Dependency> jarSet = new TreeSet<>();
+
+		Files.walkFileTree(
+			portalPath.resolve("tmp"), EnumSet.allOf(FileVisitOption.class),
+			Integer.MAX_VALUE,
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult visitFile(
+						Path filePath, BasicFileAttributes attrs)
+					throws IOException {
+
+					String filePathString = filePath.toString();
+
+					if (filePathString.endsWith("compat.jar")) {
+						jarSet.add(
+							new Dependency(
+								Paths.get(filePathString), null, false));
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
+
+		return jarSet;
+	}
+
 	public static Set<Dependency> getPortalLibJars(Path portalPath)
 		throws IOException {
 
 		final Set<Dependency> jarSet = new TreeSet<>();
 
-		_addAllJarsInDirToSet(jarSet, portalPath.resolve("lib"));
-		_addCompatJarsInDirToSet(jarSet, portalPath.resolve("tmp"));
+		Files.walkFileTree(
+			portalPath.resolve("lib"), EnumSet.allOf(FileVisitOption.class),
+			Integer.MAX_VALUE,
+			new SimpleFileVisitor<Path>() {
+
+				@Override
+				public FileVisitResult visitFile(
+						Path filePath, BasicFileAttributes attrs)
+					throws IOException {
+
+					String filePathString = filePath.toString();
+
+					if (filePathString.endsWith(".jar")) {
+						jarSet.add(
+							new Dependency(
+								Paths.get(filePathString), null, false));
+					}
+
+					return FileVisitResult.CONTINUE;
+				}
+
+			});
 
 		return jarSet;
 	}
@@ -71,60 +122,6 @@ public class ModuleUtil {
 
 		throw new IllegalArgumentException(
 			"Cannot find symbolic name in " + bndPath);
-	}
-
-	private static void _addAllJarsInDirToSet(
-		Set<Dependency> jarSet, Path dir) throws IOException {
-
-		Files.walkFileTree(
-			dir, EnumSet.allOf(FileVisitOption.class),
-			Integer.MAX_VALUE,
-			new SimpleFileVisitor<Path>() {
-
-				@Override
-				public FileVisitResult visitFile(
-						Path filePath, BasicFileAttributes attrs)
-					throws IOException {
-
-					String filePathString = filePath.toString();
-
-					if (filePathString.endsWith(".jar")) {
-						jarSet.add(
-							new Dependency(
-								Paths.get(filePathString), null, false));
-					}
-
-					return FileVisitResult.CONTINUE;
-				}
-
-			});
-	}
-
-	private static void _addCompatJarsInDirToSet(
-		Set<Dependency> jarSet, Path dir) throws IOException {
-
-		Files.walkFileTree(
-			dir, EnumSet.allOf(FileVisitOption.class),
-			Integer.MAX_VALUE,
-			new SimpleFileVisitor<Path>() {
-
-				@Override
-				public FileVisitResult visitFile(
-						Path filePath, BasicFileAttributes attrs)
-					throws IOException {
-
-					String filePathString = filePath.toString();
-
-					if (filePathString.endsWith("compat.jar")) {
-						jarSet.add(
-							new Dependency(
-								Paths.get(filePathString), null, false));
-					}
-
-					return FileVisitResult.CONTINUE;
-				}
-
-			});
 	}
 
 }
