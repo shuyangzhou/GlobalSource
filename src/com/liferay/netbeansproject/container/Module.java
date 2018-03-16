@@ -47,20 +47,20 @@ public class Module implements Comparable<Module> {
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
 			Properties portalModuleDependencyProperties, Path trunkPath,
-			boolean includeTomcatWorkJSP)
+			boolean includeTomcatWorkJSP, Path portalPath)
 		throws IOException {
 
 		return createModule(
 			projectPath, modulePath, moduleDependencies, jarDependencies,
 			portalModuleDependencyProperties, trunkPath, includeTomcatWorkJSP,
-			modulePath.getFileName());
+			modulePath.getFileName(), portalPath);
 	}
 
 	public static Module createModule(
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
 			Properties portalModuleDependencyProperties, Path trunkPath,
-			boolean includeJsps, Path moduleName)
+			boolean includeJsps, Path moduleName, Path portalPath)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -128,6 +128,12 @@ public class Module implements Comparable<Module> {
 			}
 		}
 
+		boolean isTopLevel = false;
+
+		if (portalPath.equals(modulePath.getParent())) {
+			isTopLevel = true;
+		}
+
 		Module module = new Module(
 			projectPath, modulePath, _resolveSourcePath(modulePath),
 			_resolveResourcePath(modulePath, "main"),
@@ -138,7 +144,7 @@ public class Module implements Comparable<Module> {
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties, moduleName.toString()),
-			checksum, _resolveJdkVersion(gradleFilePath));
+			checksum, _resolveJdkVersion(gradleFilePath, isTopLevel));
 
 		if (projectPath != null) {
 			module._save();
@@ -409,10 +415,11 @@ public class Module implements Comparable<Module> {
 		}
 	}
 
-	private static String _resolveJdkVersion(Path gradleFilePath)
+	private static String _resolveJdkVersion(
+			Path gradleFilePath, boolean isTopLevel)
 		throws IOException {
 
-		if (!Files.exists(gradleFilePath)) {
+		if (!Files.exists(gradleFilePath) || isTopLevel) {
 			return "1.8";
 		}
 

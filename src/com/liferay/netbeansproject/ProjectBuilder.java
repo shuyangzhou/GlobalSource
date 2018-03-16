@@ -196,7 +196,7 @@ public class ProjectBuilder {
 							Module.createModule(
 								null, path, null, null,
 								portalModuleDependencyProperties, trunkPath,
-								includeJsps))) {
+								includeJsps, portalPath))) {
 
 						newModulePaths.add(path);
 					}
@@ -265,7 +265,8 @@ public class ProjectBuilder {
 				moduleDependenciesMap.get(newModulePath),
 				jarDependenciesMap.get(
 					String.valueOf(newModulePath.getFileName())),
-				portalModuleDependencyProperties, trunkPath, includeJsps);
+				portalModuleDependencyProperties, trunkPath, includeJsps,
+				portalPath);
 
 			modules.add(module);
 
