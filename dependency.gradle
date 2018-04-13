@@ -10,7 +10,7 @@ allprojects {
 	configurations.whenObjectAdded {
 		Configuration configuration ->
 
-		if (configuration.name == "provided") {
+		if (configuration.name == "compileOnly") {
 			configuration.dependencies.all {
 				transitive = false
 			}
@@ -20,12 +20,12 @@ allprojects {
 	task printDependencies << {
 		StringBuilder sb = new StringBuilder();
 
-		["compile", "compileInclude", "testIntegrationRuntime"].each {
+		["compileOnly", "compileInclude", "testIntegrationRuntime"].each {
 			Configuration configuration = configurations.findByName it
 
 			if (configuration) {
-				if (configuration.name == "compile") {
-					sb.append("compile=")
+				if (configuration.name == "compileOnly") {
+					sb.append("compileOnly=")
 				}
 				else if (configuration.name == "compileInclude") {
 					sb.append("compileInclude=")
