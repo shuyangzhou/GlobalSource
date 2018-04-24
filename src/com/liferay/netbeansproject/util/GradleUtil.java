@@ -337,19 +337,22 @@ public class GradleUtil {
 				StringUtil.split(
 					dependencies.getProperty(configurationName), ':')) {
 
-			if (jar.startsWith(portalToolsPath)) {
-				continue;
-			}
-
 			Path jarPath = Paths.get(jar);
 
 			String jarName = String.valueOf(jarPath.getFileName());
 
-			if (jarName.startsWith("com.liferay")) {
-				String[] jarPathSplit = StringUtil.split(jarName, '-');
+			if (!jar.contains("com.liferay.osgi.felix.util")) {
+				if (jar.startsWith(portalToolsPath)) {
 
-				if (symbolicNameSet.contains(jarPathSplit[0])) {
 					continue;
+				}
+
+				if (jarName.startsWith("com.liferay")) {
+					String[] jarPathSplit = StringUtil.split(jarName, '-');
+
+					if (symbolicNameSet.contains(jarPathSplit[0])) {
+						continue;
+					}
 				}
 			}
 
