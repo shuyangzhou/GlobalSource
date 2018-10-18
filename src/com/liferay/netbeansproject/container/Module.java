@@ -433,7 +433,7 @@ public class Module implements Comparable<Module> {
 			}
 		}
 
-		return "1.7";
+		return "1.8";
 	}
 
 	private static Set<String> _resolvePortalModuleDependencies(
