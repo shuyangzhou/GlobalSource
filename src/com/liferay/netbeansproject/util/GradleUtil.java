@@ -74,8 +74,10 @@ public class GradleUtil {
 			gradleTask.add("--daemon");
 		}
 
+		String userDir = System.getProperty("user.dir");
+
 		gradleTask.add("--parallel");
-		gradleTask.add("--init-script=dependency.gradle");
+		gradleTask.add("--init-script=" + userDir + "/dependency.gradle");
 		gradleTask.add("-p");
 		gradleTask.add(String.valueOf(portalDirPath.resolve("modules")));
 		gradleTask.add(_getTaskName(portalDirPath, workDirPath));
