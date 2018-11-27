@@ -143,6 +143,11 @@ public class GradleUtil {
 
 				jarDependencies.addAll(
 					_getConfigurationDependencies(
+						dependencyPath, "compile", "compileSources", false,
+						portalToolsPath, symbolicNameSet));
+
+				jarDependencies.addAll(
+					_getConfigurationDependencies(
 						dependencyPath, "compileOnly", "compileOnlySources",
 						false, portalToolsPath, symbolicNameSet));
 

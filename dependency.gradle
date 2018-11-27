@@ -20,11 +20,14 @@ allprojects {
 	task printDependencies << {
 		StringBuilder sb = new StringBuilder();
 
-		["compileOnly", "compileInclude", "testIntegrationRuntime"].each {
+		["compile", "compileOnly", "compileInclude", "testIntegrationRuntime"].each {
 			Configuration configuration = configurations.findByName it
 
 			if (configuration) {
-				if (configuration.name == "compileOnly") {
+				if (configuration.name == "compile") {
+					sb.append("compile=")
+				}
+				else if (configuration.name == "compileOnly") {
 					sb.append("compileOnly=")
 				}
 				else if (configuration.name == "compileInclude") {
