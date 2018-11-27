@@ -20,7 +20,7 @@ allprojects {
 	task printDependencies << {
 		StringBuilder sb = new StringBuilder();
 
-		["compile", "compileOnly", "compileInclude", "testIntegrationRuntime"].each {
+		["compile", "compileOnly", "compileInclude", "testIntegrationCompile", "testIntegrationRuntime"].each {
 			Configuration configuration = configurations.findByName it
 
 			if (configuration) {
