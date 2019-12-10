@@ -17,60 +17,62 @@ allprojects {
 		}
 	}
 
-	task printDependencies << {
-		StringBuilder sb = new StringBuilder();
+	task printDependencies {
+		doLast {
+			StringBuilder sb = new StringBuilder();
 
-		["compile", "compileOnly", "compileInclude", "testIntegrationCompile", "testIntegrationRuntime"].each {
-			Configuration configuration = configurations.findByName it
+			["compile", "compileOnly", "compileInclude", "testIntegrationCompile", "testIntegrationRuntime"].each {
+				Configuration configuration = configurations.findByName it
 
-			if (configuration) {
-				if (configuration.name == "compile") {
-					sb.append("compile=")
-				}
-				else if (configuration.name == "compileOnly") {
-					sb.append("compileOnly=")
-				}
-				else if (configuration.name == "compileInclude") {
-					sb.append("compileInclude=")
-				}
-				else {
-					sb.append("compileTest=")
-				}
+				if (configuration) {
+					if (configuration.name == "compile") {
+						sb.append("compile=")
+					}
+					else if (configuration.name == "compileOnly") {
+						sb.append("compileOnly=")
+					}
+					else if (configuration.name == "compileInclude") {
+						sb.append("compileInclude=")
+					}
+					else {
+						sb.append("compileTest=")
+					}
 
-				configuration.files.each {
-					sb.append(it)
-					sb.append(':')
-				}
-
-				sb.append('\n')
-
-				def componentIds = configuration.incoming.resolutionResult.allDependencies.collect {
-					it.selected.id
-				}
-
-				def result = dependencies.createArtifactResolutionQuery()
-					.forComponents(componentIds)
-					.withArtifacts(JvmLibrary, SourcesArtifact)
-					.execute()
-
-				sb.append(configuration.name)
-				sb.append("Sources=")
-
-				for (component in result.resolvedComponents) {
-					component.getArtifacts(SourcesArtifact).each {
-						sb.append("${it.file}")
+					configuration.files.each {
+						sb.append(it)
 						sb.append(':')
 					}
+
+					sb.append('\n')
+
+					def componentIds = configuration.incoming.resolutionResult.allDependencies.collect {
+						it.selected.id
+					}
+
+					def result = dependencies.createArtifactResolutionQuery()
+						.forComponents(componentIds)
+						.withArtifacts(JvmLibrary, SourcesArtifact)
+						.execute()
+
+					sb.append(configuration.name)
+					sb.append("Sources=")
+
+					for (component in result.resolvedComponents) {
+						component.getArtifacts(SourcesArtifact).each {
+							sb.append("${it.file}")
+							sb.append(':')
+						}
+					}
+
+					sb.append('\n')
 				}
-
-				sb.append('\n')
 			}
-		}
 
-		if (sb.length() != 0) {
-			def file = new File(dependencyDirectory + File.separator + project.getName())
+			if (sb.length() != 0) {
+				def file = new File(dependencyDirectory + File.separator + project.getName())
 
-			file.text = sb
+				file.text = sb
+			}
 		}
 	}
 }
