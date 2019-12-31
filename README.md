@@ -8,4 +8,4 @@ Create a build-ext.properties file and fill in the following settings:
 
 3. Set jdk8.home to your jdk8 home. In case your default jdk is jdk8 already, it is optional.
 
-Run ant build for a clean rebuild, run ant add (or just ant, add is the default target) for an increment build.
+Run ant build

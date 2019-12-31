@@ -16,7 +16,6 @@ package com.liferay.netbeansproject;
 
 import com.liferay.netbeansproject.container.Dependency;
 import com.liferay.netbeansproject.container.Module;
-import com.liferay.netbeansproject.util.ArgumentsUtil;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.GradleUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
@@ -49,10 +48,6 @@ import java.util.Set;
 public class ProjectBuilder {
 
 	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
-
-		boolean rebuild = Boolean.valueOf(arguments.get("rebuild"));
-
 		Properties buildProperties = PropertiesUtil.loadProperties(
 			Paths.get("build.properties"));
 
@@ -112,7 +107,7 @@ public class ProjectBuilder {
 			}
 
 			projectBuilder.scanPortal(
-				rebuild, projectDirPath.resolve(portalDirPath.getFileName()),
+				projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
 				groupDepth, currentGroupStopWords, trunkPath,
 				appServerProperties.getProperty("app.server.tomcat.version"),
@@ -121,7 +116,7 @@ public class ProjectBuilder {
 	}
 
 	public void scanPortal(
-			boolean rebuild, final Path projectPath, Path portalPath,
+			final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
 			int groupDepth, List<String> groupStopWords, Path trunkPath,
 			String tomcatVersion, boolean includeJsps,
@@ -129,15 +124,6 @@ public class ProjectBuilder {
 		throws Exception {
 
 		final Map<Path, Module> oldModulePaths = new HashMap<>();
-
-		if (!rebuild) {
-			_loadExistingProjects(
-				projectPath.resolve("modules"), oldModulePaths);
-
-			if (oldModulePaths.isEmpty()) {
-				rebuild = true;
-			}
-		}
 
 		final Set<String> ignoredDirSet = new HashSet<>(
 			Arrays.asList(StringUtil.split(ignoredDirs, ',')));
@@ -228,34 +214,12 @@ public class ProjectBuilder {
 					Paths.get("modules", oldModulePathName.toString())));
 		}
 
-		if (rebuild) {
-			FileUtil.delete(projectPath);
+		FileUtil.delete(projectPath);
 
-			jarDependenciesMap = GradleUtil.getJarDependencies(
-				portalPath, portalPath.resolve("modules"),
-				moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
-				gradleBuildExcludeDirs, gradleOpts);
-		}
-		else {
-			for (Path newModulePath : newModulePaths) {
-				Path newModulePathName = newModulePath.getFileName();
-
-				FileUtil.delete(
-					projectPath.resolve(
-						Paths.get("modules", newModulePathName.toString())));
-
-				if (Files.exists(newModulePath.resolve("build.gradle"))) {
-					jarDependenciesMap.putAll(
-						GradleUtil.getJarDependencies(
-							portalPath, newModulePath,
-							moduleProjectPaths.keySet(),
-							displayGradleProcessOutput, true,
-							gradleBuildExcludeDirs, gradleOpts));
-				}
-			}
-
-			GradleUtil.stopGradleDaemon(portalPath, displayGradleProcessOutput);
-		}
+		jarDependenciesMap = GradleUtil.getJarDependencies(
+			portalPath, portalPath.resolve("modules"),
+			moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
+			gradleBuildExcludeDirs, gradleOpts);
 
 		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
@@ -333,21 +297,6 @@ public class ProjectBuilder {
 		}
 
 		return moduleGroups;
-	}
-
-	private void _loadExistingProjects(
-			Path projectModulesPath, Map<Path, Module> modules)
-		throws IOException {
-
-		if (Files.exists(projectModulesPath)) {
-			for (Path path : Files.newDirectoryStream(projectModulesPath)) {
-				Module module = Module.load(path);
-
-				if (module != null) {
-					modules.put(module.getModulePath(), module);
-				}
-			}
-		}
 	}
 
 }

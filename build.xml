@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
 	basedir="."
-	default="add"
+	default="build"
 	name="Liferay-Source-Netbeans-Project"
 	xmlns:if="ant:if"
 	xmlns:ivy="antlib:org.apache.ivy.ant"
@@ -100,21 +100,11 @@
 		</sequential>
 	</macrodef>
 
-	<target name="add">
-		<compile />
-
-		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}" jvm="${java.executable}">
-			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-			<arg value="rebuild=false" />
-		</java>
-	</target>
-
 	<target name="build">
 		<compile />
 
 		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}" jvm="${java.executable}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
-			<arg value="rebuild=true" />
 		</java>
 	</target>
 

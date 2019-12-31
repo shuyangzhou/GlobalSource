@@ -190,7 +190,7 @@ public class GradleUtil {
 			Path moduleProjectPath = null;
 
 			if (line.contains(" project(") || line.contains(" project (") ||
-				line.contains(" (project(") || line.contains(" (project (") ) {
+				line.contains(" (project(") || line.contains(" (project (")) {
 
 				moduleProjectPath = Paths.get(
 					"modules",
@@ -221,49 +221,6 @@ public class GradleUtil {
 		return moduleDependencies;
 	}
 
-	public static void stopGradleDaemon(
-			Path portalDirPath, boolean displayGradleProcessOutput)
-		throws Exception {
-
-		List<String> gradleTask = new ArrayList<>();
-
-		gradleTask.add(String.valueOf(portalDirPath.resolve("gradlew")));
-
-		gradleTask.add("--stop");
-
-		ProcessBuilder processBuilder = new ProcessBuilder(gradleTask);
-
-		Process process = processBuilder.start();
-
-		if (displayGradleProcessOutput) {
-			String line = null;
-
-			try (BufferedReader br = new BufferedReader(
-					new InputStreamReader(process.getInputStream()))) {
-
-				while ((line = br.readLine()) != null) {
-					System.out.println(line);
-				}
-			}
-
-			try (BufferedReader br = new BufferedReader(
-					new InputStreamReader(process.getErrorStream()))) {
-
-				while ((line = br.readLine()) != null) {
-					System.out.println(line);
-				}
-			}
-		}
-
-		int exitCode = process.waitFor();
-
-		if (exitCode != 0) {
-			throw new IOException(
-				"Process " + processBuilder.command() + " failed with " +
-					exitCode);
-		}
-	}
-
 	private static boolean _checkPortalSnapshotsVersions(Path portalDirPath)
 		throws IOException {
 
@@ -289,8 +246,9 @@ public class GradleUtil {
 								"/maven-metadata-local.xml");
 
 						try {
-							if (!_getMetadataVersion(metadataPath).startsWith(
-									_getBundleVersion(bndPath))) {
+							if (!_getMetadataVersion(
+									metadataPath).startsWith(
+										_getBundleVersion(bndPath))) {
 
 								_installPortalSnapshot(path);
 							}
@@ -352,7 +310,6 @@ public class GradleUtil {
 
 			if (!jar.contains("com.liferay.osgi.felix.util")) {
 				if (jar.startsWith(portalToolsPath)) {
-
 					continue;
 				}
 
@@ -406,7 +363,11 @@ public class GradleUtil {
 
 		relativeWorkPathString = relativeWorkPathString.replace('/', ':');
 
-		return relativeWorkPathString.concat(":").concat("printDependencies");
+		return relativeWorkPathString.concat(
+			":"
+		).concat(
+			"printDependencies"
+		);
 	}
 
 	private static void _installPortalSnapshot(Path path) throws IOException {
@@ -453,7 +414,7 @@ public class GradleUtil {
 				fileName.startsWith("javax.servlet")) {
 
 				if (!(sourceJarLocation.contains("org.glassfish.web") &&
-					!sourceJarLocation.contains("LIFERAY-PATCHED"))) {
+					  !sourceJarLocation.contains("LIFERAY-PATCHED"))) {
 
 					continue;
 				}
