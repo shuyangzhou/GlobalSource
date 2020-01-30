@@ -79,10 +79,6 @@ src.${module.getModuleName()}.src.dir=${"$"}{file.reference.${module.getModuleNa
 file.reference.${module.getModuleName()}-resources=${module.getSourceResourcePath()}
 src.${module.getModuleName()}.resources.dir=${"$"}{file.reference.${module.getModuleName()}-resources}
 </#if>
-<#if module.getModuleName() == "portal-impl">
-file.reference.portal-test-integration-src=${portalPath}/portal-test-integration/src
-src.test.dir=${"$"}{file.reference.portal-test-integration-src}
-</#if>
 <#if module.getModuleName() == "portal-kernel">
 file.reference.portal-test-src=${portalPath}/portal-test/src
 src.test.dir=${"$"}{file.reference.portal-test-src}
