@@ -155,7 +155,7 @@ public class ProjectBuilder {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
-					if (!Files.exists(path.resolve("src"))) {
+					if (!Files.exists(path.resolve("src")) && !path.getParent().getFileName().toString().equals("third-party")) {
 						return FileVisitResult.CONTINUE;
 					}
 
