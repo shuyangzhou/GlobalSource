@@ -419,22 +419,17 @@ public class Module implements Comparable<Module> {
 			Properties properties, String moduleName)
 		throws IOException {
 
-		StringBuilder sb = new StringBuilder();
-
 		String dependencies = properties.getProperty(moduleName);
 
-		if (dependencies == null) {
-			sb.append(
-				PropertiesUtil.getRequiredProperty(
-					properties, "portal.module.dependencies"));
+		if (dependencies == null || dependencies.isEmpty()) {
+			return Collections.emptySet();
 		}
-		else {
-			if (!dependencies.isEmpty()) {
-				sb.append(dependencies);
-				sb.append(',');
-			}
-			sb.append(properties.getProperty("petra.modules"));
-		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(dependencies);
+		sb.append(',');
+		sb.append(properties.getProperty("petra.modules"));
 
 		return new HashSet(Arrays.asList(StringUtil.split(sb.toString(), ',')));
 	}
