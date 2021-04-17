@@ -181,7 +181,7 @@ public class GradleUtil {
 		Path buildGradlePath = modulePath.resolve("build.gradle");
 
 		if (!Files.exists(buildGradlePath)) {
-			return Collections.emptySet();
+			return new HashSet<>();
 		}
 
 		Set<Dependency> moduleDependencies = new HashSet<>();

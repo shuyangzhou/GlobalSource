@@ -522,6 +522,13 @@ public class Module implements Comparable<Module> {
 		_portalModuleDependencies = portalModuleDependencies;
 		_checksum = checksum;
 		_jdkVersion = jdkVersion;
+
+		if ((_testUnitPath != null) || (_testIntegrationPath != null)) {
+			Path portalTest = _projectPath.resolve("portal-test");
+
+			_moduleDependencies.add(
+				new Dependency(portalTest, portalTest.resolve("src"), true));
+		}
 	}
 
 	private void _save() throws IOException {
