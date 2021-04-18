@@ -14,9 +14,6 @@
 				<#if module.getJspPath()??>
 					<root id="src.${module.getModuleName()}.jsp.dir" name="jsp-src"/>
 				</#if>
-				<#if module.getModuleName() == "portal-kernel">
-					<root id="src.test.dir" name="portal-test"/>
-				</#if>
 			</source-roots>
 
 			<test-roots>
