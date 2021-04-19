@@ -6,6 +6,4 @@ Create a build-ext.properties file and fill in the following settings:
 
 2. Set the project.dir to your desired location for generated project files
 
-3. Set jdk8.home to your jdk8 home. In case your default jdk is jdk8 already, it is optional.
-
 Run ant build

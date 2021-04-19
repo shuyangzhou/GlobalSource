@@ -26,48 +26,7 @@
 	<taskdef classpath="lib/ant-contrib.jar" resource="net/sf/antcontrib/antlib.xml" />
 	<taskdef classpathref="ivy.lib.path" resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" />
 
-	<macrodef name="conditional-property">
-		<attribute name="name" />
-		<attribute name="true.value" />
-		<attribute name="false.value" />
-		<attribute name="test.property.name" />
-		<attribute default="" name="test.value" />
-
-		<sequential>
-			<property name="@{name}" value="@{true.value}" if:true="@{test.value}" />
-			<property name="@{name}" value="@{false.value}" if:blank="${@{test.property.name}}" />
-			<property name="@{name}" value="@{true.value}" unless:blank="${@{test.property.name}}" />
-		</sequential>
-	</macrodef>
-
-	<conditional-property
-		name="java.fork"
-		true.value="true"
-		false.value="false"
-		test.property.name="jdk8.home"
-		test.value="${jvm.debug}"
-	/>
-
-	<conditional-property
-		name="javac.fork"
-		true.value="true"
-		false.value="false"
-		test.property.name="jdk8.home"
-	/>
-
-	<conditional-property
-		name="java.executable"
-		true.value="${jdk8.home}/bin/java"
-		false.value="java"
-		test.property.name="jdk8.home"
-	/>
-
-	<conditional-property
-		name="javac.executable"
-		true.value="${jdk8.home}/bin/javac"
-		false.value="javac"
-		test.property.name="jdk8.home"
-	/>
+	<property name="java.fork" value="true" if:true="${jvm.debug}" />
 
 	<macrodef name="clean">
 		<attribute name="project.dir" />
@@ -87,8 +46,6 @@
 				classpathref="lib.classpath"
 				debug="true"
 				destdir="classes"
-				executable="${javac.executable}"
-				fork="${javac.fork}"
 				includeantruntime="false" >
 
 				<src path="src" />
@@ -103,7 +60,7 @@
 	<target name="build">
 		<compile />
 
-		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}" jvm="${java.executable}">
+		<java classname="com.liferay.netbeansproject.ProjectBuilder" classpath="classes" classpathref="lib.classpath" fork="${java.fork}">
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 		</java>
 	</target>
