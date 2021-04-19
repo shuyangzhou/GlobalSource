@@ -32,12 +32,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -123,8 +121,6 @@ public class ProjectBuilder {
 			String gradleBuildExcludeDirs, String gradleOpts)
 		throws Exception {
 
-		final Map<Path, Module> oldModulePaths = new HashMap<>();
-
 		final Set<String> ignoredDirSet = new HashSet<>(
 			Arrays.asList(StringUtil.split(ignoredDirs, ',')));
 
@@ -136,9 +132,7 @@ public class ProjectBuilder {
 
 		final Map<String, Path> moduleProjectPaths = new HashMap<>();
 
-		final Set<Path> newModulePaths = new HashSet<>();
-
-		final List<Module> modules = new ArrayList<>();
+		final Set<Path> modulePaths = new HashSet<>();
 
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
@@ -175,20 +169,7 @@ public class ProjectBuilder {
 								"modules", String.valueOf(path.getFileName())));
 					}
 
-					Module module = oldModulePaths.remove(path);
-
-					if ((module == null) ||
-						!module.equals(
-							Module.createModule(
-								null, path, null, null,
-								portalModuleDependencyProperties, trunkPath,
-								includeJsps, portalPath))) {
-
-						newModulePaths.add(path);
-					}
-					else {
-						modules.add(module);
-					}
+					modulePaths.add(path);
 
 					return FileVisitResult.SKIP_SUBTREE;
 				}
@@ -197,44 +178,33 @@ public class ProjectBuilder {
 
 		Map<Path, Set<Dependency>> moduleDependenciesMap = new HashMap<>();
 
-		for (Path newModulePath : newModulePaths) {
+		for (Path modulePath : modulePaths) {
 			moduleDependenciesMap.put(
-				newModulePath,
+				modulePath,
 				GradleUtil.getModuleDependencies(
-					newModulePath, moduleProjectPaths));
-		}
-
-		Map<String, Set<Dependency>> jarDependenciesMap = new HashMap<>();
-
-		for (Path oldModulePath : oldModulePaths.keySet()) {
-			Path oldModulePathName = oldModulePath.getFileName();
-
-			FileUtil.delete(
-				projectPath.resolve(
-					Paths.get("modules", oldModulePathName.toString())));
+					modulePath, moduleProjectPaths));
 		}
 
 		FileUtil.delete(projectPath);
 
-		jarDependenciesMap = GradleUtil.getJarDependencies(
-			portalPath, portalPath.resolve("modules"),
-			moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
-			gradleBuildExcludeDirs, gradleOpts);
+		Map<String, Set<Dependency>> jarDependenciesMap =
+			GradleUtil.getJarDependencies(
+				portalPath, portalPath.resolve("modules"),
+				moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
+				gradleBuildExcludeDirs, gradleOpts);
 
 		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
 		Set<Dependency> compatJars = ModuleUtil.getCompatJars(portalPath);
 
-		for (Path newModulePath : newModulePaths) {
+		for (Path modulePath : modulePaths) {
 			Module module = Module.createModule(
-				projectPath.resolve("modules"), newModulePath,
-				moduleDependenciesMap.get(newModulePath),
+				projectPath.resolve("modules"), modulePath,
+				moduleDependenciesMap.get(modulePath),
 				jarDependenciesMap.get(
-					String.valueOf(newModulePath.getFileName())),
+					String.valueOf(modulePath.getFileName())),
 				portalModuleDependencyProperties, trunkPath, includeJsps,
 				portalPath);
-
-			modules.add(module);
 
 			CreateModule.createModule(
 				module, projectPath, portalLibJars, compatJars, portalPath);
