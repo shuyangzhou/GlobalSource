@@ -15,18 +15,13 @@
 package com.liferay.netbeansproject.container;
 
 import com.liferay.netbeansproject.util.HashUtil;
-import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,23 +48,7 @@ public class Module implements Comparable<Module> {
 			jarDependencies = new HashSet<>();
 		}
 
-		String checksum = null;
-
 		Path gradleFilePath = modulePath.resolve("build.gradle");
-
-		if (Files.exists(gradleFilePath)) {
-			try {
-				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-
-				byte[] hash = messageDigest.digest(
-					Files.readAllBytes(gradleFilePath));
-
-				checksum = StringUtil.bytesToHexString(hash);
-			}
-			catch (NoSuchAlgorithmException nsae) {
-				throw new Error(nsae);
-			}
-		}
 
 		if (projectPath != null) {
 			projectPath = projectPath.resolve(modulePath.getFileName());
@@ -100,7 +79,7 @@ public class Module implements Comparable<Module> {
 			isTopLevel = true;
 		}
 
-		Module module = new Module(
+		return new Module(
 			projectPath, modulePath, _resolveSourcePath(modulePath),
 			_resolveResourcePath(modulePath, "main"),
 			_resolveTestPath(modulePath, true),
@@ -111,42 +90,7 @@ public class Module implements Comparable<Module> {
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties,
 				String.valueOf(modulePath.getFileName())),
-			checksum, _resolveJdkVersion(gradleFilePath, isTopLevel));
-
-		if (projectPath != null) {
-			module._save();
-		}
-
-		return module;
-	}
-
-	public static Module load(Path projectPath) throws IOException {
-		Path moduleInfoPath = projectPath.resolve("module-info.properties");
-
-		if (Files.notExists(moduleInfoPath)) {
-			return null;
-		}
-
-		Properties properties = PropertiesUtil.loadProperties(moduleInfoPath);
-
-		return new Module(
-			projectPath, Paths.get(properties.getProperty("module.path")),
-			_getPath(properties, "source.path"),
-			_getPath(properties, "source.resource.path"),
-			_getPath(properties, "test.unit.path"),
-			_getPath(properties, "test.unit.resource.path"),
-			_getPath(properties, "test.integration.path"),
-			_getPath(properties, "test.integration.resource.path"),
-			_getPath(properties, "jsp.path"),
-			_getDependencyList(properties.getProperty("module.dependencies")),
-			_getDependencyList(properties.getProperty("jar.dependencies")),
-			new HashSet(
-				Arrays.asList(
-					StringUtil.split(
-						properties.getProperty("portal.module.dependencies"),
-						','))),
-			properties.getProperty("checksum"),
-			properties.getProperty("jdk.version"));
+			_resolveJdkVersion(gradleFilePath, isTopLevel));
 	}
 
 	@Override
@@ -178,17 +122,12 @@ public class Module implements Comparable<Module> {
 			Objects.equals(
 				_testIntegrationResourcePath,
 				module._testIntegrationResourcePath) &&
-			Objects.equals(_jspPath, module._jspPath) &&
-			Objects.equals(_checksum, module._checksum)) {
+			Objects.equals(_jspPath, module._jspPath)) {
 
 			return true;
 		}
 
 		return false;
-	}
-
-	public String getChecksum() {
-		return _checksum;
 	}
 
 	public Set<Dependency> getJarDependencies() {
@@ -256,7 +195,6 @@ public class Module implements Comparable<Module> {
 		hashCode = HashUtil.hash(hashCode, _testIntegrationPath);
 		hashCode = HashUtil.hash(hashCode, _testIntegrationResourcePath);
 		hashCode = HashUtil.hash(hashCode, _jspPath);
-		hashCode = HashUtil.hash(hashCode, _checksum);
 
 		return hashCode;
 	}
@@ -287,65 +225,9 @@ public class Module implements Comparable<Module> {
 		sb.append(_moduleDependencies);
 		sb.append(", jarDependencies=");
 		sb.append(_jarDependencies);
-		sb.append(", checksum=");
-		sb.append(_checksum);
 		sb.append("}");
 
 		return sb.toString();
-	}
-
-	private static String _createDependencyString(
-		Set<Dependency> dependencies) {
-
-		StringBuilder dependenciesSB = new StringBuilder();
-
-		for (Dependency dependency : dependencies) {
-			dependenciesSB.append(dependency.getPath());
-			dependenciesSB.append(',');
-			dependenciesSB.append(dependency.getSourcePath());
-			dependenciesSB.append(',');
-			dependenciesSB.append(dependency.isTest());
-			dependenciesSB.append(';');
-		}
-
-		dependenciesSB.setLength(dependenciesSB.length() - 1);
-
-		return dependenciesSB.toString();
-	}
-
-	private static Set<Dependency> _getDependencyList(String dependencies) {
-		if (dependencies == null) {
-			return Collections.emptySet();
-		}
-
-		Set<Dependency> dependencyList = new HashSet<>();
-
-		for (String dependencyString : StringUtil.split(dependencies, ';')) {
-			String[] dependencySplit = StringUtil.split(dependencyString, ',');
-
-			Path sourcePath = null;
-
-			if (!dependencySplit[1].equals("null")) {
-				sourcePath = Paths.get(dependencySplit[1]);
-			}
-
-			dependencyList.add(
-				new Dependency(
-					Paths.get(dependencySplit[0]), sourcePath,
-					Boolean.valueOf(dependencySplit[1])));
-		}
-
-		return dependencyList;
-	}
-
-	private static Path _getPath(Properties properties, String key) {
-		String value = properties.getProperty(key);
-
-		if (value == null) {
-			return null;
-		}
-
-		return Paths.get(value);
 	}
 
 	private static String _getWorkPath(Path bndPath) throws IOException {
@@ -372,14 +254,6 @@ public class Module implements Comparable<Module> {
 		}
 
 		return fileName;
-	}
-
-	private static void _putProperty(
-		Properties properties, String name, Object value) {
-
-		if (value != null) {
-			properties.put(name, String.valueOf(value));
-		}
 	}
 
 	private static String _resolveJdkVersion(
@@ -494,7 +368,7 @@ public class Module implements Comparable<Module> {
 		Path testIntegrationPath, Path testIntegrationResourcePath,
 		Path jspPath, Set<Dependency> moduleDependencies,
 		Set<Dependency> jarDependencies, Set<String> portalModuleDependencies,
-		String checksum, String jdkVersion) {
+		String jdkVersion) {
 
 		_projectPath = projectPath;
 		_modulePath = modulePath;
@@ -508,7 +382,6 @@ public class Module implements Comparable<Module> {
 		_moduleDependencies = moduleDependencies;
 		_jarDependencies = jarDependencies;
 		_portalModuleDependencies = portalModuleDependencies;
-		_checksum = checksum;
 		_jdkVersion = jdkVersion;
 
 		if ((_testUnitPath != null) || (_testIntegrationPath != null)) {
@@ -519,65 +392,6 @@ public class Module implements Comparable<Module> {
 		}
 	}
 
-	private void _save() throws IOException {
-		Properties properties = new Properties();
-
-		_putProperty(properties, "module.path", _modulePath);
-		_putProperty(properties, "source.path", _sourcePath);
-		_putProperty(properties, "source.resource.path", _sourceResourcePath);
-		_putProperty(properties, "test.unit.path", _testUnitPath);
-		_putProperty(
-			properties, "test.unit.resource.path", _testUnitResourcePath);
-		_putProperty(properties, "test.integration.path", _testIntegrationPath);
-		_putProperty(
-			properties, "test.integration.resource.path",
-			_testIntegrationResourcePath);
-		_putProperty(properties, "jsp.path", _jspPath);
-
-		Path gradleFilePath = _modulePath.resolve("build.gradle");
-
-		try {
-			if (Files.exists(gradleFilePath)) {
-				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-
-				byte[] hash = messageDigest.digest(
-					Files.readAllBytes(gradleFilePath));
-
-				properties.put("checksum", StringUtil.bytesToHexString(hash));
-			}
-		}
-		catch (NoSuchAlgorithmException nsae) {
-			throw new Error(nsae);
-		}
-
-		if (!_jarDependencies.isEmpty()) {
-			_putProperty(
-				properties, "jar.dependencies",
-				_createDependencyString(_jarDependencies));
-		}
-
-		if (!_moduleDependencies.isEmpty()) {
-			_putProperty(
-				properties, "module.dependencies",
-				_createDependencyString(_moduleDependencies));
-		}
-
-		_putProperty(
-			properties, "portal.module.dependencies",
-			StringUtil.merge(_portalModuleDependencies, ','));
-
-		_putProperty(properties, "jdk.version", _jdkVersion);
-
-		Files.createDirectories(_projectPath);
-
-		try (Writer writer = Files.newBufferedWriter(
-				_projectPath.resolve("module-info.properties"))) {
-
-			properties.store(writer, null);
-		}
-	}
-
-	private final String _checksum;
 	private final Set<Dependency> _jarDependencies;
 	private final String _jdkVersion;
 	private final Path _jspPath;
