@@ -49,19 +49,6 @@ public class Module implements Comparable<Module> {
 			boolean includeTomcatWorkJSP, Path portalPath)
 		throws IOException {
 
-		return createModule(
-			projectPath, modulePath, moduleDependencies, jarDependencies,
-			portalModuleDependencyProperties, trunkPath, includeTomcatWorkJSP,
-			modulePath.getFileName(), portalPath);
-	}
-
-	public static Module createModule(
-			Path projectPath, Path modulePath,
-			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
-			Properties portalModuleDependencyProperties, Path trunkPath,
-			boolean includeJsps, Path moduleName, Path portalPath)
-		throws IOException {
-
 		if (jarDependencies == null) {
 			jarDependencies = new HashSet<>();
 		}
@@ -85,7 +72,7 @@ public class Module implements Comparable<Module> {
 		}
 
 		if (projectPath != null) {
-			projectPath = projectPath.resolve(moduleName);
+			projectPath = projectPath.resolve(modulePath.getFileName());
 		}
 
 		Path resourcesPath = Paths.get(
@@ -94,7 +81,7 @@ public class Module implements Comparable<Module> {
 
 		Path jspPath = null;
 
-		if (includeJsps) {
+		if (includeTomcatWorkJSP) {
 			if (Files.exists(resourcesPath)) {
 				Stream<Path> jspStream = Files.list(resourcesPath)
 					.filter(fileName -> fileName.toString().endsWith(".jsp"));
@@ -122,7 +109,8 @@ public class Module implements Comparable<Module> {
 			_resolveResourcePath(modulePath, "testIntegration"), jspPath,
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
-				portalModuleDependencyProperties, moduleName.toString()),
+				portalModuleDependencyProperties,
+				String.valueOf(modulePath.getFileName())),
 			checksum, _resolveJdkVersion(gradleFilePath, isTopLevel));
 
 		if (projectPath != null) {
