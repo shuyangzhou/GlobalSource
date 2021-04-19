@@ -62,15 +62,6 @@ public class ProjectBuilder {
 		String ignoredDirs = PropertiesUtil.getRequiredProperty(
 			buildProperties, "ignored.dirs");
 
-		int groupDepth = Integer.valueOf(
-			PropertiesUtil.getRequiredProperty(buildProperties, "group.depth"));
-
-		List<String> groupStopWords = Arrays.asList(
-			StringUtil.split(
-				PropertiesUtil.getRequiredProperty(
-					buildProperties, "group.stop.words"),
-				','));
-
 		boolean includeJsps = Boolean.valueOf(
 			PropertiesUtil.getRequiredProperty(
 				buildProperties, "include.generated.jsp.servlet"));
@@ -84,13 +75,6 @@ public class ProjectBuilder {
 
 		for (String portalDir : portalDirs) {
 			Path portalDirPath = Paths.get(portalDir);
-
-			List<String> currentGroupStopWords = new ArrayList<>(
-				groupStopWords);
-
-			currentGroupStopWords.add(
-				String.valueOf(
-					portalDirPath.getName(portalDirPath.getNameCount() - 2)));
 
 			Properties appServerProperties = new Properties();
 
@@ -107,7 +91,7 @@ public class ProjectBuilder {
 			projectBuilder.scanPortal(
 				projectDirPath.resolve(portalDirPath.getFileName()),
 				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				groupDepth, currentGroupStopWords, trunkPath,
+				trunkPath,
 				appServerProperties.getProperty("app.server.tomcat.version"),
 				includeJsps, gradleBuildExcludeDirs, gradleOpts);
 		}
@@ -116,8 +100,7 @@ public class ProjectBuilder {
 	public void scanPortal(
 			final Path projectPath, Path portalPath,
 			final boolean displayGradleProcessOutput, String ignoredDirs,
-			int groupDepth, List<String> groupStopWords, Path trunkPath,
-			String tomcatVersion, boolean includeJsps,
+			Path trunkPath, String tomcatVersion, boolean includeJsps,
 			String gradleBuildExcludeDirs, String gradleOpts)
 		throws Exception {
 
@@ -213,60 +196,6 @@ public class ProjectBuilder {
 		CreateUmbrella.createUmbrella(
 			portalPath, moduleNames, projectPath.resolve("umbrella"), trunkPath,
 			tomcatVersion);
-
-		if (groupDepth < 1) {
-			return;
-		}
-
-		Map<Path, List<Module>> moduleGroups = _createModuleGroups(
-			modules, groupDepth, groupStopWords);
-
-		Path groupProjectPath = projectPath.resolve("group-modules");
-
-		FileUtil.delete(groupProjectPath);
-
-		for (Map.Entry<Path, List<Module>> entry : moduleGroups.entrySet()) {
-			CreateGroupModule.createModule(
-				groupProjectPath, portalPath, entry.getKey(), entry.getValue(),
-				portalLibJars, compatJars);
-		}
-
-		CreateGroupUmbrella.createUmbrella(
-			portalPath, moduleGroups.keySet(),
-			projectPath.resolve("group-umbrella"), trunkPath, tomcatVersion);
-	}
-
-	private Map<Path, List<Module>> _createModuleGroups(
-		List<Module> modules, int groupDepth, List<String> groupStopWords) {
-
-		Map<Path, List<Module>> moduleGroups = new HashMap<>();
-
-		for (Module module : modules) {
-			Path groupPath = module.getModulePath();
-
-			for (int i = 1; i < groupDepth; i++) {
-				if (groupStopWords.contains(
-						String.valueOf(
-							groupPath.getName(groupPath.getNameCount() - 2)))) {
-
-					break;
-				}
-
-				groupPath = groupPath.getParent();
-			}
-
-			List<Module> moduleGroup = moduleGroups.get(groupPath);
-
-			if (moduleGroup == null) {
-				moduleGroup = new ArrayList<>();
-
-				moduleGroups.put(groupPath, moduleGroup);
-			}
-
-			moduleGroup.add(module);
-		}
-
-		return moduleGroups;
 	}
 
 }
