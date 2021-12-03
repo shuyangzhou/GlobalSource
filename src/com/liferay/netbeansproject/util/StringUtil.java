@@ -102,6 +102,10 @@ public class StringUtil {
 	}
 
 	public static String[] split(String s, char delimiter) {
+		if (s == null) {
+			return new String[0];
+		}
+
 		s = s.trim();
 
 		if (s.isEmpty()) {
