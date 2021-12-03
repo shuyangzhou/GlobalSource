@@ -284,6 +284,13 @@ public class Module implements Comparable<Module> {
 		String dependencies = properties.getProperty(moduleName);
 
 		if (dependencies == null || dependencies.isEmpty()) {
+			if (moduleName.endsWith("-test")) {
+				return new HashSet<>(
+					Arrays.asList(
+						StringUtil.split(
+							properties.getProperty("petra.modules"), ',')));
+			}
+
 			return Collections.emptySet();
 		}
 
@@ -293,7 +300,7 @@ public class Module implements Comparable<Module> {
 		sb.append(',');
 		sb.append(properties.getProperty("petra.modules"));
 
-		return new HashSet(Arrays.asList(StringUtil.split(sb.toString(), ',')));
+		return new HashSet<>(Arrays.asList(StringUtil.split(sb.toString(), ',')));
 	}
 
 	private static Path _resolveResourcePath(Path modulePath, String type) {
