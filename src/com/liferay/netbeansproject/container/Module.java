@@ -285,10 +285,15 @@ public class Module implements Comparable<Module> {
 
 		if (dependencies == null || dependencies.isEmpty()) {
 			if (moduleName.endsWith("-test")) {
-				return new HashSet<>(
+				Set<String> dependencySet = new HashSet<>(
 					Arrays.asList(
 						StringUtil.split(
 							properties.getProperty("petra.modules"), ',')));
+
+				dependencySet.add("portal-impl");
+				dependencySet.add("portal-kernel");
+
+				return dependencySet;
 			}
 
 			return Collections.emptySet();
