@@ -35,37 +35,6 @@ import java.util.TreeSet;
  */
 public class ModuleUtil {
 
-	public static Set<Dependency> getCompatJars(Path portalPath)
-		throws IOException {
-
-		final Set<Dependency> jarSet = new TreeSet<>();
-
-		Files.walkFileTree(
-			portalPath.resolve("tmp"), EnumSet.allOf(FileVisitOption.class),
-			Integer.MAX_VALUE,
-			new SimpleFileVisitor<Path>() {
-
-				@Override
-				public FileVisitResult visitFile(
-						Path filePath, BasicFileAttributes attrs)
-					throws IOException {
-
-					String filePathString = filePath.toString();
-
-					if (filePathString.endsWith("compat.jar")) {
-						jarSet.add(
-							new Dependency(
-								Paths.get(filePathString), null, false));
-					}
-
-					return FileVisitResult.CONTINUE;
-				}
-
-			});
-
-		return jarSet;
-	}
-
 	public static Set<Dependency> getPortalLibJars(Path portalPath)
 		throws IOException {
 

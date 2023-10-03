@@ -37,7 +37,7 @@ public class CreateModule {
 
 	public static void createModule(
 			Module module, Path projectPath, Set<Dependency> portalLibJars,
-			Set<Dependency> compatJars, Path portalPath)
+			Path portalPath)
 		throws Exception {
 
 		Path projectModulePath = projectPath.resolve(
@@ -50,8 +50,6 @@ public class CreateModule {
 		String modulePath = String.valueOf(module.getModulePath());
 
 		Set<Dependency> combinedJars = new TreeSet<>();
-
-		combinedJars.addAll(compatJars);
 
 		if (!modulePath.contains("modules")) {
 			combinedJars.addAll(portalLibJars);

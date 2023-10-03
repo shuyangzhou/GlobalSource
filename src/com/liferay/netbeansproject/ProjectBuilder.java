@@ -178,8 +178,6 @@ public class ProjectBuilder {
 
 		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
-		Set<Dependency> compatJars = ModuleUtil.getCompatJars(portalPath);
-
 		for (Path modulePath : modulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve("modules"), modulePath,
@@ -190,7 +188,7 @@ public class ProjectBuilder {
 				portalPath);
 
 			CreateModule.createModule(
-				module, projectPath, portalLibJars, compatJars, portalPath);
+				module, projectPath, portalLibJars, portalPath);
 		}
 
 		CreateUmbrella.createUmbrella(
