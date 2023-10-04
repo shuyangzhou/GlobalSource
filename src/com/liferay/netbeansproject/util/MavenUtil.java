@@ -263,7 +263,7 @@ public class MavenUtil {
 		for (String line : Files.readAllLines(buildGradlePath)) {
 			line = line.trim();
 
-			if (line.startsWith("api") || line.startsWith("parentThemes") || line.startsWith("match(")) {
+			if (line.startsWith("parentThemes") || line.startsWith("match(")) {
 				continue;
 			}
 
