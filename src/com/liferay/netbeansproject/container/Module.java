@@ -41,7 +41,7 @@ public class Module implements Comparable<Module> {
 			Path projectPath, Path modulePath,
 			Set<Dependency> moduleDependencies, Set<Dependency> jarDependencies,
 			Properties portalModuleDependencyProperties, Path trunkPath,
-			boolean includeTomcatWorkJSP, Path portalPath)
+			boolean includeTomcatWorkJSP, Path portalPath, Set<String> portalPreModuleNames)
 		throws IOException {
 
 		if (jarDependencies == null) {
@@ -89,7 +89,7 @@ public class Module implements Comparable<Module> {
 			moduleDependencies, jarDependencies,
 			_resolvePortalModuleDependencies(
 				portalModuleDependencyProperties,
-				String.valueOf(modulePath.getFileName())),
+				String.valueOf(modulePath.getFileName()), portalPreModuleNames),
 			_resolveJdkVersion(gradleFilePath, isTopLevel));
 	}
 
@@ -278,17 +278,14 @@ public class Module implements Comparable<Module> {
 	}
 
 	private static Set<String> _resolvePortalModuleDependencies(
-			Properties properties, String moduleName)
+			Properties properties, String moduleName, Set<String> portalPreModuleNames)
 		throws IOException {
 
 		String dependencies = properties.getProperty(moduleName);
 
 		if (dependencies == null || dependencies.isEmpty()) {
 			if (moduleName.endsWith("-test")) {
-				Set<String> dependencySet = new HashSet<>(
-					Arrays.asList(
-						StringUtil.split(
-							properties.getProperty("petra.modules"), ',')));
+				Set<String> dependencySet = new HashSet<>(portalPreModuleNames);
 
 				dependencySet.add("portal-impl");
 				dependencySet.add("portal-kernel");
@@ -303,7 +300,7 @@ public class Module implements Comparable<Module> {
 
 		sb.append(dependencies);
 		sb.append(',');
-		sb.append(properties.getProperty("petra.modules"));
+		sb.append(StringUtil.merge(portalPreModuleNames, ','));
 
 		return new HashSet<>(Arrays.asList(StringUtil.split(sb.toString(), ',')));
 	}

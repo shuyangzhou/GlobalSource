@@ -109,6 +109,8 @@ public class ProjectBuilder {
 
 		final Set<Path> modulePaths = new HashSet<>();
 
+		Set<String> portalPreModuleNames = new HashSet<>();
+
 		Files.walkFileTree(
 			portalPath, EnumSet.allOf(FileVisitOption.class), Integer.MAX_VALUE,
 			new SimpleFileVisitor<Path>() {
@@ -133,7 +135,9 @@ public class ProjectBuilder {
 						path = path.getParent();
 					}
 
-					moduleNames.add(String.valueOf(path.getFileName()));
+					String moduleName = String.valueOf(path.getFileName());
+
+					moduleNames.add(moduleName);
 
 					String symbolicName = ModuleUtil.getSymbolicName(path);
 
@@ -142,6 +146,10 @@ public class ProjectBuilder {
 							symbolicName,
 							Paths.get(
 								"modules", String.valueOf(path.getFileName())));
+					}
+
+					if (Files.exists(path.resolve(".lfrbuild-portal-pre"))) {
+						portalPreModuleNames.add(moduleName);
 					}
 
 					modulePaths.add(path);
@@ -170,7 +178,7 @@ public class ProjectBuilder {
 				moduleDependenciesMap.get(modulePath),
 				MavenUtil.getDependencies(modulePath.resolve("build.gradle")),
 				portalModuleDependencyProperties, trunkPath, includeJsps,
-				portalPath);
+				portalPath, portalPreModuleNames);
 
 			CreateModule.createModule(
 				module, projectPath, portalLibJars, portalPath);
