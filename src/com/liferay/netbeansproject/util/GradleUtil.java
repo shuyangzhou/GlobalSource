@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -30,7 +29,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -51,128 +48,6 @@ import org.w3c.dom.NodeList;
  * @author Tom Wang
  */
 public class GradleUtil {
-
-	public static Map<String, Set<Dependency>> getJarDependencies(
-			Path portalDirPath, Path workDirPath, Set<String> symbolicNameSet,
-			boolean displayGradleProcessOutput, boolean daemon,
-			String gradleBuildExcludeDirs, String gradleOpts)
-		throws Exception {
-
-		_checkPortalSnapshotsVersions(portalDirPath);
-
-		Path dependenciesDirPath = Files.createTempDirectory(null);
-
-		FileUtil.delete(dependenciesDirPath);
-
-		Files.createDirectories(dependenciesDirPath);
-
-		List<String> gradleTask = new ArrayList<>();
-
-		gradleTask.add(String.valueOf(portalDirPath.resolve("gradlew")));
-
-		if (daemon) {
-			gradleTask.add("--daemon");
-		}
-
-		String userDir = System.getProperty("user.dir");
-
-		gradleTask.add("--parallel");
-		gradleTask.add("--init-script=" + userDir + "/dependency.gradle");
-		gradleTask.add("-p");
-		gradleTask.add(String.valueOf(portalDirPath.resolve("modules")));
-		gradleTask.add(_getTaskName(portalDirPath, workDirPath));
-		gradleTask.add(
-			"-PdependencyDirectory=".concat(dependenciesDirPath.toString()));
-		gradleTask.add("-Dbuild.exclude.dirs=" + gradleBuildExcludeDirs);
-		gradleTask.add("-g");
-
-		Path gradleCachePath = Paths.get(".gradle");
-
-		Files.deleteIfExists(gradleCachePath.resolve("gradle.properties"));
-
-		FileUtil.copy(portalDirPath.resolve(".gradle"), gradleCachePath);
-
-		gradleTask.add(String.valueOf(gradleCachePath));
-
-		ProcessBuilder processBuilder = new ProcessBuilder(gradleTask);
-
-		Map<String, String> env = processBuilder.environment();
-
-		env.put("GRADLE_OPTS", gradleOpts);
-
-		Process process = processBuilder.start();
-
-		if (displayGradleProcessOutput) {
-			String line = null;
-
-			try (BufferedReader br = new BufferedReader(
-					new InputStreamReader(process.getInputStream()))) {
-
-				while ((line = br.readLine()) != null) {
-					System.out.println(line);
-				}
-			}
-
-			try (BufferedReader br = new BufferedReader(
-					new InputStreamReader(process.getErrorStream()))) {
-
-				while ((line = br.readLine()) != null) {
-					System.out.println(line);
-				}
-			}
-		}
-
-		int exitCode = process.waitFor();
-
-		if (exitCode != 0) {
-			throw new IOException(
-				"Process " + processBuilder.command() + " failed with " +
-					exitCode);
-		}
-
-		Map<String, Set<Dependency>> dependenciesMap = new HashMap<>();
-
-		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
-				dependenciesDirPath)) {
-
-			String portalToolsPath = String.valueOf(
-				portalDirPath.resolve("tools/sdk"));
-
-			for (Path dependencyPath : directoryStream) {
-				Set<Dependency> jarDependencies = new TreeSet<>();
-
-				jarDependencies.addAll(
-					_getConfigurationDependencies(
-						dependencyPath, "compile", "compileSources", false,
-						portalToolsPath, symbolicNameSet));
-
-				jarDependencies.addAll(
-					_getConfigurationDependencies(
-						dependencyPath, "compileOnly", "compileOnlySources",
-						false, portalToolsPath, symbolicNameSet));
-
-				jarDependencies.addAll(
-					_getConfigurationDependencies(
-						dependencyPath, "compileInclude",
-						"compileIncludeSources", false, portalToolsPath,
-						symbolicNameSet));
-
-				jarDependencies.addAll(
-					_getConfigurationDependencies(
-						dependencyPath, "compileTest",
-						"testIntegrationRuntimeSources", true, portalToolsPath,
-						symbolicNameSet));
-
-				dependenciesMap.put(
-					String.valueOf(dependencyPath.getFileName()),
-					jarDependencies);
-			}
-		}
-
-		FileUtil.delete(dependenciesDirPath);
-
-		return dependenciesMap;
-	}
 
 	public static Set<Dependency> getModuleDependencies(
 			Path modulePath, Map<String, Path> moduleProjectPaths)

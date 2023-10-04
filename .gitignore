@@ -5,5 +5,6 @@ nbproject/build-impl.xml
 nbproject/genfiles.properties
 nbproject/private/*
 .gradle
+.m2-cache
 
 build-ext.properties

@@ -18,6 +18,7 @@ import com.liferay.netbeansproject.container.Dependency;
 import com.liferay.netbeansproject.container.Module;
 import com.liferay.netbeansproject.util.FileUtil;
 import com.liferay.netbeansproject.util.GradleUtil;
+import com.liferay.netbeansproject.util.MavenUtil;
 import com.liferay.netbeansproject.util.ModuleUtil;
 import com.liferay.netbeansproject.util.PropertiesUtil;
 import com.liferay.netbeansproject.util.StringUtil;
@@ -56,9 +57,6 @@ public class ProjectBuilder {
 		Path projectDirPath = Paths.get(
 			PropertiesUtil.getRequiredProperty(buildProperties, "project.dir"));
 
-		boolean displayGradleProcessOutput = Boolean.valueOf(
-			buildProperties.getProperty("display.gradle.process.output"));
-
 		String ignoredDirs = PropertiesUtil.getRequiredProperty(
 			buildProperties, "ignored.dirs");
 
@@ -66,15 +64,12 @@ public class ProjectBuilder {
 			PropertiesUtil.getRequiredProperty(
 				buildProperties, "include.generated.jsp.servlet"));
 
-		String gradleBuildExcludeDirs = buildProperties.getProperty(
-			"gradle.build.exclude.dirs");
-
-		String gradleOpts = buildProperties.getProperty("gradle.opts");
-
 		ProjectBuilder projectBuilder = new ProjectBuilder();
 
 		for (String portalDir : portalDirs) {
 			Path portalDirPath = Paths.get(portalDir);
+
+			MavenUtil.buildCache(portalDirPath, buildProperties);
 
 			Properties appServerProperties = new Properties();
 
@@ -90,18 +85,15 @@ public class ProjectBuilder {
 
 			projectBuilder.scanPortal(
 				projectDirPath.resolve(portalDirPath.getFileName()),
-				portalDirPath, displayGradleProcessOutput, ignoredDirs,
-				trunkPath,
+				portalDirPath, ignoredDirs,	trunkPath,
 				appServerProperties.getProperty("app.server.tomcat.version"),
-				includeJsps, gradleBuildExcludeDirs, gradleOpts);
+				includeJsps);
 		}
 	}
 
 	public void scanPortal(
-			final Path projectPath, Path portalPath,
-			final boolean displayGradleProcessOutput, String ignoredDirs,
-			Path trunkPath, String tomcatVersion, boolean includeJsps,
-			String gradleBuildExcludeDirs, String gradleOpts)
+			final Path projectPath, Path portalPath, String ignoredDirs,
+			Path trunkPath, String tomcatVersion, boolean includeJsps)
 		throws Exception {
 
 		final Set<String> ignoredDirSet = new HashSet<>(
@@ -170,20 +162,13 @@ public class ProjectBuilder {
 
 		FileUtil.delete(projectPath);
 
-		Map<String, Set<Dependency>> jarDependenciesMap =
-			GradleUtil.getJarDependencies(
-				portalPath, portalPath.resolve("modules"),
-				moduleProjectPaths.keySet(), displayGradleProcessOutput, false,
-				gradleBuildExcludeDirs, gradleOpts);
-
 		Set<Dependency> portalLibJars = ModuleUtil.getPortalLibJars(portalPath);
 
 		for (Path modulePath : modulePaths) {
 			Module module = Module.createModule(
 				projectPath.resolve("modules"), modulePath,
 				moduleDependenciesMap.get(modulePath),
-				jarDependenciesMap.get(
-					String.valueOf(modulePath.getFileName())),
+				MavenUtil.getDependencies(modulePath.resolve("build.gradle")),
 				portalModuleDependencyProperties, trunkPath, includeJsps,
 				portalPath);
 
