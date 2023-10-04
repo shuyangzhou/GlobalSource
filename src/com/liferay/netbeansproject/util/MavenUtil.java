@@ -168,6 +168,19 @@ public class MavenUtil {
 			_coordinateTestWhitelist.add(coordinate);
 		}
 
+		Properties developmentLibProperties = PropertiesUtil.loadProperties(
+			portalPath.resolve("lib/development/dependencies.properties"));
+
+		for (Object value : developmentLibProperties.values()) {
+			Coordinate coordinate = new Coordinate(String.valueOf(value));
+
+			coordinate.setTest(true);
+
+			_coordinateTestWhitelist.add(coordinate);
+		}
+
+		_coordinateTestWhitelist.removeAll(_coordinateBlacklist);
+
 		String ignoredDirs = PropertiesUtil.getRequiredProperty(
 			buildProperties, "ignored.dirs");
 
@@ -222,9 +235,9 @@ public class MavenUtil {
 			mergedCoordinates.addAll(coordinates);
 		}
 
-		mergedCoordinates.removeAll(_coordinateBlacklist);
-
 		mergedCoordinates.addAll(_coordinateTestWhitelist);
+
+		mergedCoordinates.removeAll(_coordinateBlacklist);		
 
 		System.out.println(
 			"Found " + mergedCoordinates.size() + " unique coordinates");

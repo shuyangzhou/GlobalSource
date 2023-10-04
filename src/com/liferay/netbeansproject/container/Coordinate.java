@@ -103,7 +103,6 @@ public class Coordinate implements Comparable<Coordinate> {
 		hash = 67 * hash + Objects.hashCode(this._groupId);
 		hash = 67 * hash + Objects.hashCode(this._artifactId);
 		hash = 67 * hash + Objects.hashCode(this._version);
-		hash = 67 * hash + (this._test ? 1 : 0);
 		return hash;
 	}
 
